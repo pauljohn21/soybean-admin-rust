@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use axum::Extension;
+use axum::{extract::Query, Extension};
 use axum_casbin::{casbin::MgmtApi, CasbinAxumLayer};
-use server_core::web::{error::AppError, res::Res};
-use server_service::admin::{sys_user, SysUserService, TUserService};
+use server_core::web::{error::AppError, page::PaginatedData, res::Res};
+use server_service::admin::{sys_user, SysUserService, TUserService, UserPageRequest};
 
 pub struct SysUserApi;
 
@@ -12,6 +12,13 @@ impl SysUserApi {
         Extension(service): Extension<Arc<SysUserService>>,
     ) -> Result<Res<Vec<sys_user::Model>>, AppError> {
         service.find_all().await.map(Res::new_data)
+    }
+
+    pub async fn get_paginated_users(
+        Query(params): Query<UserPageRequest>,
+        Extension(service): Extension<Arc<SysUserService>>,
+    ) -> Result<Res<PaginatedData<sys_user::Model>>, AppError> {
+        service.find_paginated_users(params).await.map(Res::new_data)
     }
 
     pub async fn remove_policies(

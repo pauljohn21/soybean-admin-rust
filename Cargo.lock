@@ -2804,6 +2804,7 @@ dependencies = [
  "derive-new",
  "sea-orm",
  "serde",
+ "server-core",
  "validator",
 ]
 

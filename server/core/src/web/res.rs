@@ -19,8 +19,8 @@ pub struct Res<T> {
 
 #[allow(dead_code)]
 impl<T: Serialize> Res<T> {
-    pub fn new_paginated(data: PaginatedData<T>) -> Self<PaginatedData<T>> {
-        Self {
+    pub fn new_paginated(data: PaginatedData<T>) -> Res<PaginatedData<T>> {
+        Res {
             code: StatusCode::OK.as_u16(),
             data: Some(data),
             msg: "success".to_string(),
