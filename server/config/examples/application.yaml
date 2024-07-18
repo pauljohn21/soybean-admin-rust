@@ -10,3 +10,4 @@ server:
 jwt:
     jwt_secret: "soybean-admin-rust"
     issuer: "https://github.com/ByteByteBrew/soybean-admin-rust"
+    expire: 7200
