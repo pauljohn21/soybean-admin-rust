@@ -7,11 +7,7 @@ use std::{
 
 #[cfg(feature = "runtime-async-std")]
 use async_std::sync::RwLock;
-use axum::{
-    body,
-    response::{IntoResponse, Response},
-    BoxError,
-};
+use axum::{body, response::Response, BoxError};
 use bytes::Bytes;
 use casbin::{
     prelude::{TryIntoAdapter, TryIntoModel},
@@ -20,7 +16,7 @@ use casbin::{
 use futures::future::BoxFuture;
 use http::{Request, StatusCode};
 use http_body::Body as HttpBody;
-use server_core::web::res::Res;
+use http_body_util::Full;
 #[cfg(feature = "runtime-tokio")]
 use tokio::sync::RwLock;
 use tower::{Layer, Service};
@@ -117,10 +113,10 @@ where
             let vals = match option_vals {
                 Some(value) => value,
                 None => {
-                    return Ok(Res::<String>::new_error(
-                        StatusCode::UNAUTHORIZED.as_u16(),
-                        "No authentication token was provided. Please ensure your request includes a valid token.",
-                    ).into_response());
+                    return Ok(Response::builder()
+                        .status(StatusCode::UNAUTHORIZED)
+                        .body(body::Body::new(Full::from("No authentication token was provided. Please ensure your request includes a valid token.")))
+                        .unwrap());
                 }
             };
 
@@ -136,17 +132,17 @@ where
                         }
                         Ok(false) => {
                             drop(lock);
-                            Ok(Res::<String>::new_error(
-                                StatusCode::FORBIDDEN.as_u16(),
-                                "You do not have the necessary permissions to access this resource. Please contact support if you believe this is an error.",
-                            ).into_response())
+                            Ok(Response::builder()
+                                .status(StatusCode::FORBIDDEN)
+                                .body(body::Body::new(Full::from("You do not have the necessary permissions to access this resource. Please contact support if you believe this is an error.")))
+                                .unwrap())
                         }
                         Err(_) => {
                             drop(lock);
-                            Ok(Res::<String>::new_error(
-                                StatusCode::BAD_GATEWAY.as_u16(),
-                                "We encountered an unexpected error while processing your request. Our team has been notified, and we are investigating the issue.",
-                            ).into_response())
+                            Ok(Response::builder()
+                                .status(StatusCode::BAD_GATEWAY)
+                                .body(body::Body::new(Full::from("We encountered an unexpected error while processing your request. Our team has been notified, and we are investigating the issue.")))
+                                .unwrap())
                         }
                     }
                 } else {
@@ -158,26 +154,25 @@ where
                         }
                         Ok(false) => {
                             drop(lock);
-                            Ok(Res::<String>::new_error(
-                                StatusCode::FORBIDDEN.as_u16(),
-                                "You do not have the necessary permissions to access this resource. Please contact support if you believe this is an error.",
-                            ).into_response())
+                            Ok(Response::builder()
+                                .status(StatusCode::FORBIDDEN)
+                                .body(body::Body::new(Full::from("You do not have the necessary permissions to access this resource. Please contact support if you believe this is an error.")))
+                                .unwrap())
                         }
                         Err(_) => {
                             drop(lock);
-                            Ok(Res::<String>::new_error(
-                                StatusCode::BAD_GATEWAY.as_u16(),
-                                "We encountered an unexpected error while processing your request. Our team has been notified, and we are investigating the issue.",
-                            ).into_response())
+                            Ok(Response::builder()
+                                .status(StatusCode::BAD_GATEWAY)
+                                .body(body::Body::new(Full::from("We encountered an unexpected error while processing your request. Our team has been notified, and we are investigating the issue.")))
+                                .unwrap())
                         }
                     }
                 }
             } else {
-                Ok(Res::<String>::new_error(
-                    StatusCode::UNAUTHORIZED.as_u16(),
-                    "No token provided or invalid token type",
-                )
-                .into_response())
+                Ok(Response::builder()
+                    .status(StatusCode::UNAUTHORIZED)
+                    .body(body::Body::new(Full::from("No token provided or invalid token type")))
+                    .unwrap())
             }
         })
     }

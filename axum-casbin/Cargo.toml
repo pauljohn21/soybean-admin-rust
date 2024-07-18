@@ -9,8 +9,6 @@ description = "Casbin axum access control middleware"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-server-core = { path = "../server/core" }
-
 casbin = { workspace = true, default-features = false, features = ["incremental", "cached"] }
 tokio = { workspace = true, default-features = false, optional = true }
 async-std = { workspace = true, default-features = false, optional = true }
