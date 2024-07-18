@@ -22,4 +22,3 @@ sea-orm = { workspace = true }
 ulid = { workspace = true }
 
 [dev-dependencies]
-server-initialize = { path = "../initialize" }

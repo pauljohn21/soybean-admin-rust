@@ -27,6 +27,7 @@ tracing-error = { workspace = true }
 tracing-log = { workspace = true }
 
 [dev-dependencies]
+server-core = { path = "../core" }
 
 axum-test-helpers = { workspace = true }
 tower = { workspace = true, features = ["full"] }
@@ -37,3 +38,5 @@ http-body-util = { workspace = true }
 bytes = { workspace = true }
 simplelog = { workspace = true }
 simple_logger = { workspace = true }
+jsonwebtoken = { workspace = true }
+chrono = { workspace = true }
