@@ -71,8 +71,6 @@ impl TAuthService for SysAuthService {
             .join(JoinType::InnerJoin, sys_role::Relation::SysUserRole.def())
             .join(JoinType::InnerJoin, sys_user_role::Relation::SysUser.def())
             .filter(sys_user::Column::Id.eq(user.id))
-            .select_only()
-            .column(sys_role::Column::Code)
             .all(db.as_ref())
             .await
             .map_err(AppError::from)?
