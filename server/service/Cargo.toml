@@ -18,3 +18,4 @@ sea-orm = { workspace = true, features = ["runtime-tokio-native-tls", "macros"] 
 thiserror = { workspace = true }
 bcrypt = { workspace = true }
 chrono = { workspace = true }
+ulid = { workspace = true }

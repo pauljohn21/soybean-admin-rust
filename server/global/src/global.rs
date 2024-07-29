@@ -75,3 +75,25 @@ pub async fn get_event_sender() -> Option<mpsc::UnboundedSender<String>> {
 pub async fn get_event_receiver() -> Option<mpsc::UnboundedReceiver<String>> {
     EVENT_RECEIVER.lock().await.take()
 }
+
+lazy_static! {
+    pub static ref DYN_EVENT_SENDER: Arc<Mutex<Option<mpsc::UnboundedSender<Box<dyn Any + Send>>>>> =
+        Arc::new(Mutex::new(None));
+    pub static ref DYN_EVENT_RECEIVER: Arc<Mutex<Option<mpsc::UnboundedReceiver<Box<dyn Any + Send>>>>> =
+        Arc::new(Mutex::new(None));
+}
+
+pub async fn initialize_dyn_global_event_channel() {
+    let (tx, rx) = mpsc::unbounded_channel::<Box<dyn Any + Send>>();
+    *crate::global::DYN_EVENT_SENDER.lock().await = Some(tx);
+    *crate::global::DYN_EVENT_RECEIVER.lock().await = Some(rx);
+}
+
+pub async fn get_dyn_event_sender() -> Option<mpsc::UnboundedSender<Box<dyn Any + Send>>> {
+    let lock = crate::global::DYN_EVENT_SENDER.lock().await;
+    lock.clone()
+}
+
+pub async fn get_dyn_event_receiver() -> Option<mpsc::UnboundedReceiver<Box<dyn Any + Send>>> {
+    crate::global::DYN_EVENT_RECEIVER.lock().await.take()
+}

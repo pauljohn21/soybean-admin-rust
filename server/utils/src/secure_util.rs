@@ -46,4 +46,13 @@ mod tests {
             "Password verification should fail for the wrong password"
         );
     }
+
+    #[test]
+    fn test_print_hashed_password() {
+        let password = b"123456";
+        let password_hash = SecureUtil::hash_password(password)
+            .expect("Failed to hash password, check the input and environment setup");
+
+        println!("Hashed password for '123456': {}", password_hash);
+    }
 }

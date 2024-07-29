@@ -1,6 +1,7 @@
 pub use casbin_initialization::initialize_casbin;
 pub use config_initialization::initialize_config;
 pub use db_initialization::{get_primary_db_connection, init_primary_connection};
+pub use event_channel_initialization::initialize_event_channel;
 pub use jwt_initialization::initialize_keys_and_validation;
 pub use log_tracing_init::initialize_log_tracing;
 pub use router_initialization::initialize_admin_router;
@@ -8,6 +9,7 @@ pub use router_initialization::initialize_admin_router;
 mod casbin_initialization;
 mod config_initialization;
 mod db_initialization;
+mod event_channel_initialization;
 mod jwt_initialization;
 mod log_tracing_init;
 mod router_initialization;

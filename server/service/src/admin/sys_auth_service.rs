@@ -6,6 +6,7 @@ use server_core::web::{
     error::AppError,
     jwt::{JwtError, JwtUtils},
 };
+use server_global::global::{get_dyn_event_receiver, get_dyn_event_sender};
 use server_model::admin::{
     entities::{
         prelude::{SysRole, SysUser},
@@ -15,7 +16,7 @@ use server_model::admin::{
     output::{AuthOutput, UserWithDomainAndOrgOutput},
 };
 use server_utils::SecureUtil;
-use tokio::{spawn, sync::mpsc};
+use ulid::Ulid;
 
 use crate::{admin::sys_user_error::UserError, helper::db_helper};
 
@@ -89,6 +90,13 @@ impl TAuthService for SysAuthService {
         .await
         .map_err(AppError::from)?;
 
+        if let Some(sender) = get_dyn_event_sender().await {
+            let auth_output = auth_output.clone();
+            tokio::spawn(async move {
+                let _ = sender.send(Box::new(auth_output));
+            });
+        }
+
         Ok(auth_output)
     }
 }
@@ -113,11 +121,23 @@ pub async fn generate_auth_output(
 
     Ok(AuthOutput {
         access_token: token,
+        refresh_token: Ulid::new().to_string(),
     })
 }
 
-pub async fn start_event_listener(mut rx: mpsc::UnboundedReceiver<String>) {
-    spawn(async move {
+pub async fn handle_login_jwt() {
+    if let Some(mut receiver) = get_dyn_event_receiver().await {
+        while let Some(event) = receiver.recv().await {
+            if let Some(auth_output) = event.downcast_ref::<AuthOutput>() {
+                // TODO Consider storing the token into the database?
+                println!("Received AuthOutput: {:?}", auth_output);
+            }
+        }
+    }
+}
+
+pub async fn start_event_listener(mut rx: tokio::sync::mpsc::UnboundedReceiver<String>) {
+    tokio::spawn(async move {
         while let Some(jwt) = rx.recv().await {
             // TODO Consider storing the token into the database?
             println!("JWT created: {}", jwt);
