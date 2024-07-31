@@ -2842,6 +2842,7 @@ name = "server-utils"
 version = "0.1.0"
 dependencies = [
  "argon2",
+ "lazy_static",
 ]
 
 [[package]]

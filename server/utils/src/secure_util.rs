@@ -4,21 +4,25 @@ use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 };
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref ARGON2: Argon2<'static> = Argon2::default();
+}
 
 pub struct SecureUtil;
 
 impl SecureUtil {
     pub fn hash_password(password: &[u8]) -> Result<String, Box<dyn Error>> {
         let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-        let password_hash = argon2.hash_password(password, &salt)?.to_string();
+        let password_hash = ARGON2.hash_password(password, &salt)?.to_string();
         Ok(password_hash)
     }
 
     pub fn verify_password(password: &[u8], password_hash: &str) -> Result<bool, Box<dyn Error>> {
         let parsed_hash = PasswordHash::new(password_hash)?;
 
-        match Argon2::default().verify_password(password, &parsed_hash) {
+        match ARGON2.verify_password(password, &parsed_hash) {
             Ok(_) => Ok(true),
             Err(e) => Err(Box::new(e)),
         }
