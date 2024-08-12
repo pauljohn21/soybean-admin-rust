@@ -5,8 +5,8 @@ use server_config::Config;
 use server_constant::definition::Audience;
 use server_global::global::get_config;
 use server_middleware::{jwt_auth_middleware, Request, RequestId, RequestIdLayer};
-use server_router::admin::{SysAuthenticationRouter, SysUserRouter};
-use server_service::admin::{SysAuthService, SysUserService};
+use server_router::admin::{SysAuthenticationRouter, SysDomainRouter, SysUserRouter};
+use server_service::admin::{SysAuthService, SysDomainService, SysUserService};
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
 
@@ -55,7 +55,19 @@ pub async fn initialize_admin_router() -> Router {
             .layer(Extension(casbin_axum_layer.clone()))
             .layer(trace_layer.clone())
             .layer(RequestIdLayer)
-            .layer(casbin_axum_layer)
+            .layer(casbin_axum_layer.clone())
+            .layer(axum::middleware::from_fn(move |req, next| {
+                jwt_auth_middleware(req, next, Audience::ManagementPlatform.as_str())
+            })),
+    )
+    .merge(
+        SysDomainRouter::init_domain_router()
+            .await
+            .layer(Extension(Arc::new(SysDomainService)))
+            .layer(Extension(casbin_axum_layer.clone()))
+            .layer(trace_layer.clone())
+            .layer(RequestIdLayer)
+            .layer(casbin_axum_layer.clone())
             .layer(axum::middleware::from_fn(move |req, next| {
                 jwt_auth_middleware(req, next, Audience::ManagementPlatform.as_str())
             })),

@@ -129,7 +129,6 @@ where
                     let mut enforcement_error = false;
 
                     for sub in subject.iter() {
-                        println!("{:?}", vec![sub, &domain, &path, &action]);
                         match lock.enforce_mut(vec![
                             sub.clone(),
                             domain.clone(),
