@@ -79,8 +79,8 @@ pub struct User {
 }
 
 impl User {
-    pub fn subject(&self) -> String {
-        self.user_id.to_string()
+    pub fn subject(&self) -> Vec<String> {
+        self.role.clone()
     }
 
     pub fn domain(&self) -> String {

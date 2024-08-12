@@ -23,7 +23,7 @@ use tower::{Layer, Service};
 
 #[derive(Clone)]
 pub struct CasbinVals {
-    pub subject: String,
+    pub subject: Vec<String>,
     pub domain: Option<String>,
 }
 
@@ -125,47 +125,77 @@ where
             if !vals.subject.is_empty() {
                 if let Some(domain) = vals.domain {
                     let mut lock = cloned_enforcer.write().await;
-                    match lock.enforce_mut(vec![subject, domain, path, action]) {
-                        Ok(true) => {
-                            drop(lock);
-                            Ok(inner.call(req).await?.map(body::Body::new))
+                    let mut authorized = false;
+                    let mut enforcement_error = false;
+
+                    for sub in subject.iter() {
+                        println!("{:?}", vec![sub, &domain, &path, &action]);
+                        match lock.enforce_mut(vec![
+                            sub.clone(),
+                            domain.clone(),
+                            path.clone(),
+                            action.clone(),
+                        ]) {
+                            Ok(true) => {
+                                authorized = true;
+                                break;
+                            }
+                            Ok(false) => continue,
+                            Err(_) => {
+                                enforcement_error = true;
+                                break;
+                            }
                         }
-                        Ok(false) => {
-                            drop(lock);
-                            Ok(Response::builder()
-                                .status(StatusCode::FORBIDDEN)
-                                .body(body::Body::new(Full::from("You do not have the necessary permissions to access this resource. Please contact support if you believe this is an error.")))
-                                .unwrap())
-                        }
-                        Err(_) => {
-                            drop(lock);
-                            Ok(Response::builder()
+                    }
+
+                    drop(lock);
+
+                    if enforcement_error {
+                        Ok(Response::builder()
                                 .status(StatusCode::BAD_GATEWAY)
                                 .body(body::Body::new(Full::from("We encountered an unexpected error while processing your request. Our team has been notified, and we are investigating the issue.")))
                                 .unwrap())
-                        }
+                    } else if authorized {
+                        Ok(inner.call(req).await?.map(body::Body::new))
+                    } else {
+                        Ok(Response::builder()
+                        .status(StatusCode::FORBIDDEN)
+                        .body(body::Body::new(Full::from("You do not have the necessary permissions to access this resource. Please contact support if you believe this is an error.")))
+                        .unwrap())
                     }
                 } else {
                     let mut lock = cloned_enforcer.write().await;
-                    match lock.enforce_mut(vec![subject, path, action]) {
-                        Ok(true) => {
-                            drop(lock);
-                            Ok(inner.call(req).await?.map(body::Body::new))
+                    let mut authorized = false;
+                    let mut enforcement_error = false;
+
+                    for sub in subject.iter() {
+                        match lock.enforce_mut(vec![sub.clone(), path.clone(), action.clone()]) {
+                            Ok(true) => {
+                                authorized = true;
+                                break;
+                            }
+                            Ok(false) => continue,
+                            Err(_) => {
+                                enforcement_error = true;
+                                break;
+                            }
                         }
-                        Ok(false) => {
-                            drop(lock);
-                            Ok(Response::builder()
+                    }
+
+                    drop(lock);
+
+                    if enforcement_error {
+                        Ok(Response::builder()
+                        .status(StatusCode::BAD_GATEWAY)
+                        .body(body::Body::new(Full::from("We encountered an unexpected error while processing your request. Our team has been notified, and we are investigating the issue.")))
+                        .unwrap())
+                    } else if authorized {
+                        Ok(inner.call(req).await?.map(body::Body::new))
+                    } else {
+                        Ok(Response::builder()
                                 .status(StatusCode::FORBIDDEN)
                                 .body(body::Body::new(Full::from("You do not have the necessary permissions to access this resource. Please contact support if you believe this is an error.")))
                                 .unwrap())
-                        }
-                        Err(_) => {
-                            drop(lock);
-                            Ok(Response::builder()
-                                .status(StatusCode::BAD_GATEWAY)
-                                .body(body::Body::new(Full::from("We encountered an unexpected error while processing your request. Our team has been notified, and we are investigating the issue.")))
-                                .unwrap())
-                        }
                     }
                 }
             } else {

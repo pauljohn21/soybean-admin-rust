@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{extract::Query, Extension};
 use axum_casbin::{casbin::MgmtApi, CasbinAxumLayer};
-use server_core::web::{error::AppError, page::PaginatedData, res::Res};
+use server_core::web::{auth::User, error::AppError, page::PaginatedData, res::Res};
 use server_service::admin::{sys_user, SysUserService, TUserService, UserPageRequest};
 
 pub struct SysUserApi;
@@ -17,7 +17,9 @@ impl SysUserApi {
     pub async fn get_paginated_users(
         Query(params): Query<UserPageRequest>,
         Extension(service): Extension<Arc<SysUserService>>,
+        user: User,
     ) -> Result<Res<PaginatedData<sys_user::Model>>, AppError> {
+        print!("user is {:#?}", user);
         service.find_paginated_users(params).await.map(Res::new_data)
     }
 
