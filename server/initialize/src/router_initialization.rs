@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use axum::{body::Body, Extension, Router};
+use axum_casbin::CasbinAxumLayer;
 use server_config::Config;
 use server_constant::definition::Audience;
 use server_global::global::get_config;
@@ -9,6 +10,7 @@ use server_router::admin::{
     SysAuthenticationRouter, SysDomainRouter, SysRoleRouter, SysUserRouter,
 };
 use server_service::admin::{SysAuthService, SysDomainService, SysRoleService, SysUserService};
+use tokio::sync::Mutex;
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
 
@@ -16,11 +18,71 @@ use crate::initialize_casbin;
 
 pub async fn initialize_admin_router() -> Router {
     let app_config = get_config::<Config>().await.unwrap();
-    let casbin_axum_layer =
+    let casbin_axum_layer = Arc::new(Mutex::new(
         initialize_casbin("server/resources/rbac_model.conf", app_config.database.url.as_str())
             .await
-            .unwrap();
+            .unwrap(),
+    ));
 
+    let audience: Audience = Audience::ManagementPlatform; // Adjust this as needed for different audiences
+
+    let mut app = Router::new();
+
+    app = app
+        .merge(
+            configure_router(
+                SysAuthenticationRouter::init_authentication_router().await,
+                Arc::new(SysAuthService),
+                None,
+                false,
+                audience,
+            )
+            .await,
+        )
+        .merge(
+            configure_router(
+                SysUserRouter::init_user_router().await,
+                Arc::new(SysUserService),
+                Some(casbin_axum_layer.clone()),
+                true,
+                audience,
+            )
+            .await,
+        )
+        .merge(
+            configure_router(
+                SysDomainRouter::init_domain_router().await,
+                Arc::new(SysDomainService),
+                Some(casbin_axum_layer.clone()),
+                true,
+                audience,
+            )
+            .await,
+        )
+        .merge(
+            configure_router(
+                SysRoleRouter::init_role_router().await,
+                Arc::new(SysRoleService),
+                Some(casbin_axum_layer.clone()),
+                true,
+                audience,
+            )
+            .await,
+        );
+
+    app
+}
+
+async fn configure_router<S>(
+    router: Router,
+    service: Arc<S>,
+    casbin_layer: Option<Arc<Mutex<CasbinAxumLayer>>>,
+    require_auth: bool,
+    audience: Audience,
+) -> Router
+where
+    S: Send + Sync + 'static,
+{
     let trace_layer = TraceLayer::new_for_http().make_span_with(|request: &Request<Body>| {
         let request_id = request
             .extensions()
@@ -35,55 +97,17 @@ pub async fn initialize_admin_router() -> Router {
         )
     });
 
-    // casbin_axum_layer
-    //     .write()
-    //     .await
-    //     .get_role_manager()
-    //     .write()
-    //     .matching_fn(Some(key_match2), None);
+    let mut router = router.layer(Extension(service)).layer(trace_layer).layer(RequestIdLayer);
 
-    let app = Router::new();
-    app.merge(
-        SysAuthenticationRouter::init_authentication_router()
-            .await
-            .layer(Extension(Arc::new(SysAuthService)))
-            .layer(trace_layer.clone())
-            .layer(RequestIdLayer),
-    )
-    .merge(
-        SysUserRouter::init_user_router()
-            .await
-            .layer(Extension(Arc::new(SysUserService)))
-            .layer(Extension(casbin_axum_layer.clone()))
-            .layer(trace_layer.clone())
-            .layer(RequestIdLayer)
-            .layer(casbin_axum_layer.clone())
-            .layer(axum::middleware::from_fn(move |req, next| {
-                jwt_auth_middleware(req, next, Audience::ManagementPlatform.as_str())
-            })),
-    )
-    .merge(
-        SysDomainRouter::init_domain_router()
-            .await
-            .layer(Extension(Arc::new(SysDomainService)))
-            .layer(Extension(casbin_axum_layer.clone()))
-            .layer(trace_layer.clone())
-            .layer(RequestIdLayer)
-            .layer(casbin_axum_layer.clone())
-            .layer(axum::middleware::from_fn(move |req, next| {
-                jwt_auth_middleware(req, next, Audience::ManagementPlatform.as_str())
-            })),
-    )
-    .merge(
-        SysRoleRouter::init_role_router()
-            .await
-            .layer(Extension(Arc::new(SysRoleService)))
-            .layer(Extension(casbin_axum_layer.clone()))
-            .layer(trace_layer.clone())
-            .layer(RequestIdLayer)
-            .layer(casbin_axum_layer.clone())
-            .layer(axum::middleware::from_fn(move |req, next| {
-                jwt_auth_middleware(req, next, Audience::ManagementPlatform.as_str())
-            })),
-    )
+    if let Some(casbin) = casbin_layer {
+        router = router.layer(Extension(casbin.clone()));
+    }
+
+    if require_auth {
+        router.layer(axum::middleware::from_fn(move |req, next| {
+            jwt_auth_middleware(req, next, audience.as_str())
+        }))
+    } else {
+        router
+    }
 }
