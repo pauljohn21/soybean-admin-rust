@@ -36,8 +36,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(SysUser::Avatar).string_len(255).comment("头像"))
                     .col(ColumnDef::new(SysUser::Email).string_len(64).comment("邮箱"))
                     .col(ColumnDef::new(SysUser::Phone).string_len(64).comment("手机号"))
+                    // TIPS: 枚举项默认应当使用 camelCase，但也允许其他风格。
+                    // 假如大写开头需要引号转义
                     .col(
                         ColumnDef::new(SysUser::Status)
+                            // .enumeration(Alias::new("\"Status\""), Status::iter())
                             .enumeration(Status::Enum, Status::iter())
                             .not_null()
                             .comment("用户状态"),

@@ -49,6 +49,7 @@ impl MigrationTrait for Migration {
 
 #[derive(DeriveIden, EnumIter)]
 pub enum Status {
+    // #[sea_orm(iden = "Status")]
     #[sea_orm(iden = "status")]
     Enum,
     #[sea_orm(iden = "enabled")]
