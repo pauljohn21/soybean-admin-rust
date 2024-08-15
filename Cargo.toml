@@ -2,6 +2,7 @@
 members = ["server/api",
     "axum-casbin",
     "sea-orm-adapter",
+    "migration",
     "server/api", "server/config", "server/core", "server/global", "server/initialize", "server/middleware", "server/model", "server/resource", "server/router", "server/service", "server/utils", "server/bin", "server/constant", "server/shared",
 ]
 exclude = []
@@ -33,7 +34,7 @@ futures = "0.3.30"
 # Web Framework and Middleware
 axum = "0.7.5"
 axum-extra = "0.9.3"
-tower = "0.4.13"
+tower = "0.5.0"
 tower-http = "0.5.2"
 tower-layer = "0.3.2"
 tower-service = "0.3.2"
@@ -50,7 +51,7 @@ validator = "0.18.1"
 casbin = { version = "2.2.0", default-features = false }
 
 # Database ORM and Adapter
-sea-orm = { version = "0.12.15", default-features = false }
+sea-orm = { version = "1.0.0", default-features = false }
 
 # Testing
 axum-test-helpers = "0.7.5"

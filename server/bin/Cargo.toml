@@ -5,6 +5,10 @@ publish.workspace = true
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "server"
+path = "src/main.rs"
+
 [dependencies]
 server-initialize = { path = "../initialize" }
 
