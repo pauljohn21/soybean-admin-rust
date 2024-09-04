@@ -56,7 +56,7 @@ where
 
         Box::pin(async move {
             let vals = CasbinVals {
-                subject: String::from("alice"),
+                subject: vec!["alice".to_string()],
                 domain: None,
             };
             req.extensions_mut().insert(vals);
