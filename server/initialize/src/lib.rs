@@ -5,6 +5,7 @@ pub use event_channel_initialization::initialize_event_channel;
 pub use jwt_initialization::initialize_keys_and_validation;
 pub use log_tracing_init::initialize_log_tracing;
 pub use router_initialization::initialize_admin_router;
+pub use server_initialization::get_server_address;
 
 mod casbin_initialization;
 mod config_initialization;
@@ -13,6 +14,7 @@ mod event_channel_initialization;
 mod jwt_initialization;
 mod log_tracing_init;
 mod router_initialization;
+mod server_initialization;
 
 #[cfg(test)]
 mod tests {

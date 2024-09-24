@@ -51,7 +51,7 @@ impl TAuthService for SysAuthService {
         let db = db_helper::get_db_connection().await?;
 
         let user = select_user_with_domain_and_org_info!(SysUser::find())
-            .filter(sys_user::Column::Username.eq(&input.username))
+            .filter(sys_user::Column::Username.eq(&input.identifier))
             .filter(sys_domain::Column::Code.eq(domain))
             .join(JoinType::InnerJoin, sys_user::Relation::SysDomain.def())
             .join(JoinType::LeftJoin, sys_user::Relation::SysOrganization.def())
