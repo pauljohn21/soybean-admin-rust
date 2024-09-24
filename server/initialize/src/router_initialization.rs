@@ -7,9 +7,11 @@ use server_constant::definition::Audience;
 use server_global::global::get_config;
 use server_middleware::{jwt_auth_middleware, Request, RequestId, RequestIdLayer};
 use server_router::admin::{
-    SysAuthenticationRouter, SysDomainRouter, SysRoleRouter, SysUserRouter,
+    SysAuthenticationRouter, SysDomainRouter, SysMenuRouter, SysRoleRouter, SysUserRouter,
 };
-use server_service::admin::{SysAuthService, SysDomainService, SysRoleService, SysUserService};
+use server_service::admin::{
+    SysAuthService, SysDomainService, SysMenuService, SysRoleService, SysUserService,
+};
 use tokio::sync::Mutex;
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
@@ -33,6 +35,16 @@ pub async fn initialize_admin_router() -> Router {
             configure_router(
                 SysAuthenticationRouter::init_authentication_router().await,
                 Arc::new(SysAuthService),
+                None,
+                false,
+                audience,
+            )
+            .await,
+        )
+        .merge(
+            configure_router(
+                SysMenuRouter::init_menu_router().await,
+                Arc::new(SysMenuService),
                 None,
                 false,
                 audience,

@@ -11,7 +11,8 @@ pub enum MenuType {
     Menu,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
-#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "Status")]
+// TODO pg大小写敏感会存在问题clear
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "\"Status\"")]
 pub enum Status {
     #[sea_orm(string_value = "BANNED")]
     Banned,
