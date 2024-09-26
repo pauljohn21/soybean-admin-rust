@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{body::Body, Extension, Router};
+use axum::{body::Body, http::StatusCode, response::IntoResponse, Extension, Router};
 use axum_casbin::CasbinAxumLayer;
 use server_config::Config;
 use server_constant::definition::Audience;
@@ -80,9 +80,14 @@ pub async fn initialize_admin_router() -> Router {
                 audience,
             )
             .await,
-        );
+        )
+        .fallback(handler_404);
 
     app
+}
+
+async fn handler_404() -> impl IntoResponse {
+    (StatusCode::NOT_FOUND, "nothing to see here")
 }
 
 async fn configure_router<S>(

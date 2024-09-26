@@ -7,6 +7,6 @@ impl SysMenuRouter {
     pub async fn init_menu_router() -> Router {
         let router =
             Router::new().route("/getConstantRoutes", get(SysMenuApi::get_constant_routes));
-        Router::new().nest("/menu", router)
+        Router::new().nest("/route", router)
     }
 }
