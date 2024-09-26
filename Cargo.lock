@@ -306,9 +306,9 @@ checksum = "8b75356056920673b02621b35afd0f7dda9306d03c79a30f5c56c44cf256e3de"
 
 [[package]]
 name = "async-trait"
-version = "0.1.82"
+version = "0.1.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a27b8a3a6e1a44fa4c8baf1f653e4172e81486d4941f2237e20dc2d0cf4ddff1"
+checksum = "721cae7de5c34fbb2acd27e21e6d2cf7b886dce0c27388d46c4e6c47ea4318dd"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -410,9 +410,9 @@ dependencies = [
 
 [[package]]
 name = "axum-test-helpers"
-version = "0.7.5"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "268e061fb54ba4f3fc85bce606d3ddb5705c478c26b0f966084bc886e3e7163f"
+checksum = "ad63ba7228d064b8253a926803917f2048bf5d51cb93d21e19cafc6a6d656d6f"
 dependencies = [
  "axum",
  "bytes",

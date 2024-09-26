@@ -27,7 +27,7 @@ edition = "2021"
 [workspace.dependencies]
 # Asynchronous Runtime and Utilities
 tokio = { version = "1.40.0", default-features = false }
-async-trait = { version = "0.1.82", default-features = false }
+async-trait = { version = "0.1.83", default-features = false }
 async-std = { version = "1.13.0", default-features = false }
 futures = "0.3.30"
 
@@ -54,7 +54,7 @@ casbin = { version = "2.5.0", default-features = false }
 sea-orm = { version = "1.0.1", default-features = false }
 
 # Testing
-axum-test-helpers = "0.7.5"
+axum-test-helpers = "0.7.6"
 
 # Serialization and Deserialization
 serde = "1.0.210"
