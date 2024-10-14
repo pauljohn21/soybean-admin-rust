@@ -19,7 +19,7 @@ panic = 'abort'             # 在遇到 panic 时使程序立即终止，而不�
 split-debuginfo = "unpacked"
 
 [workspace.package]
-authors = ["1571339199@qq.com"]
+authors = ["wang1571339199@outlook.com"]
 publish = false
 version = "0.1.0"
 edition = "2021"

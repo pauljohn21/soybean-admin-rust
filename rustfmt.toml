@@ -1,4 +1,3 @@
-version = "Two"
 use_small_heuristics = "Default"
 max_width = 100          # 与.editorconfig中的Rust部分设置对齐
 hard_tabs = false        # 使用空格代替制表符，对齐.editorconfig设置

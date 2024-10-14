@@ -243,177 +243,131 @@ mod tests {
 
         assert!(adapter.save_policy(e.get_mut_model()).await.is_ok());
 
-        assert!(
-            adapter
-                .remove_policy("", "p", to_owned(vec!["alice", "data1", "read"]))
-                .await
-                .unwrap()
-        );
-        assert!(
-            adapter
-                .remove_policy("", "p", to_owned(vec!["bob", "data2", "write"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .remove_policy("", "p", to_owned(vec!["data2_admin", "data2", "read"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .remove_policy("", "p", to_owned(vec!["data2_admin", "data2", "write"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .remove_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
-                .await
-                .is_ok()
-        );
+        assert!(adapter
+            .remove_policy("", "p", to_owned(vec!["alice", "data1", "read"]))
+            .await
+            .unwrap());
+        assert!(adapter
+            .remove_policy("", "p", to_owned(vec!["bob", "data2", "write"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .remove_policy("", "p", to_owned(vec!["data2_admin", "data2", "read"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .remove_policy("", "p", to_owned(vec!["data2_admin", "data2", "write"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .remove_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
+            .await
+            .is_ok());
 
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["alice", "data1", "read"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["bob", "data2", "write"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["data2_admin", "data2", "read"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["data2_admin", "data2", "write"]))
-                .await
-                .is_ok()
-        );
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["alice", "data1", "read"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["bob", "data2", "write"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["data2_admin", "data2", "read"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["data2_admin", "data2", "write"]))
+            .await
+            .is_ok());
 
-        assert!(
-            adapter
-                .remove_policies(
-                    "",
-                    "p",
-                    vec![
-                        to_owned(vec!["alice", "data1", "read"]),
-                        to_owned(vec!["bob", "data2", "write"]),
-                        to_owned(vec!["data2_admin", "data2", "read"]),
-                        to_owned(vec!["data2_admin", "data2", "write"]),
-                    ],
-                )
-                .await
-                .is_ok()
-        );
+        assert!(adapter
+            .remove_policies(
+                "",
+                "p",
+                vec![
+                    to_owned(vec!["alice", "data1", "read"]),
+                    to_owned(vec!["bob", "data2", "write"]),
+                    to_owned(vec!["data2_admin", "data2", "read"]),
+                    to_owned(vec!["data2_admin", "data2", "write"]),
+                ],
+            )
+            .await
+            .is_ok());
 
-        assert!(
-            adapter
-                .add_policies(
-                    "",
-                    "p",
-                    vec![
-                        to_owned(vec!["alice", "data1", "read"]),
-                        to_owned(vec!["bob", "data2", "write"]),
-                        to_owned(vec!["data2_admin", "data2", "read"]),
-                        to_owned(vec!["data2_admin", "data2", "write"]),
-                    ],
-                )
-                .await
-                .is_ok()
-        );
+        assert!(adapter
+            .add_policies(
+                "",
+                "p",
+                vec![
+                    to_owned(vec!["alice", "data1", "read"]),
+                    to_owned(vec!["bob", "data2", "write"]),
+                    to_owned(vec!["data2_admin", "data2", "read"]),
+                    to_owned(vec!["data2_admin", "data2", "write"]),
+                ],
+            )
+            .await
+            .is_ok());
 
-        assert!(
-            adapter
-                .add_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
-                .await
-                .is_ok()
-        );
+        assert!(adapter
+            .add_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
+            .await
+            .is_ok());
 
-        assert!(
-            adapter
-                .remove_policy("", "p", to_owned(vec!["alice", "data1", "read"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .remove_policy("", "p", to_owned(vec!["bob", "data2", "write"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .remove_policy("", "p", to_owned(vec!["data2_admin", "data2", "read"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .remove_policy("", "p", to_owned(vec!["data2_admin", "data2", "write"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .remove_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
-                .await
-                .is_ok()
-        );
+        assert!(adapter
+            .remove_policy("", "p", to_owned(vec!["alice", "data1", "read"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .remove_policy("", "p", to_owned(vec!["bob", "data2", "write"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .remove_policy("", "p", to_owned(vec!["data2_admin", "data2", "read"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .remove_policy("", "p", to_owned(vec!["data2_admin", "data2", "write"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .remove_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
+            .await
+            .is_ok());
 
-        assert!(
-            !adapter
-                .remove_policy("", "g", to_owned(vec!["alice", "data2_admin", "not_exists"]))
-                .await
-                .unwrap()
-        );
+        assert!(!adapter
+            .remove_policy("", "g", to_owned(vec!["alice", "data2_admin", "not_exists"]))
+            .await
+            .unwrap());
 
-        assert!(
-            adapter
-                .add_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .add_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
-                .await
-                .is_err()
-        );
+        assert!(adapter
+            .add_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .add_policy("", "g", to_owned(vec!["alice", "data2_admin"]))
+            .await
+            .is_err());
 
-        assert!(
-            !adapter
-                .remove_filtered_policy(
-                    "",
-                    "g",
-                    0,
-                    to_owned(vec!["alice", "data2_admin", "not_exists"]),
-                )
-                .await
-                .unwrap()
-        );
+        assert!(!adapter
+            .remove_filtered_policy(
+                "",
+                "g",
+                0,
+                to_owned(vec!["alice", "data2_admin", "not_exists"]),
+            )
+            .await
+            .unwrap());
 
-        assert!(
-            adapter
-                .remove_filtered_policy("", "g", 0, to_owned(vec!["alice", "data2_admin"]))
-                .await
-                .unwrap()
-        );
+        assert!(adapter
+            .remove_filtered_policy("", "g", 0, to_owned(vec!["alice", "data2_admin"]))
+            .await
+            .unwrap());
 
-        assert!(
-            adapter
-                .add_policy("", "g", to_owned(vec!["alice", "data2_admin", "domain1", "domain2"]))
-                .await
-                .is_ok()
-        );
+        assert!(adapter
+            .add_policy("", "g", to_owned(vec!["alice", "data2_admin", "domain1", "domain2"]))
+            .await
+            .is_ok());
         assert!(
             adapter
                 .remove_filtered_policy(
@@ -427,18 +381,14 @@ mod tests {
         );
 
         // GitHub issue: https://github.com/casbin-rs/sqlx-adapter/issues/64
-        assert!(
-            adapter
-                .add_policy("", "g", to_owned(vec!["carol", "data1_admin"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .remove_filtered_policy("", "g", 0, to_owned(vec!["carol"]))
-                .await
-                .unwrap()
-        );
+        assert!(adapter
+            .add_policy("", "g", to_owned(vec!["carol", "data1_admin"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .remove_filtered_policy("", "g", 0, to_owned(vec!["carol"]))
+            .await
+            .unwrap());
         assert_eq!(Vec::<String>::new(), e.get_roles_for_user("carol", None));
 
         // GitHub issue: https://github.com/casbin-rs/sqlx-adapter/pull/90
@@ -449,60 +399,44 @@ mod tests {
         // p, alice_rfp, pen_rfp, get_rfp
         // p, bob_rfp, pen_rfp, get_rfp
         // p, alice_rfp, pencil_rfp, get_rfp
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["alice_rfp", "book_rfp", "read_rfp"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["bob_rfp", "book_rfp", "read_rfp"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["bob_rfp", "book_rfp", "write_rfp"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["alice_rfp", "pen_rfp", "get_rfp"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["bob_rfp", "pen_rfp", "get_rfp"]))
-                .await
-                .is_ok()
-        );
-        assert!(
-            adapter
-                .add_policy("", "p", to_owned(vec!["alice_rfp", "pencil_rfp", "get_rfp"]))
-                .await
-                .is_ok()
-        );
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["alice_rfp", "book_rfp", "read_rfp"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["bob_rfp", "book_rfp", "read_rfp"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["bob_rfp", "book_rfp", "write_rfp"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["alice_rfp", "pen_rfp", "get_rfp"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["bob_rfp", "pen_rfp", "get_rfp"]))
+            .await
+            .is_ok());
+        assert!(adapter
+            .add_policy("", "p", to_owned(vec!["alice_rfp", "pencil_rfp", "get_rfp"]))
+            .await
+            .is_ok());
 
         // should remove (return true) all policies where "book_rfp" is in the second
         // position
-        assert!(
-            adapter
-                .remove_filtered_policy("", "p", 1, to_owned(vec!["book_rfp"]))
-                .await
-                .unwrap()
-        );
+        assert!(adapter
+            .remove_filtered_policy("", "p", 1, to_owned(vec!["book_rfp"]))
+            .await
+            .unwrap());
 
         // should remove (return true) all policies which match "alice_rfp" on first
         // position and "get_rfp" on third position
-        assert!(
-            adapter
-                .remove_filtered_policy("", "p", 0, to_owned(vec!["alice_rfp", "", "get_rfp"]))
-                .await
-                .unwrap()
-        );
+        assert!(adapter
+            .remove_filtered_policy("", "p", 0, to_owned(vec!["alice_rfp", "", "get_rfp"]))
+            .await
+            .unwrap());
 
         // shadow the previous enforcer
         let mut e = Enforcer::new(
