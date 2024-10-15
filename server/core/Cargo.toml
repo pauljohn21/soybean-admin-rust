@@ -10,6 +10,7 @@ server-config = { path = "../config" }
 server-global = { path = "../global" }
 
 serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 axum = { workspace = true }
 validator = { workspace = true, features = ["derive"] }
 jsonwebtoken = { workspace = true }
