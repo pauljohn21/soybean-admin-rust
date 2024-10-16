@@ -53,6 +53,16 @@ pub async fn initialize_admin_router() -> Router {
         )
         .merge(
             configure_router(
+                SysMenuRouter::init_protected_menu_router().await,
+                Arc::new(SysMenuService),
+                Some(casbin_axum_layer.clone()),
+                true,
+                audience,
+            )
+            .await,
+        )
+        .merge(
+            configure_router(
                 SysUserRouter::init_user_router().await,
                 Arc::new(SysUserService),
                 Some(casbin_axum_layer.clone()),
