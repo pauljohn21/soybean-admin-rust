@@ -1,16 +1,24 @@
 use std::sync::Arc;
 
-use axum::{extract::Query, Extension};
+use axum::{
+    extract::{Path, Query},
+    Extension,
+};
 use axum_casbin::{casbin::MgmtApi, CasbinAxumLayer};
-use server_core::web::{auth::User, error::AppError, page::PaginatedData, res::Res};
-use server_service::admin::{sys_user, SysUserService, TUserService, UserPageRequest};
+use server_core::web::{
+    auth::User, error::AppError, page::PaginatedData, res::Res, validator::ValidatedForm,
+};
+use server_service::admin::{
+    CreateUserInput, SysUserService, TUserService, UpdateUserInput, UserPageRequest,
+    UserWithoutPassword,
+};
 
 pub struct SysUserApi;
 
 impl SysUserApi {
     pub async fn get_all_users(
         Extension(service): Extension<Arc<SysUserService>>,
-    ) -> Result<Res<Vec<sys_user::Model>>, AppError> {
+    ) -> Result<Res<Vec<UserWithoutPassword>>, AppError> {
         service.find_all().await.map(Res::new_data)
     }
 
@@ -18,7 +26,7 @@ impl SysUserApi {
         Query(params): Query<UserPageRequest>,
         Extension(service): Extension<Arc<SysUserService>>,
         user: User,
-    ) -> Result<Res<PaginatedData<sys_user::Model>>, AppError> {
+    ) -> Result<Res<PaginatedData<UserWithoutPassword>>, AppError> {
         print!("user is {:#?}", user);
         service.find_paginated_users(params).await.map(Res::new_data)
     }
@@ -51,5 +59,33 @@ impl SysUserApi {
         ];
         let _ = enforcer_write.add_policy(rule).await;
         Res::new_data(true)
+    }
+
+    pub async fn create_user(
+        Extension(service): Extension<Arc<SysUserService>>,
+        ValidatedForm(input): ValidatedForm<CreateUserInput>,
+    ) -> Result<Res<UserWithoutPassword>, AppError> {
+        service.create_user(input).await.map(Res::new_data)
+    }
+
+    pub async fn get_user(
+        Path(id): Path<i64>,
+        Extension(service): Extension<Arc<SysUserService>>,
+    ) -> Result<Res<UserWithoutPassword>, AppError> {
+        service.get_user(id).await.map(Res::new_data)
+    }
+
+    pub async fn update_user(
+        Extension(service): Extension<Arc<SysUserService>>,
+        ValidatedForm(input): ValidatedForm<UpdateUserInput>,
+    ) -> Result<Res<UserWithoutPassword>, AppError> {
+        service.update_user(input).await.map(Res::new_data)
+    }
+
+    pub async fn delete_user(
+        Path(id): Path<i64>,
+        Extension(service): Extension<Arc<SysUserService>>,
+    ) -> Result<Res<()>, AppError> {
+        service.delete_user(id).await.map(Res::new_data)
     }
 }

@@ -9,6 +9,10 @@ pub enum UserError {
     WrongPassword,
     #[error("Authentication failed")]
     AuthenticationFailed,
+    #[error("Username already exists")]
+    UsernameAlreadyExists,
+    #[error("Invalid user status")]
+    InvalidUserStatus,
 }
 
 impl ApiError for UserError {
@@ -17,6 +21,8 @@ impl ApiError for UserError {
             UserError::UserNotFound => 1001,
             UserError::WrongPassword => 1002,
             UserError::AuthenticationFailed => 1003,
+            UserError::UsernameAlreadyExists => 1004,
+            UserError::InvalidUserStatus => 1005,
         }
     }
 

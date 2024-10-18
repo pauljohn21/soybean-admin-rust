@@ -2,7 +2,7 @@ pub use sys_authentication::LoginInput;
 pub use sys_domain::{CreateDomainInput, DomainPageRequest, UpdateDomainInput};
 pub use sys_menu::{CreateMenuInput, UpdateMenuInput};
 pub use sys_role::{CreateRoleInput, RolePageRequest, UpdateRoleInput};
-pub use sys_user::UserPageRequest;
+pub use sys_user::{CreateUserInput, UpdateUserInput, UserPageRequest};
 
 mod sys_authentication;
 mod sys_domain;
