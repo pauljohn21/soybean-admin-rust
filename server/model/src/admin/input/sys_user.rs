@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use server_core::web::page::PageRequest;
 use validator::Validate;
 
+use crate::admin::entities::sea_orm_active_enums::Status;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserPageRequest {
     #[serde(flatten)]
@@ -11,8 +13,7 @@ pub struct UserPageRequest {
 
 #[derive(Deserialize, Validate)]
 pub struct UserInput {
-    pub domain_id: i64,
-    pub org_id: Option<i64>,
+    pub domain: String,
     #[validate(length(
         min = 1,
         max = 50,
@@ -35,20 +36,15 @@ pub struct UserInput {
     #[validate(email(message = "Invalid email format"))]
     pub email: Option<String>,
     #[validate(length(max = 20, message = "Phone number must not exceed 20 characters"))]
-    pub phone: Option<String>,
-    #[validate(length(
-        min = 1,
-        max = 20,
-        message = "Status must be between 1 and 20 characters"
-    ))]
-    pub status: String,
+    pub phone_number: Option<String>,
+    pub status: Status,
 }
 
 pub type CreateUserInput = UserInput;
 
 #[derive(Deserialize, Validate)]
 pub struct UpdateUserInput {
-    pub id: i64,
+    pub id: String,
     #[serde(flatten)]
     pub user: UserInput,
 }

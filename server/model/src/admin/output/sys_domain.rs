@@ -2,8 +2,8 @@ use sea_orm::FromQueryResult;
 
 #[derive(Debug, FromQueryResult)]
 pub struct DomainOutput {
-    pub id: i64,
+    pub id: String,
     pub code: String,
     pub name: String,
-    pub remark: Option<String>,
+    pub description: Option<String>,
 }

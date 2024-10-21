@@ -28,10 +28,10 @@ impl SysDomainApi {
     }
 
     pub async fn get_domain(
-        Path(id): Path<i64>,
+        Path(id): Path<String>,
         Extension(service): Extension<Arc<SysDomainService>>,
     ) -> Result<Res<sys_domain::Model>, AppError> {
-        service.get_domain(id).await.map(Res::new_data)
+        service.get_domain(&id).await.map(Res::new_data)
     }
 
     pub async fn update_domain(
@@ -42,9 +42,9 @@ impl SysDomainApi {
     }
 
     pub async fn delete_domain(
-        Path(id): Path<i64>,
+        Path(id): Path<String>,
         Extension(service): Extension<Arc<SysDomainService>>,
     ) -> Result<Res<()>, AppError> {
-        service.delete_domain(id).await.map(Res::new_data)
+        service.delete_domain(&id).await.map(Res::new_data)
     }
 }

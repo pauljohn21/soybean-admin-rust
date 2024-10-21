@@ -69,10 +69,10 @@ impl SysUserApi {
     }
 
     pub async fn get_user(
-        Path(id): Path<i64>,
+        Path(id): Path<String>,
         Extension(service): Extension<Arc<SysUserService>>,
     ) -> Result<Res<UserWithoutPassword>, AppError> {
-        service.get_user(id).await.map(Res::new_data)
+        service.get_user(&id).await.map(Res::new_data)
     }
 
     pub async fn update_user(
@@ -83,9 +83,9 @@ impl SysUserApi {
     }
 
     pub async fn delete_user(
-        Path(id): Path<i64>,
+        Path(id): Path<String>,
         Extension(service): Extension<Arc<SysUserService>>,
     ) -> Result<Res<()>, AppError> {
-        service.delete_user(id).await.map(Res::new_data)
+        service.delete_user(&id).await.map(Res::new_data)
     }
 }

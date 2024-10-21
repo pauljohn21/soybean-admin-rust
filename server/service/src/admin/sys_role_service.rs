@@ -20,16 +20,16 @@ pub trait TRoleService {
     ) -> Result<PaginatedData<sys_role::Model>, AppError>;
 
     async fn create_role(&self, input: CreateRoleInput) -> Result<sys_role::Model, AppError>;
-    async fn get_role(&self, id: i64) -> Result<sys_role::Model, AppError>;
+    async fn get_role(&self, id: &str) -> Result<sys_role::Model, AppError>;
     async fn update_role(&self, input: UpdateRoleInput) -> Result<sys_role::Model, AppError>;
-    async fn delete_role(&self, id: i64) -> Result<(), AppError>;
+    async fn delete_role(&self, id: &str) -> Result<(), AppError>;
 }
 
 #[derive(Clone)]
 pub struct SysRoleService;
 
 impl SysRoleService {
-    async fn check_role_exists(&self, id: Option<i64>, code: &str) -> Result<(), AppError> {
+    async fn check_role_exists(&self, id: Option<&str>, code: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
         let mut query = SysRole::find().filter(sys_role::Column::Code.eq(code));
 
@@ -86,7 +86,7 @@ impl TRoleService for SysRoleService {
             pid: Set(input.pid),
             code: Set(input.code),
             name: Set(input.name),
-            remark: Set(input.remark),
+            description: Set(input.description),
             ..Default::default()
         };
 
@@ -94,7 +94,7 @@ impl TRoleService for SysRoleService {
         Ok(result)
     }
 
-    async fn get_role(&self, id: i64) -> Result<sys_role::Model, AppError> {
+    async fn get_role(&self, id: &str) -> Result<sys_role::Model, AppError> {
         let db = db_helper::get_db_connection().await?;
         SysRole::find_by_id(id)
             .one(db.as_ref())
@@ -106,9 +106,9 @@ impl TRoleService for SysRoleService {
     async fn update_role(&self, input: UpdateRoleInput) -> Result<sys_role::Model, AppError> {
         let db = db_helper::get_db_connection().await?;
 
-        self.check_role_exists(Some(input.id), &input.role.code).await?;
+        self.check_role_exists(Some(&input.id), &input.role.code).await?;
 
-        let role: sys_role::ActiveModel = SysRole::find_by_id(input.id)
+        let role: sys_role::ActiveModel = SysRole::find_by_id(&input.id)
             .one(db.as_ref())
             .await
             .map_err(AppError::from)?
@@ -116,11 +116,11 @@ impl TRoleService for SysRoleService {
             .into();
 
         let role = sys_role::ActiveModel {
-            id: Set(input.id),
+            id: Set(input.id.clone()),
             pid: Set(input.role.pid),
             code: Set(input.role.code),
             name: Set(input.role.name),
-            remark: Set(input.role.remark),
+            description: Set(input.role.description),
 
             updated_at: Set(Some(Utc::now().naive_utc())),
             ..role
@@ -130,7 +130,7 @@ impl TRoleService for SysRoleService {
         Ok(updated_role)
     }
 
-    async fn delete_role(&self, id: i64) -> Result<(), AppError> {
+    async fn delete_role(&self, id: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
         SysRole::delete_by_id(id).exec(db.as_ref()).await.map_err(AppError::from)?;
         Ok(())

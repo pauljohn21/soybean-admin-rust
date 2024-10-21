@@ -23,15 +23,15 @@ pub struct DomainInput {
         message = "Name must be between 1 and 100 characters"
     ))]
     pub name: String,
-    #[validate(length(max = 500, message = "Remark must not exceed 500 characters"))]
-    pub remark: Option<String>,
+    #[validate(length(max = 500, message = "Description must not exceed 500 characters"))]
+    pub description: Option<String>,
 }
 
 pub type CreateDomainInput = DomainInput;
 
 #[derive(Deserialize, Validate)]
 pub struct UpdateDomainInput {
-    pub id: i64,
+    pub id: String,
     #[serde(flatten)]
     pub domain: DomainInput,
 }

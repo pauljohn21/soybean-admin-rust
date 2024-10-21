@@ -18,9 +18,9 @@ pub trait TDomainService {
     ) -> Result<PaginatedData<sys_domain::Model>, AppError>;
 
     async fn create_domain(&self, input: CreateDomainInput) -> Result<sys_domain::Model, AppError>;
-    async fn get_domain(&self, id: i64) -> Result<sys_domain::Model, AppError>;
+    async fn get_domain(&self, id: &str) -> Result<sys_domain::Model, AppError>;
     async fn update_domain(&self, input: UpdateDomainInput) -> Result<sys_domain::Model, AppError>;
-    async fn delete_domain(&self, id: i64) -> Result<(), AppError>;
+    async fn delete_domain(&self, id: &str) -> Result<(), AppError>;
 }
 
 #[derive(Clone)]
@@ -29,15 +29,16 @@ pub struct SysDomainService;
 impl SysDomainService {
     async fn check_domain_exists(
         &self,
-        id: Option<i64>,
+        id: Option<&str>,
         code: &str,
         name: &str,
     ) -> Result<(), AppError> {
+        let id_str = id.unwrap_or("-1");
         let db = db_helper::get_db_connection().await?;
 
         let code_exists = SysDomain::find()
             .filter(sys_domain::Column::Code.eq(code))
-            .filter(sys_domain::Column::Id.ne(id.unwrap_or(-1)))
+            .filter(sys_domain::Column::Id.ne(id_str))
             .one(db.as_ref())
             .await
             .map_err(AppError::from)?
@@ -49,7 +50,7 @@ impl SysDomainService {
 
         let name_exists = SysDomain::find()
             .filter(sys_domain::Column::Name.eq(name))
-            .filter(sys_domain::Column::Id.ne(id.unwrap_or(-1)))
+            .filter(sys_domain::Column::Id.ne(id_str))
             .one(db.as_ref())
             .await
             .map_err(AppError::from)?
@@ -101,7 +102,7 @@ impl TDomainService for SysDomainService {
         let domain = sys_domain::ActiveModel {
             code: Set(input.code),
             name: Set(input.name),
-            remark: Set(input.remark),
+            description: Set(input.description),
             ..Default::default()
         };
 
@@ -109,7 +110,7 @@ impl TDomainService for SysDomainService {
         Ok(result)
     }
 
-    async fn get_domain(&self, id: i64) -> Result<sys_domain::Model, AppError> {
+    async fn get_domain(&self, id: &str) -> Result<sys_domain::Model, AppError> {
         let db = db_helper::get_db_connection().await?;
         SysDomain::find_by_id(id)
             .one(db.as_ref())
@@ -120,25 +121,25 @@ impl TDomainService for SysDomainService {
 
     async fn update_domain(&self, input: UpdateDomainInput) -> Result<sys_domain::Model, AppError> {
         let db = db_helper::get_db_connection().await?;
-        let existing_domain = self.get_domain(input.id).await?;
+        let existing_domain = self.get_domain(&input.id).await?;
 
         if existing_domain.code == "built-in" {
             return Err(DomainError::BuiltInDomain.into());
         }
 
-        self.check_domain_exists(Some(input.id), &input.domain.code, &input.domain.name)
+        self.check_domain_exists(Some(&input.id), &input.domain.code, &input.domain.name)
             .await?;
 
         let mut domain: sys_domain::ActiveModel = existing_domain.into();
         domain.code = Set(input.domain.code);
         domain.name = Set(input.domain.name);
-        domain.remark = Set(input.domain.remark);
+        domain.description = Set(input.domain.description);
 
         let updated_domain = domain.update(db.as_ref()).await.map_err(AppError::from)?;
         Ok(updated_domain)
     }
 
-    async fn delete_domain(&self, id: i64) -> Result<(), AppError> {
+    async fn delete_domain(&self, id: &str) -> Result<(), AppError> {
         let domain = self.get_domain(id).await?;
 
         if domain.code == "built-in" {

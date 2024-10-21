@@ -27,10 +27,10 @@ impl SysRoleApi {
     }
 
     pub async fn get_role(
-        Path(id): Path<i64>,
+        Path(id): Path<String>,
         Extension(service): Extension<Arc<SysRoleService>>,
     ) -> Result<Res<sys_role::Model>, AppError> {
-        service.get_role(id).await.map(Res::new_data)
+        service.get_role(&id).await.map(Res::new_data)
     }
 
     pub async fn update_role(
@@ -41,9 +41,9 @@ impl SysRoleApi {
     }
 
     pub async fn delete_role(
-        Path(id): Path<i64>,
+        Path(id): Path<String>,
         Extension(service): Extension<Arc<SysRoleService>>,
     ) -> Result<Res<()>, AppError> {
-        service.delete_role(id).await.map(Res::new_data)
+        service.delete_role(&id).await.map(Res::new_data)
     }
 }

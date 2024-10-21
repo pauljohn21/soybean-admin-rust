@@ -10,7 +10,7 @@ use server_global::global::{get_dyn_event_receiver, get_dyn_event_sender};
 use server_model::admin::{
     entities::{
         prelude::{SysRole, SysUser},
-        sys_domain, sys_organization, sys_role, sys_user, sys_user_role,
+        sys_domain, sys_role, sys_user, sys_user_role,
     },
     input::LoginInput,
     output::{AuthOutput, UserWithDomainAndOrgOutput},
@@ -25,16 +25,13 @@ macro_rules! select_user_with_domain_and_org_info {
         $query
             .select_only()
             .column_as(sys_user::Column::Id, "id")
-            .column_as(sys_user::Column::DomainId, "domain_id")
-            .column_as(sys_user::Column::OrgId, "org_id")
+            .column_as(sys_user::Column::Domain, "domain")
             .column_as(sys_user::Column::Username, "username")
             .column_as(sys_user::Column::Password, "password")
             .column_as(sys_user::Column::NickName, "nick_name")
             .column_as(sys_user::Column::Avatar, "avatar")
             .column_as(sys_domain::Column::Code, "domain_code")
             .column_as(sys_domain::Column::Name, "domain_name")
-            .column_as(sys_organization::Column::Id, "organization_id")
-            .column_as(sys_organization::Column::Name, "organization_name")
     }};
 }
 #[async_trait]
@@ -54,7 +51,6 @@ impl TAuthService for SysAuthService {
             .filter(sys_user::Column::Username.eq(&input.identifier))
             .filter(sys_domain::Column::Code.eq(domain))
             .join(JoinType::InnerJoin, sys_user::Relation::SysDomain.def())
-            .join(JoinType::LeftJoin, sys_user::Relation::SysOrganization.def())
             .into_model::<UserWithDomainAndOrgOutput>()
             .one(db.as_ref())
             .await
@@ -67,10 +63,12 @@ impl TAuthService for SysAuthService {
             return Err(AppError::from(UserError::WrongPassword));
         }
 
+        let user_id = &user.id;
+
         let role_codes: Vec<String> = SysRole::find()
             .join(JoinType::InnerJoin, sys_role::Relation::SysUserRole.def())
             .join(JoinType::InnerJoin, sys_user_role::Relation::SysUser.def())
-            .filter(sys_user::Column::Id.eq(user.id))
+            .filter(sys_user::Column::Id.eq(user_id))
             .all(db.as_ref())
             .await
             .map_err(AppError::from)?
@@ -79,11 +77,11 @@ impl TAuthService for SysAuthService {
             .collect();
 
         let auth_output = generate_auth_output(
-            user.id,
+            user_id.clone(),
             user.username,
             role_codes,
             user.domain_code,
-            user.organization_name,
+            None,
         )
         .await
         .map_err(AppError::from)?;
@@ -100,14 +98,14 @@ impl TAuthService for SysAuthService {
 }
 
 pub async fn generate_auth_output(
-    user_id: i64,
+    user_id: String,
     username: String,
     role_codes: Vec<String>,
     domain_code: String,
     organization_name: Option<String>,
 ) -> Result<AuthOutput, JwtError> {
     let claims = Claims::new(
-        user_id.to_string(),
+        user_id,
         Audience::ManagementPlatform.as_str().to_string(),
         username,
         role_codes,

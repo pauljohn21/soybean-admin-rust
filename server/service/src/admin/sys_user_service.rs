@@ -22,9 +22,9 @@ pub trait TUserService {
     ) -> Result<PaginatedData<UserWithoutPassword>, AppError>;
 
     async fn create_user(&self, input: CreateUserInput) -> Result<UserWithoutPassword, AppError>;
-    async fn get_user(&self, id: i64) -> Result<UserWithoutPassword, AppError>;
+    async fn get_user(&self, id: &str) -> Result<UserWithoutPassword, AppError>;
     async fn update_user(&self, input: UpdateUserInput) -> Result<UserWithoutPassword, AppError>;
-    async fn delete_user(&self, id: i64) -> Result<(), AppError>;
+    async fn delete_user(&self, id: &str) -> Result<(), AppError>;
 }
 
 #[derive(Clone)]
@@ -45,7 +45,7 @@ impl SysUserService {
         Ok(())
     }
 
-    async fn get_user_by_id(&self, id: i64) -> Result<sys_user::Model, AppError> {
+    async fn get_user_by_id(&self, id: String) -> Result<sys_user::Model, AppError> {
         let db = db_helper::get_db_connection().await?;
         SysUser::find_by_id(id)
             .one(db.as_ref())
@@ -102,15 +102,14 @@ impl TUserService for SysUserService {
 
         let db = db_helper::get_db_connection().await?;
         let user = sys_user::ActiveModel {
-            domain_id: Set(input.domain_id),
-            org_id: Set(input.org_id),
+            domain: Set(input.domain),
             username: Set(input.username),
             password: Set(input.password), /* Note: In a real application, you should hash the
                                             * password */
             nick_name: Set(input.nick_name),
             avatar: Set(input.avatar),
             email: Set(input.email),
-            phone: Set(input.phone),
+            phone_number: Set(input.phone_number),
             status: Set(input.status),
             ..Default::default()
         };
@@ -119,7 +118,7 @@ impl TUserService for SysUserService {
         Ok(UserWithoutPassword::from(user_model))
     }
 
-    async fn get_user(&self, id: i64) -> Result<UserWithoutPassword, AppError> {
+    async fn get_user(&self, id: &str) -> Result<UserWithoutPassword, AppError> {
         let db = db_helper::get_db_connection().await?;
         SysUser::find_by_id(id)
             .one(db.as_ref())
@@ -138,14 +137,13 @@ impl TUserService for SysUserService {
         }
 
         // Update fields
-        user.domain_id = Set(input.user.domain_id);
-        user.org_id = Set(input.user.org_id);
+        user.domain = Set(input.user.domain);
         user.username = Set(input.user.username);
         user.password = Set(input.user.password); // Note: In a real application, you should hash the password
         user.nick_name = Set(input.user.nick_name);
         user.avatar = Set(input.user.avatar);
         user.email = Set(input.user.email);
-        user.phone = Set(input.user.phone);
+        user.phone_number = Set(input.user.phone_number);
         user.status = Set(input.user.status);
 
         let db = db_helper::get_db_connection().await?;
@@ -153,7 +151,7 @@ impl TUserService for SysUserService {
         Ok(UserWithoutPassword::from(updated_user))
     }
 
-    async fn delete_user(&self, id: i64) -> Result<(), AppError> {
+    async fn delete_user(&self, id: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
 
         let result = SysUser::delete_by_id(id).exec(db.as_ref()).await.map_err(AppError::from)?;
