@@ -131,15 +131,13 @@ impl TUserService for SysUserService {
     async fn update_user(&self, input: UpdateUserInput) -> Result<UserWithoutPassword, AppError> {
         let mut user = self.get_user_by_id(input.id).await?.into_active_model();
 
-        // Check if username has changed and if so, check for uniqueness
         if input.user.username != *user.username.as_ref() {
             self.check_username_unique(&input.user.username).await?;
         }
 
-        // Update fields
         user.domain = Set(input.user.domain);
         user.username = Set(input.user.username);
-        user.password = Set(input.user.password); // Note: In a real application, you should hash the password
+        user.password = Set(input.user.password); // TODO: Note: In a real application, you should hash the password
         user.nick_name = Set(input.user.nick_name);
         user.avatar = Set(input.user.avatar);
         user.email = Set(input.user.email);
