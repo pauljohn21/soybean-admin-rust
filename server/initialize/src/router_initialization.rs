@@ -12,7 +12,6 @@ use server_router::admin::{
 use server_service::admin::{
     SysAuthService, SysDomainService, SysMenuService, SysRoleService, SysUserService,
 };
-use tokio::sync::Mutex;
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
 
@@ -20,11 +19,10 @@ use crate::initialize_casbin;
 
 pub async fn initialize_admin_router() -> Router {
     let app_config = get_config::<Config>().await.unwrap();
-    let casbin_axum_layer = Arc::new(Mutex::new(
+    let casbin_axum_layer =
         initialize_casbin("server/resources/rbac_model.conf", app_config.database.url.as_str())
             .await
-            .unwrap(),
-    ));
+            .unwrap();
 
     let audience: Audience = Audience::ManagementPlatform; // Adjust this as needed for different audiences
 
@@ -103,7 +101,7 @@ async fn handler_404() -> impl IntoResponse {
 async fn configure_router<S>(
     router: Router,
     service: Arc<S>,
-    casbin_layer: Option<Arc<Mutex<CasbinAxumLayer>>>,
+    casbin_layer: Option<CasbinAxumLayer>,
     require_auth: bool,
     audience: Audience,
 ) -> Router
@@ -127,7 +125,7 @@ where
     let mut router = router.layer(Extension(service)).layer(trace_layer).layer(RequestIdLayer);
 
     if let Some(casbin) = casbin_layer {
-        router = router.layer(Extension(casbin.clone()));
+        router = router.layer(casbin.clone());
     }
 
     if require_auth {
