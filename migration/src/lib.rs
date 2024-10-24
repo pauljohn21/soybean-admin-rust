@@ -29,6 +29,7 @@ impl MigratorTrait for Migrator {
             Box::new(datas::m20241024_034744_insert_sys_menu::Migration),
             Box::new(datas::m20241024_033933_insert_sys_user_role::Migration),
             Box::new(datas::m20241024_034305_insert_sys_role_menu::Migration),
+            Box::new(datas::m20241024_082926_insert_casbin_rule::Migration),
         ]
     }
 }
