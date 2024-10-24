@@ -25,6 +25,7 @@ tracing = { workspace = true, features = ["log"] }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 tracing-error = { workspace = true }
 tracing-log = { workspace = true }
+chrono = { workspace = true }
 
 [dev-dependencies]
 server-core = { path = "../core" }
@@ -39,4 +40,3 @@ bytes = { workspace = true }
 simplelog = { workspace = true }
 simple_logger = { workspace = true }
 jsonwebtoken = { workspace = true }
-chrono = { workspace = true }

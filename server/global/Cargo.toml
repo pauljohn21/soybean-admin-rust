@@ -11,3 +11,4 @@ sea-orm = { workspace = true }
 tokio = { workspace = true, default-features = false, features = ["full"] }
 jsonwebtoken = { workspace = true }
 lazy_static = { workspace = true }
+http = { workspace = true }  # 替换 axum 为 http

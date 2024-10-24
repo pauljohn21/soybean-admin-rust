@@ -2913,6 +2913,7 @@ dependencies = [
 name = "server-global"
 version = "0.1.0"
 dependencies = [
+ "http 1.1.0",
  "jsonwebtoken",
  "lazy_static",
  "once_cell",
@@ -2993,6 +2994,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "server-api",
+ "server-global",
 ]
 
 [[package]]

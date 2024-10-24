@@ -1,16 +1,18 @@
-use std::sync::Arc;
+use std::{fmt::Write, sync::Arc};
 
 use axum::{body::Body, http::StatusCode, response::IntoResponse, Extension, Router};
 use axum_casbin::CasbinAxumLayer;
+use chrono::Utc;
 use server_config::Config;
 use server_constant::definition::Audience;
-use server_global::global::get_config;
+use server_global::global::{clear_routes, get_collected_routes, get_config};
 use server_middleware::{jwt_auth_middleware, Request, RequestId, RequestIdLayer};
 use server_router::admin::{
     SysAuthenticationRouter, SysDomainRouter, SysMenuRouter, SysRoleRouter, SysUserRouter,
 };
-use server_service::admin::{
-    SysAuthService, SysDomainService, SysMenuService, SysRoleService, SysUserService,
+use server_service::{
+    admin::{SysAuthService, SysDomainService, SysMenuService, SysRoleService, SysUserService},
+    SysEndpoint,
 };
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
@@ -18,6 +20,8 @@ use tracing::info_span;
 use crate::initialize_casbin;
 
 pub async fn initialize_admin_router() -> Router {
+    clear_routes().await;
+
     let app_config = get_config::<Config>().await.unwrap();
     let casbin_axum_layer =
         initialize_casbin("server/resources/rbac_model.conf", app_config.database.url.as_str())
@@ -91,6 +95,8 @@ pub async fn initialize_admin_router() -> Router {
         )
         .fallback(handler_404);
 
+    process_collected_routes().await;
+
     app
 }
 
@@ -135,4 +141,55 @@ where
     } else {
         router
     }
+}
+
+async fn process_collected_routes() {
+    let routes = get_collected_routes().await;
+    let endpoints: Vec<SysEndpoint> = routes
+        .into_iter()
+        .map(|route| {
+            let resource = route.path.split('/').nth(1).unwrap_or("").to_string();
+            SysEndpoint {
+                id: generate_id(&route.path, &route.method.to_string()),
+                path: route.path.clone(),
+                method: route.method.to_string(),
+                action: "rw".to_string(),
+                resource,
+                controller: route.service_name,
+                summary: None,
+                created_at: Utc::now().naive_utc(),
+                updated_at: None,
+            }
+        })
+        .collect();
+
+    println!("Collected Endpoints:");
+    for endpoint in &endpoints {
+        let mut output = String::new();
+        writeln!(output, "ID: {}", endpoint.id).unwrap();
+        writeln!(output, "Path: {}", endpoint.path).unwrap();
+        writeln!(output, "Method: {}", endpoint.method).unwrap();
+        writeln!(output, "Action: {}", endpoint.action).unwrap();
+        writeln!(output, "Resource: {}", endpoint.resource).unwrap();
+        writeln!(output, "Controller: {}", endpoint.controller).unwrap();
+        writeln!(output, "Summary: {:?}", endpoint.summary).unwrap();
+        writeln!(output, "Created At: {}", endpoint.created_at).unwrap();
+        writeln!(output, "Updated At: {:?}", endpoint.updated_at).unwrap();
+        writeln!(output, "---").unwrap();
+        print!("{}", output);
+    }
+
+    // 调用服务处理端点信息（入库操作）
+    // SysEndpointService::handle_endpoints(endpoints).await;
+}
+
+fn generate_id(path: &str, method: &str) -> String {
+    use std::{
+        collections::hash_map::DefaultHasher,
+        hash::{Hash, Hasher},
+    };
+
+    let mut hasher = DefaultHasher::new();
+    format!("{}{}", path, method).hash(&mut hasher);
+    format!("{:x}", hasher.finish())
 }

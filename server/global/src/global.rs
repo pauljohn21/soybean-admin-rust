@@ -4,6 +4,7 @@ use std::{
     sync::Arc,
 };
 
+use http::Method;
 use jsonwebtoken::{DecodingKey, EncodingKey, Validation};
 use lazy_static::lazy_static;
 use once_cell::sync::Lazy;
@@ -96,4 +97,37 @@ pub async fn get_dyn_event_sender() -> Option<mpsc::UnboundedSender<Box<dyn Any 
 
 pub async fn get_dyn_event_receiver() -> Option<mpsc::UnboundedReceiver<Box<dyn Any + Send>>> {
     crate::global::DYN_EVENT_RECEIVER.lock().await.take()
+}
+
+#[derive(Clone, Debug)]
+pub struct RouteInfo {
+    pub path: String,
+    pub method: Method,
+    pub service_name: String,
+}
+
+impl RouteInfo {
+    pub fn new(path: &str, method: Method, service_name: &str) -> Self {
+        RouteInfo {
+            path: path.to_string(),
+            method,
+            service_name: service_name.to_string(),
+        }
+    }
+}
+
+lazy_static! {
+    pub static ref ROUTE_COLLECTOR: Arc<Mutex<Vec<RouteInfo>>> = Arc::new(Mutex::new(Vec::new()));
+}
+
+pub async fn add_route(route: RouteInfo) {
+    ROUTE_COLLECTOR.lock().await.push(route);
+}
+
+pub async fn get_collected_routes() -> Vec<RouteInfo> {
+    ROUTE_COLLECTOR.lock().await.clone()
+}
+
+pub async fn clear_routes() {
+    ROUTE_COLLECTOR.lock().await.clear();
 }
