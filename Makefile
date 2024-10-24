@@ -38,13 +38,22 @@ default: fmt run-server
 # 声明所有任务为伪目标
 .PHONY: fmt run-server run-migration migrate-up migrate-down build test clean generate-migration
 
-# 生成新的迁移文件
+# 生成表结构迁移文件
 # 用法: make generate-migration name=table_name
 # 例如: make generate-migration name=sys_role
-generate-migration:
+generate-schema-migration:
 	@if [ -z "$(name)" ]; then \
-		echo "Error: Please provide a name for the migration."; \
-		echo "Usage: make generate-migration name=table_name"; \
+		echo "Error: Please provide a name for the schema migration."; \
+		echo "Usage: make generate-schema-migration name=table_name"; \
 		exit 1; \
 	fi
-	sea-orm-cli migrate generate --migration-dir migration/src/migrations create_$(name)
+	sea-orm-cli migrate generate --migration-dir migration/src/schemas create_$(name)
+
+# 生成数据迁移文件
+generate-data-migration:
+	@if [ -z "$(name)" ]; then \
+		echo "Error: Please provide a name for the data migration."; \
+		echo "Usage: make generate-data-migration name=insert_default_data"; \
+		exit 1; \
+	fi
+	sea-orm-cli migrate generate --migration-dir migration/src/datas insert_$(name)
