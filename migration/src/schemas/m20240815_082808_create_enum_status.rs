@@ -61,11 +61,11 @@ impl MigrationTrait for Migration {
 pub enum Status {
     #[sea_orm(iden = "Status")]
     Enum,
-    #[sea_orm(iden = "enabled")]
+    #[sea_orm(iden = "ENABLED")]
     ENABLED,
-    #[sea_orm(iden = "disabled")]
+    #[sea_orm(iden = "DISABLED")]
     DISABLED,
-    #[sea_orm(iden = "banned")]
+    #[sea_orm(iden = "BANNED")]
     BANNED,
 }
 
