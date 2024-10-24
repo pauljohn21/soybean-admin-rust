@@ -10,7 +10,7 @@ impl SysUserRouter {
     pub async fn init_user_router() -> Router {
         let router = Router::new()
             .route("/users", get(SysUserApi::get_all_users))
-            .route("/", get(SysUserApi::get_paginated_users))
+            .route("/list", get(SysUserApi::get_paginated_users))
             .route("/", post(SysUserApi::create_user))
             .route("/:id", get(SysUserApi::get_user))
             .route("/", put(SysUserApi::update_user))
