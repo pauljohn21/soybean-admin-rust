@@ -11,22 +11,29 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let db = manager.get_connection();
-        // let schema = Schema::new(DbBackend::Postgres);
 
         match db.get_database_backend() {
             DbBackend::MySql | DbBackend::Sqlite => {}
             DbBackend::Postgres => {
+                // Create Status enum
                 manager
                     .create_type(
                         Type::create()
-                            .as_enum(Status::Enum)
+                            .as_enum(Alias::new("Status"))
                             .values([Status::ENABLED, Status::DISABLED, Status::BANNED])
                             .to_owned(),
                     )
                     .await?;
 
-                // manager.create_type(schema.
-                // create_enum_from_active_enum::<StatusEnum>()).await?;
+                // Create MenuType enum
+                manager
+                    .create_type(
+                        Type::create()
+                            .as_enum(Alias::new("MenuType"))
+                            .values([MenuType::DIRECTORY, MenuType::MENU])
+                            .to_owned(),
+                    )
+                    .await?;
             }
         }
 
@@ -39,7 +46,10 @@ impl MigrationTrait for Migration {
         match db.get_database_backend() {
             DbBackend::MySql | DbBackend::Sqlite => {}
             DbBackend::Postgres => {
-                manager.drop_type(Type::drop().name(Status::Enum).to_owned()).await?;
+                // Drop Status enum
+                manager.drop_type(Type::drop().name(Alias::new("Status")).to_owned()).await?;
+                // Drop MenuType enum
+                manager.drop_type(Type::drop().name(Alias::new("MenuType")).to_owned()).await?;
             }
         }
 
@@ -49,8 +59,7 @@ impl MigrationTrait for Migration {
 
 #[derive(DeriveIden, EnumIter)]
 pub enum Status {
-    // #[sea_orm(iden = "Status")]
-    #[sea_orm(iden = "status")]
+    #[sea_orm(iden = "Status")]
     Enum,
     #[sea_orm(iden = "enabled")]
     ENABLED,
@@ -60,14 +69,12 @@ pub enum Status {
     BANNED,
 }
 
-// https://www.sea-ql.org/SeaORM/docs/generate-entity/enumeration/#postgres
-// #[derive(EnumIter, DeriveActiveEnum)]
-// #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "Status")]
-// pub enum StatusEnum {
-//     #[sea_orm(string_value = "enabled")]
-//     ENABLED,
-//     #[sea_orm(string_value = "disabled")]
-//     DISABLED,
-//     #[sea_orm(string_value = "banned")]
-//     BANNED,
-// }
+#[derive(DeriveIden, EnumIter)]
+pub enum MenuType {
+    #[sea_orm(iden = "MenuType")]
+    Enum,
+    #[sea_orm(iden = "directory")]
+    DIRECTORY,
+    #[sea_orm(iden = "menu")]
+    MENU,
+}

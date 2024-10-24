@@ -15,38 +15,42 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(SysUser::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(SysUser::Id).big_integer().auto_increment().primary_key())
-                    .col(ColumnDef::new(SysUser::DomainId).big_integer().not_null().comment("域ID"))
-                    .col(ColumnDef::new(SysUser::OrgId).big_integer().comment("组织ID"))
+                    .col(ColumnDef::new(SysUser::Id).string().not_null().primary_key())
                     .col(
                         ColumnDef::new(SysUser::Username)
-                            .string_len(64)
+                            .string()
                             .not_null()
+                            .unique_key()
                             .comment("用户名"),
                     )
+                    .col(ColumnDef::new(SysUser::Password).string().not_null().comment("密码"))
+                    .col(ColumnDef::new(SysUser::Domain).string().not_null().comment("域"))
+                    .col(ColumnDef::new(SysUser::BuiltIn).boolean().not_null().comment("是否内置"))
+                    .col(ColumnDef::new(SysUser::Avatar).string().comment("头像"))
+                    .col(ColumnDef::new(SysUser::Email).string().unique_key().comment("邮箱"))
                     .col(
-                        ColumnDef::new(SysUser::Password)
-                            .string_len(255)
-                            .not_null()
-                            .comment("密码"),
+                        ColumnDef::new(SysUser::PhoneNumber)
+                            .string()
+                            .unique_key()
+                            .comment("手机号"),
                     )
-                    .col(
-                        ColumnDef::new(SysUser::NickName).string_len(64).not_null().comment("昵称"),
-                    )
-                    .col(ColumnDef::new(SysUser::Avatar).string_len(255).comment("头像"))
-                    .col(ColumnDef::new(SysUser::Email).string_len(64).comment("邮箱"))
-                    .col(ColumnDef::new(SysUser::Phone).string_len(64).comment("手机号"))
-                    // TIPS: 枚举项默认应当使用 camelCase，但也允许其他风格。
-                    // 假如大写开头需要引号转义
+                    .col(ColumnDef::new(SysUser::NickName).string().not_null().comment("昵称"))
                     .col(
                         ColumnDef::new(SysUser::Status)
-                            // .enumeration(Alias::new("\"Status\""), Status::iter())
-                            .enumeration(Status::Enum, Status::iter())
+                            .enumeration(Alias::new("\"Status\""), Status::iter())
                             .not_null()
                             .comment("用户状态"),
                     )
-                    .col(ColumnDef::new(SysUser::CreatedAt).timestamp())
+                    .col(
+                        ColumnDef::new(SysUser::CreatedAt)
+                            .timestamp()
+                            .not_null()
+                            .default(Expr::current_timestamp())
+                            .comment("创建时间"),
+                    )
+                    .col(ColumnDef::new(SysUser::CreatedBy).string().not_null())
                     .col(ColumnDef::new(SysUser::UpdatedAt).timestamp())
+                    .col(ColumnDef::new(SysUser::UpdatedBy).string())
                     .to_owned(),
             )
             .await?;
@@ -57,7 +61,7 @@ impl MigrationTrait for Migration {
                 Index::create()
                     .table(SysUser::Table)
                     .name("idx_sys_user_domain_id")
-                    .col(SysUser::DomainId)
+                    .col(SysUser::Domain)
                     .to_owned(),
             )
             .await?;
@@ -85,15 +89,17 @@ impl MigrationTrait for Migration {
 pub enum SysUser {
     Table,
     Id,
-    DomainId,
-    OrgId,
     Username,
     Password,
-    NickName,
+    Domain,
+    BuiltIn,
     Avatar,
     Email,
-    Phone,
+    PhoneNumber,
+    NickName,
     Status,
     CreatedAt,
+    CreatedBy,
     UpdatedAt,
+    UpdatedBy,
 }

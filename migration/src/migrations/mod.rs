@@ -1,2 +1,0 @@
-pub mod m20240815_082808_create_enum_status;
-pub mod m20240815_082854_create_sys_user;
