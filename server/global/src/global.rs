@@ -104,14 +104,16 @@ pub struct RouteInfo {
     pub path: String,
     pub method: Method,
     pub service_name: String,
+    pub summary: String,
 }
 
 impl RouteInfo {
-    pub fn new(path: &str, method: Method, service_name: &str) -> Self {
+    pub fn new(path: &str, method: Method, service_name: &str, summary: &str) -> Self {
         RouteInfo {
             path: path.to_string(),
             method,
             service_name: service_name.to_string(),
+            summary: summary.to_string(),
         }
     }
 }

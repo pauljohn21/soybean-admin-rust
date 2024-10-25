@@ -14,14 +14,39 @@ impl SysUserRouter {
         let service_name = "SysUserApi";
 
         let routes = vec![
-            RouteInfo::new(&format!("{}/users", base_path), Method::GET, service_name),
-            RouteInfo::new(&format!("{}/list", base_path), Method::GET, service_name),
-            RouteInfo::new(base_path, Method::POST, service_name),
-            RouteInfo::new(&format!("{}/:id", base_path), Method::GET, service_name),
-            RouteInfo::new(base_path, Method::PUT, service_name),
-            RouteInfo::new(&format!("{}/:id", base_path), Method::DELETE, service_name),
-            RouteInfo::new(&format!("{}/add_policies", base_path), Method::GET, service_name),
-            RouteInfo::new(&format!("{}/remove_policies", base_path), Method::GET, service_name),
+            RouteInfo::new(
+                &format!("{}/users", base_path),
+                Method::GET,
+                service_name,
+                "获取所有用户",
+            ),
+            RouteInfo::new(
+                &format!("{}/list", base_path),
+                Method::GET,
+                service_name,
+                "获取用户列表",
+            ),
+            RouteInfo::new(base_path, Method::POST, service_name, "创建用户"),
+            RouteInfo::new(
+                &format!("{}/:id", base_path),
+                Method::GET,
+                service_name,
+                "获取用户详情",
+            ),
+            RouteInfo::new(base_path, Method::PUT, service_name, "更新用户"),
+            RouteInfo::new(&format!("{}/:id", base_path), Method::DELETE, service_name, "删除用户"),
+            RouteInfo::new(
+                &format!("{}/add_policies", base_path),
+                Method::GET,
+                service_name,
+                "添加用户策略",
+            ),
+            RouteInfo::new(
+                &format!("{}/remove_policies", base_path),
+                Method::GET,
+                service_name,
+                "删除用户策略",
+            ),
         ];
 
         for route in routes {

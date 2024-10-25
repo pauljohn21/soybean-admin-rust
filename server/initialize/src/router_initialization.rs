@@ -159,7 +159,7 @@ async fn process_collected_routes() {
                 action: "rw".to_string(),
                 resource,
                 controller: route.service_name,
-                summary: None,
+                summary: Some(route.summary),
                 created_at: Utc::now().naive_utc(),
                 updated_at: None,
             }
