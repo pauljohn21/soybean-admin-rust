@@ -8,7 +8,8 @@ use server_constant::definition::Audience;
 use server_global::global::{clear_routes, get_collected_routes, get_config};
 use server_middleware::{jwt_auth_middleware, Request, RequestId, RequestIdLayer};
 use server_router::admin::{
-    SysAuthenticationRouter, SysDomainRouter, SysMenuRouter, SysRoleRouter, SysUserRouter,
+    SysAuthenticationRouter, SysDomainRouter, SysEndpointRouter, SysMenuRouter, SysRoleRouter,
+    SysUserRouter,
 };
 use server_service::{
     admin::{
@@ -90,6 +91,16 @@ pub async fn initialize_admin_router() -> Router {
             configure_router(
                 SysRoleRouter::init_role_router().await,
                 Arc::new(SysRoleService),
+                Some(casbin_axum_layer.clone()),
+                true,
+                audience,
+            )
+            .await,
+        )
+        .merge(
+            configure_router(
+                SysEndpointRouter::init_endpoint_router().await,
+                Arc::new(SysEndpointService),
                 Some(casbin_axum_layer.clone()),
                 true,
                 audience,

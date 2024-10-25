@@ -1,8 +1,8 @@
 pub use errors::*;
 pub use server_model::admin::{
     entities::{
-        prelude::{SysDomain, SysMenu, SysRole, SysUser},
-        sys_domain, sys_menu, sys_role, sys_user,
+        prelude::{SysDomain, SysEndpoint, SysMenu, SysRole, SysUser},
+        sys_domain, sys_endpoint, sys_menu, sys_role, sys_user,
     },
     input::*,
     output::*,

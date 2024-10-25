@@ -15,7 +15,7 @@ use crate::helper::db_helper;
 #[async_trait]
 pub trait TEndpointService {
     async fn sync_endpoints(&self, endpoints: Vec<sys_endpoint::Model>) -> Result<(), AppError>;
-    async fn find_paginated(
+    async fn find_paginated_endpoints(
         &self,
         params: EndpointPageRequest,
     ) -> Result<PaginatedData<sys_endpoint::Model>, AppError>;
@@ -110,7 +110,7 @@ impl TEndpointService for SysEndpointService {
         Ok(())
     }
 
-    async fn find_paginated(
+    async fn find_paginated_endpoints(
         &self,
         params: EndpointPageRequest,
     ) -> Result<PaginatedData<sys_endpoint::Model>, AppError> {
