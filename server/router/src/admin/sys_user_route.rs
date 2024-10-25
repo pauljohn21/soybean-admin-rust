@@ -1,13 +1,33 @@
 use axum::{
+    http::Method,
     routing::{delete, get, post, put},
     Router,
 };
 use server_api::admin::SysUserApi;
+use server_global::global::{add_route, RouteInfo};
 
 pub struct SysUserRouter;
 
 impl SysUserRouter {
     pub async fn init_user_router() -> Router {
+        let base_path = "/user";
+        let service_name = "SysUserApi";
+
+        let routes = vec![
+            RouteInfo::new(&format!("{}/users", base_path), Method::GET, service_name),
+            RouteInfo::new(&format!("{}/list", base_path), Method::GET, service_name),
+            RouteInfo::new(base_path, Method::POST, service_name),
+            RouteInfo::new(&format!("{}/:id", base_path), Method::GET, service_name),
+            RouteInfo::new(base_path, Method::PUT, service_name),
+            RouteInfo::new(&format!("{}/:id", base_path), Method::DELETE, service_name),
+            RouteInfo::new(&format!("{}/add_policies", base_path), Method::GET, service_name),
+            RouteInfo::new(&format!("{}/remove_policies", base_path), Method::GET, service_name),
+        ];
+
+        for route in routes {
+            add_route(route).await;
+        }
+
         let router = Router::new()
             .route("/users", get(SysUserApi::get_all_users))
             .route("/list", get(SysUserApi::get_paginated_users))
@@ -17,6 +37,7 @@ impl SysUserRouter {
             .route("/:id", delete(SysUserApi::delete_user))
             .route("/add_policies", get(SysUserApi::add_policies))
             .route("/remove_policies", get(SysUserApi::remove_policies));
-        Router::new().nest("/user", router)
+
+        Router::new().nest(base_path, router)
     }
 }

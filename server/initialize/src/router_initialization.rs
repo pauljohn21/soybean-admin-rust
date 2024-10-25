@@ -1,4 +1,4 @@
-use std::{fmt::Write, sync::Arc};
+use std::sync::Arc;
 
 use axum::{body::Body, http::StatusCode, response::IntoResponse, Extension, Router};
 use axum_casbin::CasbinAxumLayer;
@@ -11,7 +11,10 @@ use server_router::admin::{
     SysAuthenticationRouter, SysDomainRouter, SysMenuRouter, SysRoleRouter, SysUserRouter,
 };
 use server_service::{
-    admin::{SysAuthService, SysDomainService, SysMenuService, SysRoleService, SysUserService},
+    admin::{
+        SysAuthService, SysDomainService, SysEndpointService, SysMenuService, SysRoleService,
+        SysUserService, TEndpointService,
+    },
     SysEndpoint,
 };
 use tower_http::trace::TraceLayer;
@@ -163,24 +166,35 @@ async fn process_collected_routes() {
         })
         .collect();
 
-    println!("Collected Endpoints:");
-    for endpoint in &endpoints {
-        let mut output = String::new();
-        writeln!(output, "ID: {}", endpoint.id).unwrap();
-        writeln!(output, "Path: {}", endpoint.path).unwrap();
-        writeln!(output, "Method: {}", endpoint.method).unwrap();
-        writeln!(output, "Action: {}", endpoint.action).unwrap();
-        writeln!(output, "Resource: {}", endpoint.resource).unwrap();
-        writeln!(output, "Controller: {}", endpoint.controller).unwrap();
-        writeln!(output, "Summary: {:?}", endpoint.summary).unwrap();
-        writeln!(output, "Created At: {}", endpoint.created_at).unwrap();
-        writeln!(output, "Updated At: {:?}", endpoint.updated_at).unwrap();
-        writeln!(output, "---").unwrap();
-        print!("{}", output);
-    }
+    // println!("Collected Endpoints:");
+    // for endpoint in &endpoints {
+    //     let mut output = String::new();
+    //     writeln!(output, "ID: {}", endpoint.id).unwrap();
+    //     writeln!(output, "Path: {}", endpoint.path).unwrap();
+    //     writeln!(output, "Method: {}", endpoint.method).unwrap();
+    //     writeln!(output, "Action: {}", endpoint.action).unwrap();
+    //     writeln!(output, "Resource: {}", endpoint.resource).unwrap();
+    //     writeln!(output, "Controller: {}", endpoint.controller).unwrap();
+    //     writeln!(output, "Summary: {:?}", endpoint.summary).unwrap();
+    //     writeln!(output, "Created At: {}", endpoint.created_at).unwrap();
+    //     writeln!(output, "Updated At: {:?}", endpoint.updated_at).unwrap();
+    //     writeln!(output, "---").unwrap();
+    //     print!("{}", output);
+    // }
 
-    // 调用服务处理端点信息（入库操作）
-    // SysEndpointService::handle_endpoints(endpoints).await;
+    let endpoint_service = SysEndpointService;
+    match endpoint_service.sync_endpoints(endpoints).await {
+        Ok(_) => {
+            tracing::info!(
+                "[soybean-admin-rust] >>>>>> [server-initialize] Endpoints synced successfully"
+            );
+        }
+        Err(_) => {
+            tracing::error!(
+                "[soybean-admin-rust] >>>>>> [server-initialize] Failed to sync endpoints"
+            );
+        }
+    }
 }
 
 fn generate_id(path: &str, method: &str) -> String {
