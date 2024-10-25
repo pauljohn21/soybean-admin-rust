@@ -10,5 +10,4 @@ once_cell = { workspace = true }
 sea-orm = { workspace = true, features = ["runtime-tokio-native-tls"] }
 tokio = { workspace = true, features = ["sync"] }
 jsonwebtoken = { workspace = true }
-lazy_static = { workspace = true }
 http = { workspace = true }

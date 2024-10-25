@@ -16,6 +16,9 @@ use server_model::admin::{
     output::{AuthOutput, UserWithDomainAndOrgOutput},
 };
 use server_utils::SecureUtil;
+use thiserror::Error;
+use tokio::sync::mpsc;
+use tracing::{error, info, instrument};
 use ulid::Ulid;
 
 use crate::{
@@ -37,6 +40,14 @@ macro_rules! select_user_with_domain_and_org_info {
             .column_as(sys_domain::Column::Name, "domain_name")
     }};
 }
+#[derive(Error, Debug)]
+pub enum EventError {
+    #[error("Failed to send event: {0}")]
+    SendError(#[from] tokio::sync::mpsc::error::SendError<Box<dyn std::any::Any + Send>>),
+    #[error("Failed to handle login event: {0}")]
+    LoginHandlerError(String),
+}
+
 #[async_trait]
 pub trait TAuthService {
     async fn pwd_login(&self, input: LoginInput, domain: &str) -> Result<AuthOutput, AppError>;
@@ -47,6 +58,7 @@ pub struct SysAuthService;
 
 #[async_trait]
 impl TAuthService for SysAuthService {
+    #[instrument(skip(self, input), fields(username = %input.identifier, domain = %domain))]
     async fn pwd_login(&self, input: LoginInput, domain: &str) -> Result<AuthOutput, AppError> {
         let db = db_helper::get_db_connection().await?;
 
@@ -101,15 +113,22 @@ impl TAuthService for SysAuthService {
                 refresh_token: auth_output.refresh_token.clone(),
             };
 
-            tokio::spawn(async move {
-                if let Err(e) = sender.send(Box::new(auth_event)) {
-                    eprintln!("Failed to send AuthEvent: {:?}", e);
-                }
-            });
+            if let Err(e) = send_auth_event(sender, auth_event).await {
+                error!("Failed to send AuthEvent: {:?}", e);
+            }
         }
 
         Ok(auth_output)
     }
+}
+
+#[instrument(skip(sender, auth_event))]
+async fn send_auth_event(
+    sender: mpsc::UnboundedSender<Box<dyn std::any::Any + Send>>,
+    auth_event: AuthEvent,
+) -> Result<(), EventError> {
+    sender.send(Box::new(auth_event)).map_err(EventError::from)?;
+    Ok(())
 }
 
 pub async fn generate_auth_output(
@@ -136,32 +155,36 @@ pub async fn generate_auth_output(
     })
 }
 
+#[instrument]
 pub async fn handle_login_jwt() {
     if let Some(mut receiver) = get_dyn_event_receiver().await {
         while let Some(event) = receiver.recv().await {
             if let Some(auth_event) = event.downcast_ref::<AuthEvent>() {
-                if let Err(e) =
-                    crate::admin::event_handlers::auth_event_handler::handle_successful_login(
-                        auth_event.user_id.clone(),
-                        auth_event.username.clone(),
-                        auth_event.domain.clone(),
-                        auth_event.access_token.clone(),
-                        auth_event.refresh_token.clone(),
-                    )
-                    .await
-                {
-                    println!("Failed to handle successful login: {:?}", e);
+                if let Err(e) = handle_auth_event(auth_event).await {
+                    error!("Failed to handle AuthEvent: {:?}", e);
                 }
             }
         }
     }
 }
 
+#[instrument(skip(auth_event), fields(user_id = %auth_event.user_id, username = %auth_event.username))]
+async fn handle_auth_event(auth_event: &AuthEvent) -> Result<(), EventError> {
+    crate::admin::event_handlers::auth_event_handler::handle_successful_login(
+        auth_event.user_id.clone(),
+        auth_event.username.clone(),
+        auth_event.domain.clone(),
+        auth_event.access_token.clone(),
+        auth_event.refresh_token.clone(),
+    )
+    .await
+    .map_err(|e| EventError::LoginHandlerError(format!("{:?}", e)))
+}
+
+#[instrument(skip(rx))]
 pub async fn start_event_listener(mut rx: tokio::sync::mpsc::UnboundedReceiver<String>) {
-    tokio::spawn(async move {
-        while let Some(jwt) = rx.recv().await {
-            // TODO Consider storing the token into the database?
-            println!("JWT created: {}", jwt);
-        }
-    });
+    while let Some(jwt) = rx.recv().await {
+        info!("JWT created: {}", jwt);
+        // TODO: Consider storing the token into the database
+    }
 }

@@ -6,10 +6,13 @@ use std::{
 
 use http::Method;
 use jsonwebtoken::{DecodingKey, EncodingKey, Validation};
-use lazy_static::lazy_static;
 use once_cell::sync::Lazy;
 use sea_orm::DatabaseConnection;
 use tokio::sync::{mpsc, Mutex, OnceCell, RwLock};
+
+//*****************************************************************************
+// 全局配置
+//*****************************************************************************
 
 pub static GLOBAL_CONFIG: Lazy<RwLock<HashMap<TypeId, Arc<dyn Any + Send + Sync>>>> =
     Lazy::new(|| RwLock::new(HashMap::new()));
@@ -26,10 +29,18 @@ pub async fn get_config<T: 'static + Any + Send + Sync>() -> Option<Arc<T>> {
         .and_then(|config| config.clone().downcast::<T>().ok())
 }
 
+//*****************************************************************************
+// 数据库连接
+//*****************************************************************************
+
 pub static GLOBAL_PRIMARY_DB: Lazy<RwLock<Option<Arc<DatabaseConnection>>>> =
     Lazy::new(|| RwLock::new(None));
 pub static GLOBAL_DB_POOL: Lazy<RwLock<HashMap<String, Arc<DatabaseConnection>>>> =
     Lazy::new(|| RwLock::new(HashMap::new()));
+
+//*****************************************************************************
+// JWT 密钥和验证
+//*****************************************************************************
 
 pub struct Keys {
     pub encoding: EncodingKey,
@@ -48,6 +59,10 @@ impl Keys {
 pub static KEYS: OnceCell<Arc<Mutex<Keys>>> = OnceCell::const_new();
 pub static VALIDATION: OnceCell<Arc<Mutex<Validation>>> = OnceCell::const_new();
 
+//*****************************************************************************
+// 事件通道
+//*****************************************************************************
+
 pub struct EventChannels {
     pub string_sender: mpsc::UnboundedSender<String>,
     pub string_receiver: Arc<Mutex<Option<mpsc::UnboundedReceiver<String>>>>,
@@ -55,9 +70,7 @@ pub struct EventChannels {
     pub dyn_receiver: Arc<Mutex<Option<mpsc::UnboundedReceiver<Box<dyn Any + Send>>>>>,
 }
 
-lazy_static! {
-    pub static ref EVENT_CHANNELS: Mutex<Option<EventChannels>> = Mutex::new(None);
-}
+pub static EVENT_CHANNELS: Lazy<Mutex<Option<EventChannels>>> = Lazy::new(|| Mutex::new(None));
 
 pub async fn initialize_event_channels() {
     let (string_tx, string_rx) = mpsc::unbounded_channel::<String>();
@@ -101,6 +114,10 @@ pub async fn get_dyn_event_receiver() -> Option<mpsc::UnboundedReceiver<Box<dyn 
     }
 }
 
+//*****************************************************************************
+// 路由信息收集
+//*****************************************************************************
+
 #[derive(Clone, Debug)]
 pub struct RouteInfo {
     pub path: String,
@@ -120,9 +137,7 @@ impl RouteInfo {
     }
 }
 
-lazy_static! {
-    pub static ref ROUTE_COLLECTOR: Arc<Mutex<Vec<RouteInfo>>> = Arc::new(Mutex::new(Vec::new()));
-}
+pub static ROUTE_COLLECTOR: Lazy<Mutex<Vec<RouteInfo>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 pub async fn add_route(route: RouteInfo) {
     ROUTE_COLLECTOR.lock().await.push(route);

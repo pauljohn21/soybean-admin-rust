@@ -2900,7 +2900,6 @@ version = "0.1.0"
 dependencies = [
  "http 1.1.0",
  "jsonwebtoken",
- "lazy_static",
  "once_cell",
  "sea-orm",
  "tokio",
@@ -2996,6 +2995,7 @@ dependencies = [
  "server-utils",
  "thiserror",
  "tokio",
+ "tracing",
  "ulid",
 ]
 
