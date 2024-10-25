@@ -18,7 +18,10 @@ use server_model::admin::{
 use server_utils::SecureUtil;
 use ulid::Ulid;
 
-use crate::{admin::sys_user_error::UserError, helper::db_helper};
+use crate::{
+    admin::{event_handlers::auth_event_handler::AuthEvent, sys_user_error::UserError},
+    helper::db_helper,
+};
 
 macro_rules! select_user_with_domain_and_org_info {
     ($query:expr) => {{
@@ -63,12 +66,14 @@ impl TAuthService for SysAuthService {
             return Err(AppError::from(UserError::WrongPassword));
         }
 
-        let user_id = &user.id;
+        let user_id = user.id.clone();
+        let username = user.username.clone();
+        let domain_code = user.domain_code.clone();
 
         let role_codes: Vec<String> = SysRole::find()
             .join(JoinType::InnerJoin, sys_role::Relation::SysUserRole.def())
             .join(JoinType::InnerJoin, sys_user_role::Relation::SysUser.def())
-            .filter(sys_user::Column::Id.eq(user_id))
+            .filter(sys_user::Column::Id.eq(&user_id))
             .all(db.as_ref())
             .await
             .map_err(AppError::from)?
@@ -78,18 +83,28 @@ impl TAuthService for SysAuthService {
 
         let auth_output = generate_auth_output(
             user_id.clone(),
-            user.username,
+            username.clone(),
             role_codes,
-            user.domain_code,
+            domain_code.clone(),
             None,
         )
         .await
         .map_err(AppError::from)?;
 
+        // 发送 AuthEvent
         if let Some(sender) = get_dyn_event_sender().await {
-            let auth_output = auth_output.clone();
+            let auth_event = AuthEvent {
+                user_id,
+                username,
+                domain: domain_code,
+                access_token: auth_output.access_token.clone(),
+                refresh_token: auth_output.refresh_token.clone(),
+            };
+
             tokio::spawn(async move {
-                let _ = sender.send(Box::new(auth_output));
+                if let Err(e) = sender.send(Box::new(auth_event)) {
+                    eprintln!("Failed to send AuthEvent: {:?}", e);
+                }
             });
         }
 
@@ -124,9 +139,19 @@ pub async fn generate_auth_output(
 pub async fn handle_login_jwt() {
     if let Some(mut receiver) = get_dyn_event_receiver().await {
         while let Some(event) = receiver.recv().await {
-            if let Some(auth_output) = event.downcast_ref::<AuthOutput>() {
-                // TODO Consider storing the token into the database?
-                println!("Received AuthOutput: {:?}", auth_output);
+            if let Some(auth_event) = event.downcast_ref::<AuthEvent>() {
+                if let Err(e) =
+                    crate::admin::event_handlers::auth_event_handler::handle_successful_login(
+                        auth_event.user_id.clone(),
+                        auth_event.username.clone(),
+                        auth_event.domain.clone(),
+                        auth_event.access_token.clone(),
+                        auth_event.refresh_token.clone(),
+                    )
+                    .await
+                {
+                    println!("Failed to handle successful login: {:?}", e);
+                }
             }
         }
     }

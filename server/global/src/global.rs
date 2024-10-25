@@ -31,14 +31,6 @@ pub static GLOBAL_PRIMARY_DB: Lazy<RwLock<Option<Arc<DatabaseConnection>>>> =
 pub static GLOBAL_DB_POOL: Lazy<RwLock<HashMap<String, Arc<DatabaseConnection>>>> =
     Lazy::new(|| RwLock::new(HashMap::new()));
 
-// static GLOBAL_REDIS_POOL: Lazy<Arc<RwLock<HashMap<String, RedisClient>>>> =
-// Lazy::new(|| {     Arc::new(RwLock::new(HashMap::new()))
-// });
-//
-// static GLOBAL_MONGO_POOL: Lazy<Arc<RwLock<HashMap<String, MongoClient>>>> =
-// Lazy::new(|| {     Arc::new(RwLock::new(HashMap::new()))
-// });
-
 pub struct Keys {
     pub encoding: EncodingKey,
     pub decoding: DecodingKey,
@@ -56,47 +48,57 @@ impl Keys {
 pub static KEYS: OnceCell<Arc<Mutex<Keys>>> = OnceCell::const_new();
 pub static VALIDATION: OnceCell<Arc<Mutex<Validation>>> = OnceCell::const_new();
 
-lazy_static! {
-    pub static ref EVENT_SENDER: Mutex<Option<mpsc::UnboundedSender<String>>> = Mutex::new(None);
-    pub static ref EVENT_RECEIVER: Mutex<Option<mpsc::UnboundedReceiver<String>>> =
-        Mutex::new(None);
-}
-
-pub async fn initialize_global_event_channel() {
-    let (tx, rx) = mpsc::unbounded_channel::<String>();
-    *EVENT_SENDER.lock().await = Some(tx);
-    *EVENT_RECEIVER.lock().await = Some(rx);
-}
-
-pub async fn get_event_sender() -> Option<mpsc::UnboundedSender<String>> {
-    let lock = EVENT_SENDER.lock().await;
-    lock.clone()
-}
-
-pub async fn get_event_receiver() -> Option<mpsc::UnboundedReceiver<String>> {
-    EVENT_RECEIVER.lock().await.take()
+pub struct EventChannels {
+    pub string_sender: mpsc::UnboundedSender<String>,
+    pub string_receiver: Arc<Mutex<Option<mpsc::UnboundedReceiver<String>>>>,
+    pub dyn_sender: mpsc::UnboundedSender<Box<dyn Any + Send>>,
+    pub dyn_receiver: Arc<Mutex<Option<mpsc::UnboundedReceiver<Box<dyn Any + Send>>>>>,
 }
 
 lazy_static! {
-    pub static ref DYN_EVENT_SENDER: Arc<Mutex<Option<mpsc::UnboundedSender<Box<dyn Any + Send>>>>> =
-        Arc::new(Mutex::new(None));
-    pub static ref DYN_EVENT_RECEIVER: Arc<Mutex<Option<mpsc::UnboundedReceiver<Box<dyn Any + Send>>>>> =
-        Arc::new(Mutex::new(None));
+    pub static ref EVENT_CHANNELS: Mutex<Option<EventChannels>> = Mutex::new(None);
 }
 
-pub async fn initialize_dyn_global_event_channel() {
-    let (tx, rx) = mpsc::unbounded_channel::<Box<dyn Any + Send>>();
-    *crate::global::DYN_EVENT_SENDER.lock().await = Some(tx);
-    *crate::global::DYN_EVENT_RECEIVER.lock().await = Some(rx);
+pub async fn initialize_event_channels() {
+    let (string_tx, string_rx) = mpsc::unbounded_channel::<String>();
+    let (dyn_tx, dyn_rx) = mpsc::unbounded_channel::<Box<dyn Any + Send>>();
+
+    let channels = EventChannels {
+        string_sender: string_tx,
+        string_receiver: Arc::new(Mutex::new(Some(string_rx))),
+        dyn_sender: dyn_tx,
+        dyn_receiver: Arc::new(Mutex::new(Some(dyn_rx))),
+    };
+
+    *EVENT_CHANNELS.lock().await = Some(channels);
+}
+
+pub async fn get_string_event_sender() -> Option<mpsc::UnboundedSender<String>> {
+    EVENT_CHANNELS
+        .lock()
+        .await
+        .as_ref()
+        .map(|channels| channels.string_sender.clone())
+}
+
+pub async fn get_string_event_receiver() -> Option<mpsc::UnboundedReceiver<String>> {
+    if let Some(channels) = EVENT_CHANNELS.lock().await.as_ref() {
+        channels.string_receiver.lock().await.take()
+    } else {
+        None
+    }
 }
 
 pub async fn get_dyn_event_sender() -> Option<mpsc::UnboundedSender<Box<dyn Any + Send>>> {
-    let lock = crate::global::DYN_EVENT_SENDER.lock().await;
-    lock.clone()
+    EVENT_CHANNELS.lock().await.as_ref().map(|channels| channels.dyn_sender.clone())
 }
 
 pub async fn get_dyn_event_receiver() -> Option<mpsc::UnboundedReceiver<Box<dyn Any + Send>>> {
-    crate::global::DYN_EVENT_RECEIVER.lock().await.take()
+    if let Some(channels) = EVENT_CHANNELS.lock().await.as_ref() {
+        channels.dyn_receiver.lock().await.take()
+    } else {
+        None
+    }
 }
 
 #[derive(Clone, Debug)]

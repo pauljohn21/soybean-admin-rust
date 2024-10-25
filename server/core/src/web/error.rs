@@ -8,6 +8,7 @@ pub trait ApiError {
     fn message(&self) -> String;
 }
 
+#[derive(Debug)]
 pub struct AppError {
     pub code: u16,
     pub message: String,

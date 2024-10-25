@@ -67,7 +67,7 @@ impl JwtUtils {
             .map_err(|e| JwtError::TokenCreationError(e.to_string()));
 
         if let Ok(ref tok) = token {
-            if let Some(sender) = global::get_event_sender().await {
+            if let Some(sender) = global::get_string_event_sender().await {
                 let tok_to_send = tok.clone();
                 tokio::spawn(async move {
                     let _ = sender.send(tok_to_send);
