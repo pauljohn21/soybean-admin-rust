@@ -17,15 +17,15 @@ sea-orm-adapter = { path = "../../sea-orm-adapter" }
 
 log = { workspace = true }
 casbin = { workspace = true }
-sea-orm = { workspace = true }
-axum = { workspace = true }
-tokio = { workspace = true, default-features = false, features = ["full"] }
-tower-http = { workspace = true, features = ["trace", "tracing"] }
+sea-orm = { workspace = true, features = ["runtime-tokio-native-tls", "macros"] }
+axum = { workspace = true, features = ["http1", "json"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync"] }
+tower-http = { workspace = true, features = ["trace"] }
 tracing = { workspace = true, features = ["log"] }
-tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tracing-subscriber = { workspace = true, features = ["env-filter", "fmt"] }
 tracing-error = { workspace = true }
 tracing-log = { workspace = true }
-chrono = { workspace = true }
+chrono = { workspace = true, features = ["clock"] }
 
 [dev-dependencies]
 server-core = { path = "../core" }

@@ -10,4 +10,4 @@ server-core = { path = "../core" }
 server-service = { path = "../service" }
 axum-casbin = { path = "../../axum-casbin" }
 
-axum = { workspace = true }
+axum = { workspace = true, features = ["http1", "query", "json", "multipart"] }

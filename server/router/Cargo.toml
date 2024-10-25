@@ -9,4 +9,4 @@ edition.workspace = true
 server-api = { path = "../api" }
 server-global = { path = "../global" }
 
-axum = { workspace = true }
+axum = { workspace = true, features = ["matched-path"] }

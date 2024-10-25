@@ -12,5 +12,5 @@ path = "src/main.rs"
 [dependencies]
 server-initialize = { path = "../initialize" }
 
-axum = { workspace = true }
-tokio = { workspace = true, features = ["full"] }
+axum = { workspace = true, features = ["http1"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "net", "macros"] }

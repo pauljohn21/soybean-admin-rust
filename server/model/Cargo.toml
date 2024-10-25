@@ -9,9 +9,9 @@ edition.workspace = true
 server-core = { path = "../core" }
 
 serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
+serde_json = { workspace = true, features = ["std"] }
 chrono = { workspace = true, features = ["serde"] }
 validator = { workspace = true, features = ["derive"] }
 derive-new = { workspace = true }
 
-sea-orm = { workspace = true, features = ["runtime-tokio-native-tls", "with-chrono", "with-json"] }
+sea-orm = { workspace = true, features = ["runtime-tokio-native-tls", "macros", "with-chrono", "with-json"] }
