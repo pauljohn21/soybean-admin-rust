@@ -18,12 +18,13 @@ use server_model::admin::{
 use server_utils::SecureUtil;
 use thiserror::Error;
 use tokio::sync::mpsc;
-use tracing::{error, info, instrument};
+use tracing::{error, instrument};
 use ulid::Ulid;
 
 use crate::{
     admin::{event_handlers::auth_event_handler::AuthEvent, sys_user_error::UserError},
     helper::db_helper,
+    project_error, project_info,
 };
 
 macro_rules! select_user_with_domain_and_org_info {
@@ -114,7 +115,7 @@ impl TAuthService for SysAuthService {
             };
 
             if let Err(e) = send_auth_event(sender, auth_event).await {
-                error!("Failed to send AuthEvent: {:?}", e);
+                project_error!("Failed to send AuthEvent: {:?}", e);
             }
         }
 
@@ -161,7 +162,7 @@ pub async fn handle_login_jwt() {
         while let Some(event) = receiver.recv().await {
             if let Some(auth_event) = event.downcast_ref::<AuthEvent>() {
                 if let Err(e) = handle_auth_event(auth_event).await {
-                    error!("Failed to handle AuthEvent: {:?}", e);
+                    project_error!("Failed to handle AuthEvent: {:?}", e);
                 }
             }
         }
@@ -184,7 +185,7 @@ async fn handle_auth_event(auth_event: &AuthEvent) -> Result<(), EventError> {
 #[instrument(skip(rx))]
 pub async fn start_event_listener(mut rx: tokio::sync::mpsc::UnboundedReceiver<String>) {
     while let Some(jwt) = rx.recv().await {
-        info!("JWT created: {}", jwt);
+        project_info!("JWT created: {}", jwt);
         // TODO: Consider storing the token into the database
     }
 }

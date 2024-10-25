@@ -8,8 +8,8 @@ async fn main() {
         "server/resources/application.yaml"
     };
 
-    server_initialize::initialize_config(config_path).await;
     server_initialize::initialize_log_tracing().await;
+    server_initialize::initialize_config(config_path).await;
     server_initialize::init_primary_connection().await;
     server_initialize::initialize_keys_and_validation().await;
     server_initialize::initialize_event_channel().await;

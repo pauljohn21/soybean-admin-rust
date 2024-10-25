@@ -1,27 +1,22 @@
 #![allow(dead_code)]
 use std::{process, sync::Arc, time::Duration};
 
-use log::info;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use server_config::{DatabaseConfig, DatabasesConfig};
 use server_global::global::{get_config, GLOBAL_DB_POOL, GLOBAL_PRIMARY_DB};
 
+use crate::{project_error, project_info};
+
 pub async fn init_primary_connection() {
     let db_config = get_config::<DatabaseConfig>().await.unwrap();
     let opt = build_connect_options(&db_config);
-    let db = Database::connect(opt).await;
-    match db {
+    match Database::connect(opt).await {
         Ok(db) => {
             *GLOBAL_PRIMARY_DB.write().await = Some(Arc::new(db));
-            tracing::info!(
-                "[soybean-admin-rust] >>>>>> [server-initialize] Primary database connection initialized"
-            );
+            project_info!("Primary database connection initialized");
         }
         Err(e) => {
-            tracing::error!(
-                "[soybean-admin-rust] >>>>>> [server-initialize] Failed to connect to primary database: {}",
-                e
-            );
+            project_error!("Failed to connect to primary database: {}", e);
             process::exit(1);
         }
     }
@@ -40,12 +35,18 @@ pub async fn init_db_pool_connections(
 
 async fn init_db_connection(name: &str, db_config: &DatabaseConfig) -> Result<(), String> {
     let opt = build_connect_options(db_config);
-    let db = Database::connect(opt)
-        .await
-        .map_err(|e| format!("[soybean-admin-rust] >>>>>> [server-initialize] Failed to connect to database '{}': {}", name, e))?;
-    GLOBAL_DB_POOL.write().await.insert(name.to_string(), Arc::new(db));
-    info!("[soybean-admin-rust] >>>>>> [server-initialize] Database '{}' initialized", name);
-    Ok(())
+    match Database::connect(opt).await {
+        Ok(db) => {
+            GLOBAL_DB_POOL.write().await.insert(name.to_string(), Arc::new(db));
+            project_info!("Database '{}' initialized", name);
+            Ok(())
+        }
+        Err(e) => {
+            let error_msg = format!("Failed to connect to database '{}': {}", name, e);
+            project_error!("{}", error_msg);
+            Err(error_msg)
+        }
+    }
 }
 
 fn build_connect_options(db_config: &DatabaseConfig) -> ConnectOptions {
@@ -76,7 +77,7 @@ pub async fn add_or_update_db_pool_connection(
 pub async fn remove_db_pool_connection(name: &str) -> Result<(), String> {
     let mut db_pool = GLOBAL_DB_POOL.write().await;
     db_pool.remove(name).ok_or_else(|| "Connection not found".to_string())?;
-    info!("[soybean-admin-rust] >>>>>> [server-initialize] Database connection '{}' removed", name);
+    project_info!("Database connection '{}' removed", name);
     Ok(())
 }
 

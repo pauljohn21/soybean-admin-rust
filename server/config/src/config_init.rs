@@ -1,9 +1,8 @@
-use log::{error, info};
 use server_global::global;
 use thiserror::Error;
 use tokio::fs;
 
-use crate::{model::Config, DatabaseConfig, JwtConfig, ServerConfig};
+use crate::{model::Config, project_error, project_info, DatabaseConfig, JwtConfig, ServerConfig};
 
 #[derive(Debug, Error)]
 pub enum ConfigError {
@@ -15,12 +14,12 @@ pub enum ConfigError {
 
 pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
     let config_data = fs::read_to_string(file_path).await.map_err(|e| {
-        error!("[soybean-admin-rust] >>>>>> [server-config] Failed to read config file: {}", e);
+        project_error!("Failed to read config file: {}", e);
         ConfigError::ReadError(e)
     })?;
 
     let config: Config = serde_yaml::from_str(&config_data).map_err(|e| {
-        error!("[soybean-admin-rust] >>>>>> [server-config] Failed to parse config file: {}", e);
+        project_error!("Failed to parse config file: {}", e);
         ConfigError::ParseError(e)
     })?;
 
@@ -29,7 +28,7 @@ pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
     global::init_config::<ServerConfig>(config.server).await;
     global::init_config::<JwtConfig>(config.jwt).await;
 
-    info!("[soybean-admin-rust] >>>>>> [server-config] Configuration initialized successfully");
+    project_info!("Configuration initialized successfully");
     Ok(())
 }
 

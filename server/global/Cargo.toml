@@ -11,3 +11,4 @@ sea-orm = { workspace = true, features = ["runtime-tokio-native-tls"] }
 tokio = { workspace = true, features = ["sync"] }
 jsonwebtoken = { workspace = true }
 http = { workspace = true }
+tracing = { workspace = true, features = ["log"] }

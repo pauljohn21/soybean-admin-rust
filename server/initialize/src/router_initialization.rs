@@ -21,10 +21,11 @@ use server_service::{
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
 
-use crate::initialize_casbin;
+use crate::{initialize_casbin, project_error, project_info};
 
 pub async fn initialize_admin_router() -> Router {
     clear_routes().await;
+    project_info!("Initializing admin router");
 
     let app_config = get_config::<Config>().await.unwrap();
     let casbin_axum_layer =
@@ -32,7 +33,7 @@ pub async fn initialize_admin_router() -> Router {
             .await
             .unwrap();
 
-    let audience: Audience = Audience::ManagementPlatform; // Adjust this as needed for different audiences
+    let audience: Audience = Audience::ManagementPlatform;
 
     let mut app = Router::new();
 
@@ -110,6 +111,7 @@ pub async fn initialize_admin_router() -> Router {
         .fallback(handler_404);
 
     process_collected_routes().await;
+    project_info!("Admin router initialization completed");
 
     app
 }
@@ -177,33 +179,13 @@ async fn process_collected_routes() {
         })
         .collect();
 
-    // println!("Collected Endpoints:");
-    // for endpoint in &endpoints {
-    //     let mut output = String::new();
-    //     writeln!(output, "ID: {}", endpoint.id).unwrap();
-    //     writeln!(output, "Path: {}", endpoint.path).unwrap();
-    //     writeln!(output, "Method: {}", endpoint.method).unwrap();
-    //     writeln!(output, "Action: {}", endpoint.action).unwrap();
-    //     writeln!(output, "Resource: {}", endpoint.resource).unwrap();
-    //     writeln!(output, "Controller: {}", endpoint.controller).unwrap();
-    //     writeln!(output, "Summary: {:?}", endpoint.summary).unwrap();
-    //     writeln!(output, "Created At: {}", endpoint.created_at).unwrap();
-    //     writeln!(output, "Updated At: {:?}", endpoint.updated_at).unwrap();
-    //     writeln!(output, "---").unwrap();
-    //     print!("{}", output);
-    // }
-
     let endpoint_service = SysEndpointService;
     match endpoint_service.sync_endpoints(endpoints).await {
         Ok(_) => {
-            tracing::info!(
-                "[soybean-admin-rust] >>>>>> [server-initialize] Endpoints synced successfully"
-            );
+            project_info!("Endpoints synced successfully")
         }
-        Err(_) => {
-            tracing::error!(
-                "[soybean-admin-rust] >>>>>> [server-initialize] Failed to sync endpoints"
-            );
+        Err(e) => {
+            project_error!("Failed to sync endpoints: {:?}", e)
         }
     }
 }

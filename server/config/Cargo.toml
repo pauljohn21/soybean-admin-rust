@@ -12,6 +12,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_yaml = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs"] }
+tracing = { workspace = true, features = ["log"] }
 log = { workspace = true }
 
 [dev-dependencies]
