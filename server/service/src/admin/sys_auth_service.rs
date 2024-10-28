@@ -21,6 +21,9 @@ use tokio::sync::mpsc;
 use tracing::{error, instrument};
 use ulid::Ulid;
 
+use super::{
+    dto::sys_auth_dto::LoginContext, event_handlers::auth_event_handler::AuthEventHandler,
+};
 use crate::{
     admin::{event_handlers::auth_event_handler::AuthEvent, sys_user_error::UserError},
     helper::db_helper,
@@ -51,7 +54,11 @@ pub enum EventError {
 
 #[async_trait]
 pub trait TAuthService {
-    async fn pwd_login(&self, input: LoginInput, domain: &str) -> Result<AuthOutput, AppError>;
+    async fn pwd_login(
+        &self,
+        input: LoginInput,
+        context: LoginContext,
+    ) -> Result<AuthOutput, AppError>;
 }
 
 #[derive(Clone)]
@@ -59,13 +66,17 @@ pub struct SysAuthService;
 
 #[async_trait]
 impl TAuthService for SysAuthService {
-    #[instrument(skip(self, input), fields(username = %input.identifier, domain = %domain))]
-    async fn pwd_login(&self, input: LoginInput, domain: &str) -> Result<AuthOutput, AppError> {
+    #[instrument(skip(self, input), fields(username = %input.identifier, domain = %context.domain))]
+    async fn pwd_login(
+        &self,
+        input: LoginInput,
+        context: LoginContext,
+    ) -> Result<AuthOutput, AppError> {
         let db = db_helper::get_db_connection().await?;
 
         let user = select_user_with_domain_and_org_info!(SysUser::find())
             .filter(sys_user::Column::Username.eq(&input.identifier))
-            .filter(sys_domain::Column::Code.eq(domain))
+            .filter(sys_domain::Column::Code.eq(&context.domain))
             .join(JoinType::InnerJoin, sys_user::Relation::SysDomain.def())
             .into_model::<UserWithDomainAndOrgOutput>()
             .one(db.as_ref())
@@ -73,6 +84,7 @@ impl TAuthService for SysAuthService {
             .map_err(AppError::from)?
             .ok_or_else(|| AppError::from(UserError::UserNotFound))?;
 
+        // 验证密码
         if !SecureUtil::verify_password(input.password.as_bytes(), &user.password)
             .map_err(|_| AppError::from(UserError::AuthenticationFailed))?
         {
@@ -83,6 +95,7 @@ impl TAuthService for SysAuthService {
         let username = user.username.clone();
         let domain_code = user.domain_code.clone();
 
+        // 获取角色
         let role_codes: Vec<String> = SysRole::find()
             .join(JoinType::InnerJoin, sys_role::Relation::SysUserRole.def())
             .join(JoinType::InnerJoin, sys_user_role::Relation::SysUser.def())
@@ -94,17 +107,19 @@ impl TAuthService for SysAuthService {
             .filter_map(|role| Some(role.code.clone()))
             .collect();
 
+        // 生成认证输出
         let auth_output = generate_auth_output(
             user_id.clone(),
             username.clone(),
             role_codes,
             domain_code.clone(),
             None,
+            context.audience.clone(),
         )
         .await
         .map_err(AppError::from)?;
 
-        // 发送 AuthEvent
+        // 发送认证事件
         if let Some(sender) = get_dyn_event_sender().await {
             let auth_event = AuthEvent {
                 user_id,
@@ -112,6 +127,11 @@ impl TAuthService for SysAuthService {
                 domain: domain_code,
                 access_token: auth_output.access_token.clone(),
                 refresh_token: auth_output.refresh_token.clone(),
+                client_ip: context.client_ip,
+                client_port: context.client_port,
+                user_agent: context.user_agent,
+                request_id: context.request_id,
+                login_type: context.login_type,
             };
 
             if let Err(e) = send_auth_event(sender, auth_event).await {
@@ -138,10 +158,11 @@ pub async fn generate_auth_output(
     role_codes: Vec<String>,
     domain_code: String,
     organization_name: Option<String>,
+    audience: Audience,
 ) -> Result<AuthOutput, JwtError> {
     let claims = Claims::new(
         user_id,
-        Audience::ManagementPlatform.as_str().to_string(),
+        audience.as_str().to_string(),
         username,
         role_codes,
         domain_code,
@@ -171,13 +192,18 @@ pub async fn handle_login_jwt() {
 
 #[instrument(skip(auth_event), fields(user_id = %auth_event.user_id, username = %auth_event.username))]
 async fn handle_auth_event(auth_event: &AuthEvent) -> Result<(), EventError> {
-    crate::admin::event_handlers::auth_event_handler::handle_successful_login(
-        auth_event.user_id.clone(),
-        auth_event.username.clone(),
-        auth_event.domain.clone(),
-        auth_event.access_token.clone(),
-        auth_event.refresh_token.clone(),
-    )
+    AuthEventHandler::handle_login(AuthEvent {
+        user_id: auth_event.user_id.clone(),
+        username: auth_event.username.clone(),
+        domain: auth_event.domain.clone(),
+        access_token: auth_event.access_token.clone(),
+        refresh_token: auth_event.refresh_token.clone(),
+        client_ip: auth_event.client_ip.clone(),
+        client_port: auth_event.client_port,
+        user_agent: auth_event.user_agent.clone(),
+        request_id: auth_event.request_id.clone(),
+        login_type: auth_event.login_type.clone(),
+    })
     .await
     .map_err(|e| EventError::LoginHandlerError(format!("{:?}", e)))
 }

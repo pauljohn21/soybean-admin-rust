@@ -13,6 +13,7 @@ pub use sys_endpoint_service::{SysEndpointService, TEndpointService};
 pub use sys_menu_service::{SysMenuService, TMenuService};
 pub use sys_role_service::{SysRoleService, TRoleService};
 pub use sys_user_service::{SysUserService, TUserService};
+pub mod dto;
 pub mod errors;
 mod sys_auth_service;
 mod sys_domain_service;

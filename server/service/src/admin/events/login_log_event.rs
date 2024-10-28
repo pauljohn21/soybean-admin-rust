@@ -10,9 +10,9 @@ pub struct LoginLogEvent {
     pub domain: String,
     pub ip: String,
     pub port: Option<i32>,
-    pub address: String,
     pub user_agent: String,
     pub request_id: String,
+    pub login_type: String,
 }
 
 impl LoginLogEvent {
@@ -25,10 +25,10 @@ impl LoginLogEvent {
             login_time: Set(Utc::now().naive_utc()),
             ip: Set(self.ip),
             port: Set(self.port),
-            address: Set(self.address),
+            address: Set("TODO".to_string()),
             user_agent: Set(self.user_agent),
             request_id: Set(self.request_id),
-            r#type: Set("PASSWORD".to_string()),
+            r#type: Set(self.login_type),
             created_at: Set(Utc::now().naive_utc()),
             created_by: Set(self.username),
         }

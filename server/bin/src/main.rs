@@ -1,3 +1,5 @@
+use std::net::SocketAddr;
+
 use tokio::net::TcpListener;
 
 #[tokio::main]
@@ -28,5 +30,7 @@ async fn main() {
     // run it
     let listener = TcpListener::bind(&addr).await.unwrap();
     // tracing::debug!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
+        .await
+        .unwrap();
 }

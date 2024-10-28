@@ -1,5 +1,6 @@
 use chrono::Utc;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
+use server_constant::definition::consts::TokenStatus;
 use server_core::web::error::AppError;
 use server_model::admin::entities::sys_tokens;
 use ulid::Ulid;
@@ -12,9 +13,9 @@ pub struct AccessTokenEvent {
     pub domain: String,
     pub ip: String,
     pub port: Option<i32>,
-    pub address: String,
     pub user_agent: String,
     pub request_id: String,
+    pub login_type: String,
 }
 
 impl AccessTokenEvent {
@@ -25,17 +26,17 @@ impl AccessTokenEvent {
             id: Set(Ulid::new().to_string()),
             access_token: Set(self.access_token),
             refresh_token: Set(self.refresh_token),
-            status: Set("ACTIVE".to_string()),
+            status: Set(TokenStatus::Active.to_string()),
             user_id: Set(self.user_id),
             username: Set(self.username.clone()),
             domain: Set(self.domain),
             login_time: Set(now),
             ip: Set(self.ip),
             port: Set(self.port),
-            address: Set(self.address),
+            address: Set("TODO".to_string()),
             user_agent: Set(self.user_agent),
             request_id: Set(self.request_id),
-            r#type: Set("ACCESS".to_string()),
+            r#type: Set(self.login_type),
             created_at: Set(now),
             created_by: Set(self.username),
         }
