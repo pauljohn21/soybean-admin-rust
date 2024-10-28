@@ -1,5 +1,7 @@
 use async_trait::async_trait;
-use sea_orm::{ColumnTrait, EntityTrait, JoinType, QueryFilter, QuerySelect, RelationTrait};
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QuerySelect, RelationTrait,
+};
 use server_constant::definition::Audience;
 use server_core::web::{
     auth::Claims,
@@ -72,11 +74,41 @@ impl TAuthService for SysAuthService {
         input: LoginInput,
         context: LoginContext,
     ) -> Result<AuthOutput, AppError> {
+        // 验证用户并获取角色
+        let (user, role_codes) =
+            self.verify_user(&input.identifier, &input.password, &context.domain).await?;
+
+        // 生成认证输出
+        let auth_output = generate_auth_output(
+            user.id.clone(),
+            user.username.clone(),
+            role_codes,
+            user.domain_code.clone(),
+            None,
+            context.audience,
+        )
+        .await?;
+
+        // 发送认证事件
+        self.send_login_event(&user, &auth_output, &context).await;
+
+        Ok(auth_output)
+    }
+}
+
+impl SysAuthService {
+    /// 验证用户身份
+    async fn verify_user(
+        &self,
+        identifier: &str,
+        password: &str,
+        domain: &str,
+    ) -> Result<(UserWithDomainAndOrgOutput, Vec<String>), AppError> {
         let db = db_helper::get_db_connection().await?;
 
         let user = select_user_with_domain_and_org_info!(SysUser::find())
-            .filter(sys_user::Column::Username.eq(&input.identifier))
-            .filter(sys_domain::Column::Code.eq(&context.domain))
+            .filter(sys_user::Column::Username.eq(identifier))
+            .filter(sys_domain::Column::Code.eq(domain))
             .join(JoinType::InnerJoin, sys_user::Relation::SysDomain.def())
             .into_model::<UserWithDomainAndOrgOutput>()
             .one(db.as_ref())
@@ -85,61 +117,88 @@ impl TAuthService for SysAuthService {
             .ok_or_else(|| AppError::from(UserError::UserNotFound))?;
 
         // 验证密码
-        if !SecureUtil::verify_password(input.password.as_bytes(), &user.password)
+        if !SecureUtil::verify_password(password.as_bytes(), &user.password)
             .map_err(|_| AppError::from(UserError::AuthenticationFailed))?
         {
             return Err(AppError::from(UserError::WrongPassword));
         }
 
-        let user_id = user.id.clone();
-        let username = user.username.clone();
-        let domain_code = user.domain_code.clone();
-
         // 获取角色
-        let role_codes: Vec<String> = SysRole::find()
+        let role_codes = self.get_user_roles(&user.id, &db).await?;
+
+        Ok((user, role_codes))
+    }
+
+    /// 获取用户角色
+    async fn get_user_roles(
+        &self,
+        user_id: &str,
+        db: &DatabaseConnection,
+    ) -> Result<Vec<String>, AppError> {
+        SysRole::find()
             .join(JoinType::InnerJoin, sys_role::Relation::SysUserRole.def())
             .join(JoinType::InnerJoin, sys_user_role::Relation::SysUser.def())
-            .filter(sys_user::Column::Id.eq(&user_id))
-            .all(db.as_ref())
+            .filter(sys_user::Column::Id.eq(user_id))
+            .all(db)
             .await
-            .map_err(AppError::from)?
-            .iter()
-            .filter_map(|role| Some(role.code.clone()))
-            .collect();
+            .map(|roles| roles.iter().map(|role| role.code.clone()).collect())
+            .map_err(AppError::from)
+    }
 
-        // 生成认证输出
-        let auth_output = generate_auth_output(
-            user_id.clone(),
-            username.clone(),
-            role_codes,
-            domain_code.clone(),
-            None,
-            context.audience.clone(),
-        )
-        .await
-        .map_err(AppError::from)?;
-
-        // 发送认证事件
+    async fn send_login_event(
+        &self,
+        user: &UserWithDomainAndOrgOutput,
+        auth_output: &AuthOutput,
+        context: &LoginContext,
+    ) {
         if let Some(sender) = get_dyn_event_sender().await {
             let auth_event = AuthEvent {
-                user_id,
-                username,
-                domain: domain_code,
+                user_id: user.id.clone(),
+                username: user.username.clone(),
+                domain: user.domain_code.clone(),
                 access_token: auth_output.access_token.clone(),
                 refresh_token: auth_output.refresh_token.clone(),
-                client_ip: context.client_ip,
+                client_ip: context.client_ip.clone(),
                 client_port: context.client_port,
-                user_agent: context.user_agent,
-                request_id: context.request_id,
-                login_type: context.login_type,
+                user_agent: context.user_agent.clone(),
+                request_id: context.request_id.clone(),
+                login_type: context.login_type.clone(),
             };
 
-            if let Err(e) = send_auth_event(sender, auth_event).await {
-                project_error!("Failed to send AuthEvent: {:?}", e);
-            }
+            // 使用 spawn 异步处理事件，避免阻塞登录流程
+            tokio::spawn(async move {
+                if let Err(e) = send_auth_event(sender, auth_event).await {
+                    // 记录错误但不影响主流程
+                    project_error!("Failed to send AuthEvent: {:?}", e);
+                    // TODO: 可以添加重试机制或将失败事件写入特定队列
+                }
+            });
         }
+    }
 
-        Ok(auth_output)
+    #[allow(dead_code)]
+    async fn check_login_security(
+        &self,
+        _username: &str,
+        _client_ip: &str,
+    ) -> Result<(), AppError> {
+        // TODO: 实现登录安全检查
+        // 1. 检查登录失败次数
+        // 2. 检查 IP 黑名单
+        // 3. 检查账号是否被锁定
+        // 4. 检查是否在允许的时间范围内
+        Ok(())
+    }
+
+    #[allow(dead_code)]
+    async fn pwd_login_with_security(
+        &self,
+        input: LoginInput,
+        context: LoginContext,
+    ) -> Result<AuthOutput, AppError> {
+        self.check_login_security(&input.identifier, &context.client_ip).await?;
+
+        self.pwd_login(input, context).await
     }
 }
 
