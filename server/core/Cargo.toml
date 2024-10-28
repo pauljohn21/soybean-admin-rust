@@ -21,4 +21,8 @@ chrono = { workspace = true }
 sea-orm = { workspace = true }
 ulid = { workspace = true }
 
+http = { workspace = true }
+tower-layer = { workspace = true }
+tower-service = { workspace = true }
+
 [dev-dependencies]

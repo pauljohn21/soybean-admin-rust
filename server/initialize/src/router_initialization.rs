@@ -3,10 +3,12 @@ use std::sync::Arc;
 use axum::{body::Body, http::StatusCode, response::IntoResponse, Extension, Router};
 use axum_casbin::CasbinAxumLayer;
 use chrono::Utc;
+use http::Request;
 use server_config::Config;
 use server_constant::definition::Audience;
+use server_core::web::{RequestId, RequestIdLayer};
 use server_global::global::{clear_routes, get_collected_routes, get_config};
-use server_middleware::{jwt_auth_middleware, Request, RequestId, RequestIdLayer};
+use server_middleware::jwt_auth_middleware;
 use server_router::admin::{
     SysAuthenticationRouter, SysDomainRouter, SysEndpointRouter, SysMenuRouter, SysRoleRouter,
     SysUserRouter,

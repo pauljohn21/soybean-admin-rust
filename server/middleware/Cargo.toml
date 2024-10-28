@@ -11,9 +11,5 @@ axum-casbin = { path = "../../axum-casbin" }
 
 axum = { workspace = true }
 headers = { workspace = true }
-http = { workspace = true }
-tower-layer = { workspace = true }
-tower-service = { workspace = true }
-ulid = { workspace = true, features = ["std"] }
 
 [dev-dependencies]

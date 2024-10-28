@@ -6,6 +6,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+server-core = { path = "../core" }
 server-config = { path = "../config" }
 server-constant = { path = "../constant" }
 server-global = { path = "../global" }
@@ -27,9 +28,9 @@ tracing-error = { workspace = true }
 tracing-log = { workspace = true }
 chrono = { workspace = true, features = ["clock"] }
 
-[dev-dependencies]
-server-core = { path = "../core" }
+http = { workspace = true }
 
+[dev-dependencies]
 axum-test-helpers = { workspace = true }
 tower = { workspace = true, features = ["full"] }
 futures = { workspace = true }
