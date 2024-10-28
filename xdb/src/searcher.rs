@@ -34,8 +34,16 @@ pub fn get_block_by_size(bytes: &[u8], offset: usize, length: usize) -> usize {
     unsafe {
         let ptr = bytes.as_ptr().add(offset);
         match length {
-            4 => *(ptr as *const u32) as usize,
-            2 => *(ptr as *const u16) as usize,
+            4 => {
+                let mut buf = [0u8; 4];
+                std::ptr::copy_nonoverlapping(ptr, buf.as_mut_ptr(), 4);
+                u32::from_ne_bytes(buf) as usize
+            }
+            2 => {
+                let mut buf = [0u8; 2];
+                std::ptr::copy_nonoverlapping(ptr, buf.as_mut_ptr(), 2);
+                u16::from_ne_bytes(buf) as usize
+            }
             _ => {
                 let mut result = 0usize;
                 std::ptr::copy_nonoverlapping(ptr, &mut result as *mut usize as *mut u8, length);
@@ -54,14 +62,12 @@ where
 
     unsafe {
         let vector_cache = get_vector_index_cache();
-        let vector_ptr = vector_cache.as_ptr().add(
-            VECTOR_INDEX_SIZE
-                * ((((ip >> 24) & 0xFF) as usize) * VECTOR_INDEX_COLS
-                    + ((ip >> 16) & 0xFF) as usize),
-        );
+        let offset = VECTOR_INDEX_SIZE
+            * ((((ip >> 24) & 0xFF) as usize) * VECTOR_INDEX_COLS + ((ip >> 16) & 0xFF) as usize);
 
-        let start_ptr = *(vector_ptr as *const u32) as usize;
-        let end_ptr = *(vector_ptr.add(4) as *const u32) as usize;
+        // 使用 get_block_by_size 来安全地读取数据
+        let start_ptr = get_block_by_size(vector_cache, offset, 4);
+        let end_ptr = get_block_by_size(vector_cache, offset + 4, 4);
 
         let full_cache = get_full_cache();
         let cache_ptr = full_cache.as_ptr().add(start_ptr);
@@ -70,22 +76,24 @@ where
 
         while left < right {
             let mid = (left + right) >> 1;
-            let segment_ptr = cache_ptr.add(mid * SEGMENT_INDEX_SIZE);
+            let segment_offset = mid * SEGMENT_INDEX_SIZE;
+            let _segment_ptr = cache_ptr.add(segment_offset);
 
-            let start_ip = *(segment_ptr as *const u32);
+            // 使用 get_block_by_size 读取所有数据
+            let start_ip = get_block_by_size(full_cache, start_ptr + segment_offset, 4) as u32;
             if ip < start_ip {
                 right = mid;
                 continue;
             }
 
-            let end_ip = *(segment_ptr.add(4) as *const u32);
+            let end_ip = get_block_by_size(full_cache, start_ptr + segment_offset + 4, 4) as u32;
             if ip > end_ip {
                 left = mid + 1;
                 continue;
             }
 
-            let data_len = *(segment_ptr.add(8) as *const u16) as usize;
-            let data_offset = *(segment_ptr.add(10) as *const u32) as usize;
+            let data_len = get_block_by_size(full_cache, start_ptr + segment_offset + 8, 2);
+            let data_offset = get_block_by_size(full_cache, start_ptr + segment_offset + 10, 4);
 
             let data = std::slice::from_raw_parts(full_cache.as_ptr().add(data_offset), data_len);
 
