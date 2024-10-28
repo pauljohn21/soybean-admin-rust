@@ -34,7 +34,7 @@ pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
 
 #[cfg(test)]
 mod tests {
-    use log::LevelFilter;
+    use log::{info, LevelFilter};
     use simplelog::{Config as LogConfig, SimpleLogger};
 
     use super::*;
