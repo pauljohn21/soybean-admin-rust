@@ -15,6 +15,7 @@ server-router = { path = "../router" }
 server-service = { path = "../service" }
 axum-casbin = { path = "../../axum-casbin" }
 sea-orm-adapter = { path = "../../sea-orm-adapter" }
+xdb = { path = "../../xdb" }
 
 log = { workspace = true }
 casbin = { workspace = true }
