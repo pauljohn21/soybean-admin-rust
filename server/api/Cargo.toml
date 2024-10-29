@@ -9,6 +9,7 @@ edition.workspace = true
 server-core = { path = "../core" }
 server-service = { path = "../service" }
 axum-casbin = { path = "../../axum-casbin" }
+xdb = { path = "../../xdb" }
 
 axum = { workspace = true, features = ["http1", "query", "json", "multipart"] }
 axum-extra = { workspace = true, features = ["typed-header"] }

@@ -3050,6 +3050,7 @@ dependencies = [
  "headers",
  "server-core",
  "server-service",
+ "xdb",
 ]
 
 [[package]]
@@ -3151,6 +3152,7 @@ dependencies = [
  "tracing-error",
  "tracing-log",
  "tracing-subscriber",
+ "xdb",
 ]
 
 [[package]]

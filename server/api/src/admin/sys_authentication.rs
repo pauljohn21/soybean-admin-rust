@@ -32,9 +32,13 @@ impl SysAuthenticationApi {
             }
         };
 
+        let address = xdb::searcher::search_by_ip(client_ip.as_str())
+            .unwrap_or_else(|_| "Unknown Location".to_string());
+
         let login_context = LoginContext {
             client_ip,
             client_port: Some(addr.port() as i32),
+            address,
             user_agent: user_agent.as_str().to_string(),
             request_id: request_id.to_string(),
             audience: Audience::ManagementPlatform,
