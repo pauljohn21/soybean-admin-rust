@@ -82,3 +82,5 @@ argon2 = "0.5.3"
 
 strum = "0.26"
 strum_macros = "0.26"
+
+rayon = "1.10"
