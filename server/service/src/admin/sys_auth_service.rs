@@ -156,7 +156,7 @@ impl SysAuthService {
                 user_id: user.id.clone(),
                 username: user.username.clone(),
                 domain: user.domain_code.clone(),
-                access_token: auth_output.access_token.clone(),
+                access_token: auth_output.token.clone(),
                 refresh_token: auth_output.refresh_token.clone(),
                 client_ip: context.client_ip.clone(),
                 client_port: context.client_port,
@@ -232,7 +232,7 @@ pub async fn generate_auth_output(
     let token = JwtUtils::generate_token(&claims).await?;
 
     Ok(AuthOutput {
-        access_token: token,
+        token,
         refresh_token: Ulid::new().to_string(),
     })
 }

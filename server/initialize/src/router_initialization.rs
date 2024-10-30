@@ -52,6 +52,16 @@ pub async fn initialize_admin_router() -> Router {
         )
         .merge(
             configure_router(
+                SysAuthenticationRouter::init_protected_router().await,
+                Arc::new(SysAuthService),
+                None,
+                true,
+                audience,
+            )
+            .await,
+        )
+        .merge(
+            configure_router(
                 SysMenuRouter::init_menu_router().await,
                 Arc::new(SysMenuService),
                 None,

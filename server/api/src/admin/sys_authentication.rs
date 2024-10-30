@@ -3,11 +3,12 @@ use std::{net::SocketAddr, sync::Arc};
 use axum::{extract::ConnectInfo, http::HeaderMap, Extension};
 use axum_extra::{headers::UserAgent, TypedHeader};
 use server_core::web::{
-    error::AppError, res::Res, util::ClientIp, validator::ValidatedForm, RequestId,
+    auth::User, error::AppError, res::Res, util::ClientIp, validator::ValidatedForm, RequestId,
 };
 use server_service::{
     admin::{
         dto::sys_auth_dto::LoginContext, AuthOutput, LoginInput, SysAuthService, TAuthService,
+        UserInfoOutput,
     },
     Audience,
 };
@@ -47,5 +48,17 @@ impl SysAuthenticationApi {
         };
 
         service.pwd_login(input, login_context).await.map(Res::new_data)
+    }
+
+    pub async fn get_user_info(
+        Extension(user): Extension<User>,
+    ) -> Result<Res<UserInfoOutput>, AppError> {
+        let user_info = UserInfoOutput {
+            user_id: user.user_id(),
+            user_name: user.username(),
+            roles: user.subject(),
+        };
+
+        Ok(Res::new_data(user_info))
     }
 }
