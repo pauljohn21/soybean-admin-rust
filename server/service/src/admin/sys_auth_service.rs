@@ -153,7 +153,7 @@ impl TAuthService for SysAuthService {
 
         let menus = SysMenuEntity::find()
             .filter(SysMenuColumn::Id.is_in(menu_ids))
-            .filter(SysMenuColumn::Status.eq(Status::Enabled))
+            .filter(SysMenuColumn::Status.eq(Status::ENABLED))
             .order_by_asc(SysMenuColumn::Sequence)
             .into_model::<SysMenuModel>()
             .all(db.as_ref())

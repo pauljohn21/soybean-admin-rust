@@ -17,6 +17,7 @@ pub struct UserWithDomainAndOrgOutput {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UserWithoutPassword {
     pub id: String,
     pub domain: String,

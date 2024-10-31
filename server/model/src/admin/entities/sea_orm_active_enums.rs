@@ -16,9 +16,9 @@ pub enum MenuType {
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "\"Status\"")]
 pub enum Status {
     #[sea_orm(string_value = "BANNED")]
-    Banned,
+    BANNED,
     #[sea_orm(string_value = "DISABLED")]
-    Disabled,
+    DISABLED,
     #[sea_orm(string_value = "ENABLED")]
-    Enabled,
+    ENABLED,
 }

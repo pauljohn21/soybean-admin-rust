@@ -64,7 +64,7 @@ impl TMenuService for SysMenuService {
 
         let menus: Vec<SysMenuModel> = SysMenu::find()
             .filter(SysMenuColumn::Constant.eq(true))
-            .filter(SysMenuColumn::Status.eq(Status::Enabled))
+            .filter(SysMenuColumn::Status.eq(Status::ENABLED))
             .all(db.as_ref())
             .await
             .map_err(AppError::from)?;
