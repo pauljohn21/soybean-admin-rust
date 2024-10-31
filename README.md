@@ -1,28 +1,22 @@
 # SoybeanAdmin Rust
 
-<p align="center">
-<a href="https://github.com/soybeanjs/soybean-admin-rust/blob/main/LICENSE">
-<img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="license"/>
-</a>
-<a href="https://github.com/soybeanjs/soybean-admin-rust/stargazers">
-<img src="https://img.shields.io/github/stars/soybeanjs/soybean-admin-rust.svg" alt="stars"/>
-</a>
-<a href="https://github.com/soybeanjs/soybean-admin-rust/network/members">
-<img src="https://img.shields.io/github/forks/soybeanjs/soybean-admin-rust.svg" alt="forks"/>
-</a>
-<a href="https://github.com/soybeanjs/soybean-admin-rust/issues">
-<img src="https://img.shields.io/github/issues/soybeanjs/soybean-admin-rust.svg" alt="issues"/>
-</a>
-</p>
-<p align="center">
-<a href="#简介">简介</a> •
-<a href="#特性">特性</a> •
-<a href="#项目结构">项目结构</a> •
-<a href="#快速开始">快速开始</a> •
-<a href="#技术栈">技术栈</a> •
-<a href="#贡献指南">贡献指南</a> •
-<a href="#许可证">许可证</a>
-</p>
+<!-- markdownlint-disable-next-line -->
+<div align="center">
+
+![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
+![stars](https://img.shields.io/github/stars/soybeanjs/soybean-admin-rust.svg)
+![forks](https://img.shields.io/github/forks/soybeanjs/soybean-admin-rust.svg)
+![issues](https://img.shields.io/github/issues/soybeanjs/soybean-admin-rust.svg)
+
+[简介](#简介) •
+[特性](#特性) •
+[项目结构](#项目结构) •
+[快速开始](#快速开始) •
+[技术栈](#技术栈) •
+[贡献指南](#贡献指南) •
+[许可证](#许可证)
+
+</div>
 
 ## 简介
 
@@ -67,7 +61,7 @@ SoybeanAdmin Rust 是一个基于 Rust 语言开发的现代化后台管理系�
 
 ## 项目结构
 
-```
+```tree
 soybean-admin-rust/
 ├── .cargo/               # Cargo 配置
 ├── axum-casbin/          # Axum Casbin 适配器
