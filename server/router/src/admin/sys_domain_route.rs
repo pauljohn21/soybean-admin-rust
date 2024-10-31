@@ -14,12 +14,7 @@ impl SysDomainRouter {
         let service_name = "SysDomainApi";
 
         let routes = vec![
-            RouteInfo::new(
-                &format!("{}/list", base_path),
-                Method::GET,
-                service_name,
-                "获取域名列表",
-            ),
+            RouteInfo::new(base_path, Method::GET, service_name, "获取域名列表"),
             RouteInfo::new(base_path, Method::POST, service_name, "创建域名"),
             RouteInfo::new(
                 &format!("{}/:id", base_path),
@@ -36,7 +31,7 @@ impl SysDomainRouter {
         }
 
         let router = Router::new()
-            .route("/list", get(SysDomainApi::get_paginated_domains))
+            .route("/", get(SysDomainApi::get_paginated_domains))
             .route("/", post(SysDomainApi::create_domain))
             .route("/:id", get(SysDomainApi::get_domain))
             .route("/", put(SysDomainApi::update_domain))

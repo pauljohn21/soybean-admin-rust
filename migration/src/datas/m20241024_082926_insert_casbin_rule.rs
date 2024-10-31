@@ -16,7 +16,7 @@ impl MigrationTrait for Migration {
             r#"
             INSERT INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5)
             VALUES
-            ('p', 'ROLE_SUPER', 'built-in', '/domain/list', 'GET', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/domain', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/domain', 'POST', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/domain/:id', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/domain', 'PUT', '', ''),
@@ -27,14 +27,14 @@ impl MigrationTrait for Migration {
             ('p', 'ROLE_SUPER', 'built-in', '/route', 'PUT', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/route/:id', 'DELETE', '', ''),
 
-            ('p', 'ROLE_SUPER', 'built-in', '/role/list', 'GET', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/role', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/role', 'POST', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/role/:id', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/role', 'PUT', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/role/:id', 'DELETE', '', ''),
 
             ('p', 'ROLE_SUPER', 'built-in', '/user/users', 'GET', '', ''),
-            ('p', 'ROLE_SUPER', 'built-in', '/user/list', 'GET', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/user', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/user', 'POST', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/user/:id', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/user', 'PUT', '', ''),

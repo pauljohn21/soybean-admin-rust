@@ -14,12 +14,7 @@ impl SysRoleRouter {
         let service_name = "SysRoleApi";
 
         let routes = vec![
-            RouteInfo::new(
-                &format!("{}/list", base_path),
-                Method::GET,
-                service_name,
-                "获取角色列表",
-            ),
+            RouteInfo::new(base_path, Method::GET, service_name, "获取角色列表"),
             RouteInfo::new(base_path, Method::POST, service_name, "创建角色"),
             RouteInfo::new(
                 &format!("{}/:id", base_path),
@@ -36,7 +31,7 @@ impl SysRoleRouter {
         }
 
         let router = Router::new()
-            .route("/list", get(SysRoleApi::get_paginated_roles))
+            .route("/", get(SysRoleApi::get_paginated_roles))
             .route("/", post(SysRoleApi::create_role))
             .route("/:id", get(SysRoleApi::get_role))
             .route("/", put(SysRoleApi::update_role))

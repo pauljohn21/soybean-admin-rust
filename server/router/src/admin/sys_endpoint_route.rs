@@ -10,7 +10,7 @@ impl SysEndpointRouter {
         let service_name = "SysEndpointApi";
 
         let routes = vec![RouteInfo::new(
-            &format!("{}/list", base_path),
+            base_path,
             Method::GET,
             service_name,
             "获取接口列表",
@@ -20,7 +20,7 @@ impl SysEndpointRouter {
             add_route(route).await;
         }
 
-        let router = Router::new().route("/list", get(SysEndpointApi::get_paginated_endpoints));
+        let router = Router::new().route("/", get(SysEndpointApi::get_paginated_endpoints));
 
         Router::new().nest(base_path, router)
     }
