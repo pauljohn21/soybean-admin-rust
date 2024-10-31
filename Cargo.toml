@@ -22,7 +22,7 @@ split-debuginfo = "unpacked"
 [workspace.package]
 authors = ["wang1571339199@outlook.com"]
 publish = false
-version = "0.1.0"
+version = "0.1.0-alpha"
 edition = "2021"
 
 [workspace.dependencies]
