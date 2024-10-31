@@ -8,6 +8,9 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let db = manager.get_connection();
 
+        // 执行架构迁移
+        sea_orm_adapter::up(db).await?;
+
         let insert_casbin_rules_stmt = Statement::from_string(
             manager.get_database_backend(),
             r#"
