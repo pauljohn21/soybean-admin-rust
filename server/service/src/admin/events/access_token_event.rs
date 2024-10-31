@@ -2,7 +2,7 @@ use chrono::Utc;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use server_constant::definition::consts::TokenStatus;
 use server_core::web::error::AppError;
-use server_model::admin::entities::sys_tokens;
+use server_model::admin::entities::sys_tokens::ActiveModel as SysTokensActiveModel;
 use ulid::Ulid;
 
 pub struct AccessTokenEvent {
@@ -23,7 +23,7 @@ impl AccessTokenEvent {
     pub async fn handle(self, db: &DatabaseConnection) -> Result<(), AppError> {
         let now = Utc::now().naive_utc();
 
-        sys_tokens::ActiveModel {
+        SysTokensActiveModel {
             id: Set(Ulid::new().to_string()),
             access_token: Set(self.access_token),
             refresh_token: Set(self.refresh_token),

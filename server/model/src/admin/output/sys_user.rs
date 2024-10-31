@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use sea_orm::FromQueryResult;
 use serde::Serialize;
 
-use crate::admin::entities::{sea_orm_active_enums::Status, sys_user};
+use crate::admin::entities::{sea_orm_active_enums::Status, sys_user::Model as SysUserModel};
 
 #[derive(Debug, FromQueryResult)]
 pub struct UserWithDomainAndOrgOutput {
@@ -32,8 +32,8 @@ pub struct UserWithoutPassword {
     pub updated_by: Option<String>,
 }
 
-impl From<sys_user::Model> for UserWithoutPassword {
-    fn from(model: sys_user::Model) -> Self {
+impl From<SysUserModel> for UserWithoutPassword {
+    fn from(model: SysUserModel) -> Self {
         Self {
             id: model.id,
             domain: model.domain,

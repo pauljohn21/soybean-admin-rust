@@ -14,11 +14,12 @@ use server_model::admin::{
     entities::{
         prelude::{SysRole, SysUser},
         sea_orm_active_enums::Status,
-        sys_domain,
-        sys_menu::{self},
-        sys_role, sys_role_menu,
-        sys_user::{self},
-        sys_user_role,
+        sys_domain::Column as SysDomainColumn,
+        sys_menu::{Column as SysMenuColumn, Entity as SysMenuEntity, Model as SysMenuModel},
+        sys_role::{Column as SysRoleColumn, Entity as SysRoleEntity, Relation as SysRoleRelation},
+        sys_role_menu::{Column as SysRoleMenuColumn, Entity as SysRoleMenuEntity},
+        sys_user::{Column as SysUserColumn, Relation as SysUserRelation},
+        sys_user_role::Relation as SysUserRoleRelation,
     },
     input::LoginInput,
     output::{AuthOutput, MenuRoute, RouteMeta, UserRoute, UserWithDomainAndOrgOutput},
@@ -42,14 +43,14 @@ macro_rules! select_user_with_domain_and_org_info {
     ($query:expr) => {{
         $query
             .select_only()
-            .column_as(sys_user::Column::Id, "id")
-            .column_as(sys_user::Column::Domain, "domain")
-            .column_as(sys_user::Column::Username, "username")
-            .column_as(sys_user::Column::Password, "password")
-            .column_as(sys_user::Column::NickName, "nick_name")
-            .column_as(sys_user::Column::Avatar, "avatar")
-            .column_as(sys_domain::Column::Code, "domain_code")
-            .column_as(sys_domain::Column::Name, "domain_name")
+            .column_as(SysUserColumn::Id, "id")
+            .column_as(SysUserColumn::Domain, "domain")
+            .column_as(SysUserColumn::Username, "username")
+            .column_as(SysUserColumn::Password, "password")
+            .column_as(SysUserColumn::NickName, "nick_name")
+            .column_as(SysUserColumn::Avatar, "avatar")
+            .column_as(SysDomainColumn::Code, "domain_code")
+            .column_as(SysDomainColumn::Name, "domain_name")
     }};
 }
 #[derive(Error, Debug)]
@@ -139,22 +140,22 @@ impl TAuthService for SysAuthService {
 
         let db = db_helper::get_db_connection().await?;
 
-        let menu_ids = sys_role_menu::Entity::find()
+        let menu_ids = SysRoleMenuEntity::find()
             .select_only()
-            .column(sys_role_menu::Column::MenuId)
-            .join_rev(JoinType::InnerJoin, sys_role::Entity::has_many(sys_role_menu::Entity).into())
-            .filter(sys_role::Column::Code.is_in(role_codes.to_vec()))
-            .filter(sys_role_menu::Column::Domain.eq(domain))
+            .column(SysRoleMenuColumn::MenuId)
+            .join_rev(JoinType::InnerJoin, SysRoleEntity::has_many(SysRoleMenuEntity).into())
+            .filter(SysRoleColumn::Code.is_in(role_codes.to_vec()))
+            .filter(SysRoleMenuColumn::Domain.eq(domain))
             .distinct()
             .into_tuple::<i32>()
             .all(db.as_ref())
             .await?;
 
-        let menus = sys_menu::Entity::find()
-            .filter(sys_menu::Column::Id.is_in(menu_ids))
-            .filter(sys_menu::Column::Status.eq(Status::Enabled))
-            .order_by_asc(sys_menu::Column::Sequence)
-            .into_model::<sys_menu::Model>()
+        let menus = SysMenuEntity::find()
+            .filter(SysMenuColumn::Id.is_in(menu_ids))
+            .filter(SysMenuColumn::Status.eq(Status::Enabled))
+            .order_by_asc(SysMenuColumn::Sequence)
+            .into_model::<SysMenuModel>()
             .all(db.as_ref())
             .await?;
 
@@ -220,9 +221,9 @@ impl SysAuthService {
         let db = db_helper::get_db_connection().await?;
 
         let user = select_user_with_domain_and_org_info!(SysUser::find())
-            .filter(sys_user::Column::Username.eq(identifier))
-            .filter(sys_domain::Column::Code.eq(domain))
-            .join(JoinType::InnerJoin, sys_user::Relation::SysDomain.def())
+            .filter(SysUserColumn::Username.eq(identifier))
+            .filter(SysDomainColumn::Code.eq(domain))
+            .join(JoinType::InnerJoin, SysUserRelation::SysDomain.def())
             .into_model::<UserWithDomainAndOrgOutput>()
             .one(db.as_ref())
             .await
@@ -249,9 +250,9 @@ impl SysAuthService {
         db: &DatabaseConnection,
     ) -> Result<Vec<String>, AppError> {
         SysRole::find()
-            .join(JoinType::InnerJoin, sys_role::Relation::SysUserRole.def())
-            .join(JoinType::InnerJoin, sys_user_role::Relation::SysUser.def())
-            .filter(sys_user::Column::Id.eq(user_id))
+            .join(JoinType::InnerJoin, SysRoleRelation::SysUserRole.def())
+            .join(JoinType::InnerJoin, SysUserRoleRelation::SysUser.def())
+            .filter(SysUserColumn::Id.eq(user_id))
             .all(db)
             .await
             .map(|roles| roles.iter().map(|role| role.code.clone()).collect())

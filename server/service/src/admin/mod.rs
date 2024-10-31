@@ -2,7 +2,10 @@ pub use errors::*;
 pub use server_model::admin::{
     entities::{
         prelude::{SysDomain, SysEndpoint, SysMenu, SysRole, SysUser},
-        sys_domain, sys_endpoint, sys_menu, sys_role, sys_user,
+        sys_domain::Model as SysDomainModel,
+        sys_endpoint::Model as SysEndpointModel,
+        sys_menu::Model as SysMenuModel,
+        sys_role::Model as SysRoleModel,
     },
     input::*,
     output::*,

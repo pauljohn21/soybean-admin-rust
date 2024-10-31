@@ -3,7 +3,13 @@ use chrono::Utc;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use server_core::web::{auth::User, error::AppError};
 use server_model::admin::{
-    entities::{prelude::SysMenu, sea_orm_active_enums::Status, sys_menu},
+    entities::{
+        prelude::SysMenu,
+        sea_orm_active_enums::Status,
+        sys_menu::{
+            ActiveModel as SysMenuActiveModel, Column as SysMenuColumn, Model as SysMenuModel,
+        },
+    },
     input::{CreateMenuInput, UpdateMenuInput},
     output::{MenuRoute, RouteMeta},
 };
@@ -18,13 +24,13 @@ pub trait TMenuService {
         &self,
         input: CreateMenuInput,
         user: User,
-    ) -> Result<sys_menu::Model, AppError>;
-    async fn get_menu(&self, id: i32) -> Result<sys_menu::Model, AppError>;
+    ) -> Result<SysMenuModel, AppError>;
+    async fn get_menu(&self, id: i32) -> Result<SysMenuModel, AppError>;
     async fn update_menu(
         &self,
         input: UpdateMenuInput,
         user: User,
-    ) -> Result<sys_menu::Model, AppError>;
+    ) -> Result<SysMenuModel, AppError>;
     async fn delete_menu(&self, id: i32, user: User) -> Result<(), AppError>;
 }
 
@@ -36,8 +42,8 @@ impl SysMenuService {
         let db = db_helper::get_db_connection().await?;
 
         let route_name_exists = SysMenu::find()
-            .filter(sys_menu::Column::RouteName.eq(route_name))
-            .filter(sys_menu::Column::Id.ne(id.unwrap_or(-1)))
+            .filter(SysMenuColumn::RouteName.eq(route_name))
+            .filter(SysMenuColumn::Id.ne(id.unwrap_or(-1)))
             .one(db.as_ref())
             .await
             .map_err(AppError::from)?
@@ -56,9 +62,9 @@ impl TMenuService for SysMenuService {
     async fn get_constant_routes(&self) -> Result<Vec<MenuRoute>, AppError> {
         let db = db_helper::get_db_connection().await?;
 
-        let menus: Vec<sys_menu::Model> = SysMenu::find()
-            .filter(sys_menu::Column::Constant.eq(true))
-            .filter(sys_menu::Column::Status.eq(Status::Enabled))
+        let menus: Vec<SysMenuModel> = SysMenu::find()
+            .filter(SysMenuColumn::Constant.eq(true))
+            .filter(SysMenuColumn::Status.eq(Status::Enabled))
             .all(db.as_ref())
             .await
             .map_err(AppError::from)?;
@@ -94,12 +100,12 @@ impl TMenuService for SysMenuService {
         &self,
         input: CreateMenuInput,
         user: User,
-    ) -> Result<sys_menu::Model, AppError> {
+    ) -> Result<SysMenuModel, AppError> {
         self.check_menu_exists(None, &input.route_name).await?;
 
         let db = db_helper::get_db_connection().await?;
 
-        let menu = sys_menu::ActiveModel {
+        let menu = SysMenuActiveModel {
             menu_type: Set(input.menu_type),
             menu_name: Set(input.menu_name),
             icon_type: Set(input.icon_type),
@@ -127,7 +133,7 @@ impl TMenuService for SysMenuService {
         Ok(result)
     }
 
-    async fn get_menu(&self, id: i32) -> Result<sys_menu::Model, AppError> {
+    async fn get_menu(&self, id: i32) -> Result<SysMenuModel, AppError> {
         let db = db_helper::get_db_connection().await?;
         SysMenu::find_by_id(id)
             .one(db.as_ref())
@@ -140,13 +146,13 @@ impl TMenuService for SysMenuService {
         &self,
         input: UpdateMenuInput,
         user: User,
-    ) -> Result<sys_menu::Model, AppError> {
+    ) -> Result<SysMenuModel, AppError> {
         let db = db_helper::get_db_connection().await?;
         let existing_menu = self.get_menu(input.id).await?;
 
         self.check_menu_exists(Some(input.id), &input.menu.route_name).await?;
 
-        let mut menu: sys_menu::ActiveModel = existing_menu.into();
+        let mut menu: SysMenuActiveModel = existing_menu.into();
         menu.menu_type = Set(input.menu.menu_type);
         menu.menu_name = Set(input.menu.menu_name);
         menu.icon_type = Set(input.menu.icon_type);

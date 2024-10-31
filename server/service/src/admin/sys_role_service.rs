@@ -5,7 +5,12 @@ use sea_orm::{
 };
 use server_core::web::{error::AppError, page::PaginatedData};
 use server_model::admin::{
-    entities::{prelude::SysRole, sys_role},
+    entities::{
+        prelude::SysRole,
+        sys_role::{
+            ActiveModel as SysRoleActiveModel, Column as SysRoleColumn, Model as SysRoleModel,
+        },
+    },
     input::{CreateRoleInput, RolePageRequest, UpdateRoleInput},
 };
 
@@ -17,11 +22,11 @@ pub trait TRoleService {
     async fn find_paginated_roles(
         &self,
         params: RolePageRequest,
-    ) -> Result<PaginatedData<sys_role::Model>, AppError>;
+    ) -> Result<PaginatedData<SysRoleModel>, AppError>;
 
-    async fn create_role(&self, input: CreateRoleInput) -> Result<sys_role::Model, AppError>;
-    async fn get_role(&self, id: &str) -> Result<sys_role::Model, AppError>;
-    async fn update_role(&self, input: UpdateRoleInput) -> Result<sys_role::Model, AppError>;
+    async fn create_role(&self, input: CreateRoleInput) -> Result<SysRoleModel, AppError>;
+    async fn get_role(&self, id: &str) -> Result<SysRoleModel, AppError>;
+    async fn update_role(&self, input: UpdateRoleInput) -> Result<SysRoleModel, AppError>;
     async fn delete_role(&self, id: &str) -> Result<(), AppError>;
 }
 
@@ -31,10 +36,10 @@ pub struct SysRoleService;
 impl SysRoleService {
     async fn check_role_exists(&self, id: Option<&str>, code: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
-        let mut query = SysRole::find().filter(sys_role::Column::Code.eq(code));
+        let mut query = SysRole::find().filter(SysRoleColumn::Code.eq(code));
 
         if let Some(id) = id {
-            query = query.filter(sys_role::Column::Id.ne(id));
+            query = query.filter(SysRoleColumn::Id.ne(id));
         }
 
         let existing_role = query.one(db.as_ref()).await.map_err(AppError::from)?;
@@ -52,12 +57,12 @@ impl TRoleService for SysRoleService {
     async fn find_paginated_roles(
         &self,
         params: RolePageRequest,
-    ) -> Result<PaginatedData<sys_role::Model>, AppError> {
+    ) -> Result<PaginatedData<SysRoleModel>, AppError> {
         let db = db_helper::get_db_connection().await?;
         let mut query = SysRole::find();
 
         if let Some(ref keywords) = params.keywords {
-            let condition = Condition::any().add(sys_role::Column::Name.contains(keywords));
+            let condition = Condition::any().add(SysRoleColumn::Name.contains(keywords));
             query = query.filter(condition);
         }
 
@@ -77,12 +82,12 @@ impl TRoleService for SysRoleService {
         })
     }
 
-    async fn create_role(&self, input: CreateRoleInput) -> Result<sys_role::Model, AppError> {
+    async fn create_role(&self, input: CreateRoleInput) -> Result<SysRoleModel, AppError> {
         let db = db_helper::get_db_connection().await?;
 
         self.check_role_exists(None, &input.code).await?;
 
-        let role = sys_role::ActiveModel {
+        let role = SysRoleActiveModel {
             pid: Set(input.pid),
             code: Set(input.code),
             name: Set(input.name),
@@ -94,7 +99,7 @@ impl TRoleService for SysRoleService {
         Ok(result)
     }
 
-    async fn get_role(&self, id: &str) -> Result<sys_role::Model, AppError> {
+    async fn get_role(&self, id: &str) -> Result<SysRoleModel, AppError> {
         let db = db_helper::get_db_connection().await?;
         SysRole::find_by_id(id)
             .one(db.as_ref())
@@ -103,19 +108,19 @@ impl TRoleService for SysRoleService {
             .ok_or_else(|| RoleError::RoleNotFound.into())
     }
 
-    async fn update_role(&self, input: UpdateRoleInput) -> Result<sys_role::Model, AppError> {
+    async fn update_role(&self, input: UpdateRoleInput) -> Result<SysRoleModel, AppError> {
         let db = db_helper::get_db_connection().await?;
 
         self.check_role_exists(Some(&input.id), &input.role.code).await?;
 
-        let role: sys_role::ActiveModel = SysRole::find_by_id(&input.id)
+        let role: SysRoleActiveModel = SysRole::find_by_id(&input.id)
             .one(db.as_ref())
             .await
             .map_err(AppError::from)?
             .ok_or_else(|| AppError::from(RoleError::RoleNotFound))?
             .into();
 
-        let role = sys_role::ActiveModel {
+        let role = SysRoleActiveModel {
             id: Set(input.id.clone()),
             pid: Set(input.role.pid),
             code: Set(input.role.code),

@@ -1,7 +1,7 @@
 use chrono::Utc;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use server_core::web::error::AppError;
-use server_model::admin::entities::sys_login_log;
+use server_model::admin::entities::sys_login_log::ActiveModel as SysLoginLogActiveModel;
 use ulid::Ulid;
 
 pub struct LoginLogEvent {
@@ -18,7 +18,7 @@ pub struct LoginLogEvent {
 
 impl LoginLogEvent {
     pub async fn handle(self, db: &DatabaseConnection) -> Result<(), AppError> {
-        sys_login_log::ActiveModel {
+        SysLoginLogActiveModel {
             id: Set(Ulid::new().to_string()),
             user_id: Set(self.user_id),
             username: Set(self.username.clone()),

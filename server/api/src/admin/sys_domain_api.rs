@@ -6,7 +6,7 @@ use axum::{
 };
 use server_core::web::{error::AppError, page::PaginatedData, res::Res, validator::ValidatedForm};
 use server_service::admin::{
-    sys_domain, CreateDomainInput, DomainPageRequest, SysDomainService, TDomainService,
+    CreateDomainInput, DomainPageRequest, SysDomainModel, SysDomainService, TDomainService,
     UpdateDomainInput,
 };
 
@@ -16,28 +16,28 @@ impl SysDomainApi {
     pub async fn get_paginated_domains(
         Query(params): Query<DomainPageRequest>,
         Extension(service): Extension<Arc<SysDomainService>>,
-    ) -> Result<Res<PaginatedData<sys_domain::Model>>, AppError> {
+    ) -> Result<Res<PaginatedData<SysDomainModel>>, AppError> {
         service.find_paginated_domains(params).await.map(Res::new_data)
     }
 
     pub async fn create_domain(
         Extension(service): Extension<Arc<SysDomainService>>,
         ValidatedForm(input): ValidatedForm<CreateDomainInput>,
-    ) -> Result<Res<sys_domain::Model>, AppError> {
+    ) -> Result<Res<SysDomainModel>, AppError> {
         service.create_domain(input).await.map(Res::new_data)
     }
 
     pub async fn get_domain(
         Path(id): Path<String>,
         Extension(service): Extension<Arc<SysDomainService>>,
-    ) -> Result<Res<sys_domain::Model>, AppError> {
+    ) -> Result<Res<SysDomainModel>, AppError> {
         service.get_domain(&id).await.map(Res::new_data)
     }
 
     pub async fn update_domain(
         Extension(service): Extension<Arc<SysDomainService>>,
         ValidatedForm(input): ValidatedForm<UpdateDomainInput>,
-    ) -> Result<Res<sys_domain::Model>, AppError> {
+    ) -> Result<Res<SysDomainModel>, AppError> {
         service.update_domain(input).await.map(Res::new_data)
     }
 

@@ -5,7 +5,12 @@ use sea_orm::{
 };
 use server_core::web::{error::AppError, page::PaginatedData};
 use server_model::admin::{
-    entities::{prelude::SysUser, sys_user},
+    entities::{
+        prelude::SysUser,
+        sys_user::{
+            ActiveModel as SysUserActiveModel, Column as SysUserColumn, Model as SysUserModel,
+        },
+    },
     input::{CreateUserInput, UpdateUserInput, UserPageRequest},
     output::UserWithoutPassword,
 };
@@ -34,7 +39,7 @@ impl SysUserService {
     async fn check_username_unique(&self, username: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
         let existing_user = SysUser::find()
-            .filter(sys_user::Column::Username.eq(username))
+            .filter(SysUserColumn::Username.eq(username))
             .one(db.as_ref())
             .await
             .map_err(AppError::from)?;
@@ -45,7 +50,7 @@ impl SysUserService {
         Ok(())
     }
 
-    async fn get_user_by_id(&self, id: String) -> Result<sys_user::Model, AppError> {
+    async fn get_user_by_id(&self, id: String) -> Result<SysUserModel, AppError> {
         let db = db_helper::get_db_connection().await?;
         SysUser::find_by_id(id)
             .one(db.as_ref())
@@ -74,7 +79,7 @@ impl TUserService for SysUserService {
         let mut query = SysUser::find();
 
         if let Some(ref keywords) = params.keywords {
-            let condition = Condition::any().add(sys_user::Column::Username.contains(keywords));
+            let condition = Condition::any().add(SysUserColumn::Username.contains(keywords));
             query = query.filter(condition);
         }
 
@@ -101,7 +106,7 @@ impl TUserService for SysUserService {
         self.check_username_unique(&input.username).await?;
 
         let db = db_helper::get_db_connection().await?;
-        let user = sys_user::ActiveModel {
+        let user = SysUserActiveModel {
             domain: Set(input.domain),
             username: Set(input.username),
             password: Set(input.password), /* Note: In a real application, you should hash the
