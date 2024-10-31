@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+use super::MenuRoute;
+
 #[derive(Clone, Debug, Serialize)]
 pub struct AuthOutput {
     pub token: String,
@@ -10,7 +12,15 @@ pub struct AuthOutput {
 
 #[derive(Debug, Serialize)]
 pub struct UserInfoOutput {
+    #[serde(rename = "userId")]
     pub user_id: String,
+    #[serde(rename = "userName")]
     pub user_name: String,
     pub roles: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct UserRoute {
+    pub routes: Vec<MenuRoute>,
+    pub home: String,
 }

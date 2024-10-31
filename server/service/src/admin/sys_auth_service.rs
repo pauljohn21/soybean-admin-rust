@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QuerySelect, RelationTrait,
+    ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QueryOrder, QuerySelect,
+    RelationTrait,
 };
 use server_constant::definition::Audience;
 use server_core::web::{
@@ -12,12 +13,17 @@ use server_global::global::{get_dyn_event_receiver, get_dyn_event_sender};
 use server_model::admin::{
     entities::{
         prelude::{SysRole, SysUser},
-        sys_domain, sys_role, sys_user, sys_user_role,
+        sea_orm_active_enums::Status,
+        sys_domain,
+        sys_menu::{self},
+        sys_role, sys_role_menu,
+        sys_user::{self},
+        sys_user_role,
     },
     input::LoginInput,
-    output::{AuthOutput, UserWithDomainAndOrgOutput},
+    output::{AuthOutput, MenuRoute, RouteMeta, UserRoute, UserWithDomainAndOrgOutput},
 };
-use server_utils::SecureUtil;
+use server_utils::{SecureUtil, TreeBuilder};
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tracing::{error, instrument};
@@ -55,16 +61,39 @@ pub enum EventError {
 }
 
 #[async_trait]
-pub trait TAuthService {
+pub trait TAuthService: Send + Sync {
     async fn pwd_login(
         &self,
         input: LoginInput,
         context: LoginContext,
     ) -> Result<AuthOutput, AppError>;
+
+    async fn get_user_routes(
+        &self,
+        role_codes: &[String],
+        domain: &str,
+    ) -> Result<UserRoute, AppError>;
 }
 
 #[derive(Clone)]
 pub struct SysAuthService;
+
+impl SysAuthService {
+    /// 查找第一个有效的路由路径
+    fn find_first_valid_route(routes: &[MenuRoute]) -> Option<String> {
+        for route in routes {
+            if !route.path.is_empty() && route.path != "/" {
+                return Some(route.path.clone());
+            }
+            if let Some(children) = &route.children {
+                if let Some(path) = Self::find_first_valid_route(children) {
+                    return Some(path);
+                }
+            }
+        }
+        None
+    }
+}
 
 #[async_trait]
 impl TAuthService for SysAuthService {
@@ -93,6 +122,90 @@ impl TAuthService for SysAuthService {
         self.send_login_event(&user, &auth_output, &context).await;
 
         Ok(auth_output)
+    }
+
+    #[instrument(skip(self), fields(roles = ?role_codes, domain = %domain))]
+    async fn get_user_routes(
+        &self,
+        role_codes: &[String],
+        domain: &str,
+    ) -> Result<UserRoute, AppError> {
+        if role_codes.is_empty() {
+            return Ok(UserRoute {
+                routes: vec![],
+                home: "/home".to_string(),
+            });
+        }
+
+        let db = db_helper::get_db_connection().await?;
+
+        let menu_ids = sys_role_menu::Entity::find()
+            .select_only()
+            .column(sys_role_menu::Column::MenuId)
+            .join_rev(JoinType::InnerJoin, sys_role::Entity::has_many(sys_role_menu::Entity).into())
+            .filter(sys_role::Column::Code.is_in(role_codes.to_vec()))
+            .filter(sys_role_menu::Column::Domain.eq(domain))
+            .distinct()
+            .into_tuple::<i32>()
+            .all(db.as_ref())
+            .await?;
+
+        let menus = sys_menu::Entity::find()
+            .filter(sys_menu::Column::Id.is_in(menu_ids))
+            .filter(sys_menu::Column::Status.eq(Status::Enabled))
+            .order_by_asc(sys_menu::Column::Sequence)
+            .into_model::<sys_menu::Model>()
+            .all(db.as_ref())
+            .await?;
+
+        let menu_routes: Vec<MenuRoute> = menus
+            .into_iter()
+            .map(|menu| MenuRoute {
+                name: menu.route_name,
+                path: menu.route_path,
+                component: menu.component,
+                meta: RouteMeta {
+                    title: menu.menu_name,
+                    i18n_key: menu.i18n_key,
+                    keep_alive: menu.keep_alive,
+                    constant: menu.constant,
+                    icon: menu.icon,
+                    order: menu.sequence,
+                    href: menu.href,
+                    hide_in_menu: menu.hide_in_menu,
+                    active_menu: menu.active_menu,
+                    multi_tab: menu.multi_tab,
+                },
+                children: Some(vec![]),
+                id: menu.id,
+                pid: menu.pid,
+            })
+            .collect();
+
+        let menu_routes_ref = menu_routes.clone();
+
+        let routes = TreeBuilder::build(
+            menu_routes,
+            |route| route.name.clone(),
+            |route| {
+                if route.pid == "0" {
+                    None
+                } else {
+                    menu_routes_ref
+                        .iter()
+                        .find(|m| m.id.to_string() == route.pid)
+                        .map(|m| m.name.clone())
+                }
+            },
+            |route| route.meta.order,
+            |route, children| {
+                route.children = Some(children);
+            },
+        );
+
+        let home = Self::find_first_valid_route(&routes).unwrap_or_else(|| "/home".to_string());
+
+        Ok(UserRoute { routes, home })
     }
 }
 

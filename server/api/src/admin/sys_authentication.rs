@@ -8,7 +8,7 @@ use server_core::web::{
 use server_service::{
     admin::{
         dto::sys_auth_dto::LoginContext, AuthOutput, LoginInput, SysAuthService, TAuthService,
-        UserInfoOutput,
+        UserInfoOutput, UserRoute,
     },
     Audience,
 };
@@ -60,5 +60,14 @@ impl SysAuthenticationApi {
         };
 
         Ok(Res::new_data(user_info))
+    }
+
+    pub async fn get_user_routes(
+        Extension(user): Extension<User>,
+        Extension(service): Extension<Arc<SysAuthService>>,
+    ) -> Result<Res<UserRoute>, AppError> {
+        let routes = service.get_user_routes(&user.subject(), &user.domain()).await?;
+
+        Ok(Res::new_data(routes))
     }
 }

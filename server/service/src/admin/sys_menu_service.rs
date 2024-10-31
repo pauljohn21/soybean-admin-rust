@@ -66,6 +66,8 @@ impl TMenuService for SysMenuService {
         let result = menus
             .into_iter()
             .map(|menu| MenuRoute {
+                id: menu.id,
+                pid: menu.pid,
                 name: menu.route_name,
                 path: menu.route_path,
                 component: menu.component,
