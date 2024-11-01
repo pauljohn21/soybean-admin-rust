@@ -10,13 +10,13 @@ use server_core::web::{RequestId, RequestIdLayer};
 use server_global::global::{clear_routes, get_collected_routes, get_config};
 use server_middleware::jwt_auth_middleware;
 use server_router::admin::{
-    SysAccessKeyRouter, SysAuthenticationRouter, SysDomainRouter, SysEndpointRouter, SysMenuRouter,
-    SysRoleRouter, SysUserRouter,
+    SysAccessKeyRouter, SysAuthenticationRouter, SysDomainRouter, SysEndpointRouter,
+    SysLoginLogRouter, SysMenuRouter, SysRoleRouter, SysUserRouter,
 };
 use server_service::{
     admin::{
-        SysAccessKeyService, SysAuthService, SysDomainService, SysEndpointService, SysMenuService,
-        SysRoleService, SysUserService, TEndpointService,
+        SysAccessKeyService, SysAuthService, SysDomainService, SysEndpointService,
+        SysLoginLogService, SysMenuService, SysRoleService, SysUserService, TEndpointService,
     },
     SysEndpoint,
 };
@@ -124,6 +124,16 @@ pub async fn initialize_admin_router() -> Router {
             configure_router(
                 SysAccessKeyRouter::init_access_key_router().await,
                 Arc::new(SysAccessKeyService),
+                Some(casbin_axum_layer.clone()),
+                true,
+                audience,
+            )
+            .await,
+        )
+        .merge(
+            configure_router(
+                SysLoginLogRouter::init_login_log_router().await,
+                Arc::new(SysLoginLogService),
                 Some(casbin_axum_layer.clone()),
                 true,
                 audience,
