@@ -7,8 +7,10 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "\"MenuType\"")]
 pub enum MenuType {
     #[sea_orm(string_value = "directory")]
+    #[serde(rename = "directory")]
     Directory,
     #[sea_orm(string_value = "menu")]
+    #[serde(rename = "menu")]
     Menu,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Deserialize, Serialize)]

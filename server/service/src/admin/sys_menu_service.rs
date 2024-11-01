@@ -11,13 +11,16 @@ use server_model::admin::{
         },
     },
     input::{CreateMenuInput, UpdateMenuInput},
-    output::{MenuRoute, RouteMeta},
+    output::{MenuRoute, MenuTree, RouteMeta},
 };
+use server_utils::TreeBuilder;
 
 use crate::{admin::sys_menu_error::MenuError, helper::db_helper};
 
 #[async_trait]
 pub trait TMenuService {
+    async fn get_menu_list(&self) -> Result<Vec<MenuTree>, AppError>;
+
     async fn get_constant_routes(&self) -> Result<Vec<MenuRoute>, AppError>;
 
     async fn create_menu(
@@ -59,6 +62,57 @@ impl SysMenuService {
 
 #[async_trait]
 impl TMenuService for SysMenuService {
+    async fn get_menu_list(&self) -> Result<Vec<MenuTree>, AppError> {
+        let db = db_helper::get_db_connection().await?;
+        let menus = SysMenu::find().all(db.as_ref()).await.map_err(AppError::from)?;
+
+        let menu_trees: Vec<MenuTree> = menus
+            .into_iter()
+            .map(|menu| MenuTree {
+                id: menu.id,
+                pid: menu.pid,
+                menu_type: menu.menu_type,
+                menu_name: menu.menu_name,
+                icon_type: menu.icon_type,
+                icon: menu.icon,
+                route_name: menu.route_name,
+                route_path: menu.route_path,
+                component: menu.component,
+                path_param: menu.path_param,
+                status: menu.status,
+                active_menu: menu.active_menu,
+                hide_in_menu: menu.hide_in_menu,
+                sequence: menu.sequence,
+                i18n_key: menu.i18n_key,
+                keep_alive: menu.keep_alive,
+                constant: menu.constant,
+                href: menu.href,
+                multi_tab: menu.multi_tab,
+                created_at: menu.created_at,
+                created_by: menu.created_by,
+                updated_at: menu.updated_at,
+                updated_by: menu.updated_by,
+                children: None,
+            })
+            .collect();
+
+        let tree = TreeBuilder::build(
+            menu_trees,
+            |node| node.id,
+            |node| {
+                if node.pid == "0" {
+                    None
+                } else {
+                    Some(node.pid.parse::<i32>().unwrap_or(-1))
+                }
+            },
+            |node| node.sequence,
+            |node, children| node.children = Some(children),
+        );
+
+        Ok(tree)
+    }
+
     async fn get_constant_routes(&self) -> Result<Vec<MenuRoute>, AppError> {
         let db = db_helper::get_db_connection().await?;
 

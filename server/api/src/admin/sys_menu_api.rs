@@ -3,12 +3,19 @@ use std::sync::Arc;
 use axum::{extract::Path, Extension};
 use server_core::web::{auth::User, error::AppError, res::Res, validator::ValidatedForm};
 use server_service::admin::{
-    CreateMenuInput, MenuRoute, SysMenuModel, SysMenuService, TMenuService, UpdateMenuInput,
+    CreateMenuInput, MenuRoute, MenuTree, SysMenuModel, SysMenuService, TMenuService,
+    UpdateMenuInput,
 };
 
 pub struct SysMenuApi;
 
 impl SysMenuApi {
+    pub async fn get_menu_list(
+        Extension(service): Extension<Arc<SysMenuService>>,
+    ) -> Result<Res<Vec<MenuTree>>, AppError> {
+        service.get_menu_list().await.map(Res::new_data)
+    }
+
     pub async fn get_constant_routes(
         Extension(service): Extension<Arc<SysMenuService>>,
     ) -> Result<Res<Vec<MenuRoute>>, AppError> {

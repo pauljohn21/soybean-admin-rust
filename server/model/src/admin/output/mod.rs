@@ -1,6 +1,6 @@
 pub use sys_authentication::{AuthOutput, UserInfoOutput, UserRoute};
 pub use sys_domain::DomainOutput;
-pub use sys_menu::{MenuRoute, RouteMeta};
+pub use sys_menu::{MenuRoute, MenuTree, RouteMeta};
 pub use sys_user::{UserWithDomainAndOrgOutput, UserWithoutPassword};
 
 mod sys_authentication;

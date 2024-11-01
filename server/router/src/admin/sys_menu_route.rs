@@ -20,6 +20,7 @@ impl SysMenuRouter {
         let service_name = "SysMenuApi";
 
         let routes = vec![
+            RouteInfo::new(base_path, Method::GET, service_name, "获取菜单列表"),
             RouteInfo::new(base_path, Method::POST, service_name, "创建菜单"),
             RouteInfo::new(
                 &format!("{}/:id", base_path),
@@ -36,6 +37,7 @@ impl SysMenuRouter {
         }
 
         let router = Router::new()
+            .route("/", get(SysMenuApi::get_menu_list))
             .route("/", post(SysMenuApi::create_menu))
             .route("/:id", get(SysMenuApi::get_menu))
             .route("/", put(SysMenuApi::update_menu))
