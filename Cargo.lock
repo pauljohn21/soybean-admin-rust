@@ -3213,7 +3213,10 @@ name = "server-core"
 version = "0.1.0-alpha"
 dependencies = [
  "axum",
+ "bytes",
  "chrono",
+ "form_urlencoded",
+ "futures",
  "http 1.1.0",
  "jsonwebtoken",
  "mime",
@@ -3224,6 +3227,7 @@ dependencies = [
  "server-global",
  "thiserror",
  "tokio",
+ "tower 0.5.1",
  "tower-layer",
  "tower-service",
  "ulid",
@@ -3234,10 +3238,12 @@ dependencies = [
 name = "server-global"
 version = "0.1.0-alpha"
 dependencies = [
+ "chrono",
  "http 1.1.0",
  "jsonwebtoken",
  "once_cell",
  "sea-orm",
+ "serde_json",
  "tokio",
  "tracing",
 ]
@@ -3312,6 +3318,7 @@ version = "0.1.0-alpha"
 dependencies = [
  "axum",
  "server-api",
+ "server-core",
  "server-global",
 ]
 

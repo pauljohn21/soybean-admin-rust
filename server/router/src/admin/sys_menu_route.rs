@@ -4,14 +4,17 @@ use axum::{
     Router,
 };
 use server_api::admin::SysMenuApi;
+use server_core::web::operation_log::OperationLogLayer;
 use server_global::global::{add_route, RouteInfo};
 
 pub struct SysMenuRouter;
 
 impl SysMenuRouter {
     pub async fn init_menu_router() -> Router {
-        let router =
-            Router::new().route("/getConstantRoutes", get(SysMenuApi::get_constant_routes));
+        let router = Router::new().route(
+            "/getConstantRoutes",
+            get(SysMenuApi::get_constant_routes).layer(OperationLogLayer::new(true)),
+        );
         Router::new().nest("/route", router)
     }
 

@@ -8,5 +8,6 @@ edition.workspace = true
 [dependencies]
 server-api = { path = "../api" }
 server-global = { path = "../global" }
+server-core = { path = "../core" }
 
 axum = { workspace = true, features = ["matched-path"] }

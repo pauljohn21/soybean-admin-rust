@@ -177,6 +177,8 @@ where
     });
 
     let mut router = router.layer(Extension(service)).layer(trace_layer).layer(RequestIdLayer);
+    // 开启操作日志 全局开启 不太推荐 操作日志这一业务本身没太大实际意义
+    // .layer(OperationLogLayer::new(true));
 
     if let Some(casbin) = casbin_layer {
         router = router.layer(casbin.clone());

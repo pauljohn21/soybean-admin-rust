@@ -8,4 +8,5 @@ pub mod validator;
 
 pub use request_id::{RequestId, RequestIdLayer};
 
+pub mod operation_log;
 mod request_id;

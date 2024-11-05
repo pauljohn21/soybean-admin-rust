@@ -84,3 +84,5 @@ strum = "0.26"
 strum_macros = "0.26"
 
 rayon = "1.10"
+
+form_urlencoded = "1.2.1"

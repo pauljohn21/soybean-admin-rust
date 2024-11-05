@@ -4,10 +4,12 @@ use std::{
     sync::Arc,
 };
 
+use chrono::{DateTime, Utc};
 use http::Method;
 use jsonwebtoken::{DecodingKey, EncodingKey, Validation};
 use once_cell::sync::Lazy;
 use sea_orm::DatabaseConnection;
+use serde_json::Value;
 use tokio::sync::{mpsc, Mutex, OnceCell, RwLock};
 
 //*****************************************************************************
@@ -149,4 +151,42 @@ pub async fn get_collected_routes() -> Vec<RouteInfo> {
 
 pub async fn clear_routes() {
     ROUTE_COLLECTOR.lock().await.clear();
+}
+
+//*****************************************************************************
+// 操作日志
+//*****************************************************************************
+
+#[derive(Debug, Clone)]
+pub struct OperationLogContext {
+    pub request_id: String,
+    pub start_time: DateTime<Utc>,
+    pub user_id: Option<String>,
+    pub username: Option<String>,
+    pub domain: Option<String>,
+    pub method: String,
+    pub url: String,
+    pub ip: String,
+    pub user_agent: Option<String>,
+    pub params: Option<Value>,
+    pub body: Option<Value>,
+}
+
+static OPERATION_LOG_CONTEXT: Lazy<Arc<RwLock<Option<OperationLogContext>>>> =
+    Lazy::new(|| Arc::new(RwLock::new(None)));
+
+impl OperationLogContext {
+    pub async fn set(context: OperationLogContext) {
+        let mut writer = OPERATION_LOG_CONTEXT.write().await;
+        *writer = Some(context);
+    }
+
+    pub async fn get() -> Option<OperationLogContext> {
+        OPERATION_LOG_CONTEXT.read().await.clone()
+    }
+
+    pub async fn clear() {
+        let mut writer = OPERATION_LOG_CONTEXT.write().await;
+        *writer = None;
+    }
 }

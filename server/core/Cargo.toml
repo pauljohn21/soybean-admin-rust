@@ -22,7 +22,12 @@ sea-orm = { workspace = true }
 ulid = { workspace = true }
 
 http = { workspace = true }
+tower = { workspace = true }
 tower-layer = { workspace = true }
 tower-service = { workspace = true }
+
+futures = { workspace = true }
+bytes = { workspace = true }
+form_urlencoded = { workspace = true }
 
 [dev-dependencies]
