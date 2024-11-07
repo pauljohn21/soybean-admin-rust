@@ -1,16 +1,20 @@
 use std::{
     any::{Any, TypeId},
     collections::HashMap,
+    future::Future,
+    pin::Pin,
     sync::Arc,
 };
 
-use chrono::{DateTime, Utc};
+use chrono::NaiveDateTime;
 use http::Method;
 use jsonwebtoken::{DecodingKey, EncodingKey, Validation};
 use once_cell::sync::Lazy;
 use sea_orm::DatabaseConnection;
 use serde_json::Value;
 use tokio::sync::{mpsc, Mutex, OnceCell, RwLock};
+
+use crate::project_info;
 
 //*****************************************************************************
 // 全局配置
@@ -65,54 +69,75 @@ pub static VALIDATION: OnceCell<Arc<Mutex<Validation>>> = OnceCell::const_new();
 // 事件通道
 //*****************************************************************************
 
-pub struct EventChannels {
-    pub string_sender: mpsc::UnboundedSender<String>,
-    pub string_receiver: Arc<Mutex<Option<mpsc::UnboundedReceiver<String>>>>,
-    pub dyn_sender: mpsc::UnboundedSender<Box<dyn Any + Send>>,
-    pub dyn_receiver: Arc<Mutex<Option<mpsc::UnboundedReceiver<Box<dyn Any + Send>>>>>,
+/// 事件通道条目
+struct DynChannelEntry {
+    name: String,
+    tx: mpsc::UnboundedSender<Box<dyn Any + Send>>,
 }
 
-pub static EVENT_CHANNELS: Lazy<Mutex<Option<EventChannels>>> = Lazy::new(|| Mutex::new(None));
-
-pub async fn initialize_event_channels() {
-    let (string_tx, string_rx) = mpsc::unbounded_channel::<String>();
-    let (dyn_tx, dyn_rx) = mpsc::unbounded_channel::<Box<dyn Any + Send>>();
-
-    let channels = EventChannels {
-        string_sender: string_tx,
-        string_receiver: Arc::new(Mutex::new(Some(string_rx))),
-        dyn_sender: dyn_tx,
-        dyn_receiver: Arc::new(Mutex::new(Some(dyn_rx))),
-    };
-
-    *EVENT_CHANNELS.lock().await = Some(channels);
+/// 事件通道管理器
+struct EventChannels {
+    string_tx: mpsc::UnboundedSender<String>,
+    dyn_channels: Vec<DynChannelEntry>,
 }
 
-pub async fn get_string_event_sender() -> Option<mpsc::UnboundedSender<String>> {
-    EVENT_CHANNELS
-        .lock()
-        .await
-        .as_ref()
-        .map(|channels| channels.string_sender.clone())
+static EVENT_CHANNELS: Lazy<Arc<Mutex<EventChannels>>> = Lazy::new(|| {
+    let (string_tx, _) = mpsc::unbounded_channel();
+    Arc::new(Mutex::new(EventChannels {
+        string_tx,
+        dyn_channels: Vec::new(),
+    }))
+});
+
+type DynFuture = dyn Future<Output = ()> + Send + 'static;
+type StringListener = Box<dyn FnOnce(mpsc::UnboundedReceiver<String>) -> Pin<Box<DynFuture>>>;
+type DynListener =
+    (String, Box<dyn Fn(mpsc::UnboundedReceiver<Box<dyn Any + Send>>) -> Pin<Box<DynFuture>>>);
+
+/// 获取字符串事件发送器
+#[inline]
+pub async fn get_string_sender() -> mpsc::UnboundedSender<String> {
+    EVENT_CHANNELS.lock().await.string_tx.clone()
 }
 
-pub async fn get_string_event_receiver() -> Option<mpsc::UnboundedReceiver<String>> {
-    if let Some(channels) = EVENT_CHANNELS.lock().await.as_ref() {
-        channels.string_receiver.lock().await.take()
-    } else {
-        None
-    }
+/// 获取动态类型事件发送器
+#[inline]
+pub async fn get_dyn_sender(name: &str) -> Option<mpsc::UnboundedSender<Box<dyn Any + Send>>> {
+    let channels = EVENT_CHANNELS.lock().await;
+    channels
+        .dyn_channels
+        .iter()
+        .find(|entry| entry.name == name)
+        .map(|entry| entry.tx.clone())
 }
 
-pub async fn get_dyn_event_sender() -> Option<mpsc::UnboundedSender<Box<dyn Any + Send>>> {
-    EVENT_CHANNELS.lock().await.as_ref().map(|channels| channels.dyn_sender.clone())
-}
+/// 注册事件监听器
+pub async fn register_event_listeners(
+    string_listener: StringListener,
+    dyn_listeners: &[DynListener],
+) {
+    let mut channels = EVENT_CHANNELS.lock().await;
 
-pub async fn get_dyn_event_receiver() -> Option<mpsc::UnboundedReceiver<Box<dyn Any + Send>>> {
-    if let Some(channels) = EVENT_CHANNELS.lock().await.as_ref() {
-        channels.dyn_receiver.lock().await.take()
-    } else {
-        None
+    // 设置字符串事件通道
+    let (string_tx, string_rx) = mpsc::unbounded_channel();
+    channels.string_tx = string_tx;
+
+    // 启动字符串事件监听器
+    tokio::spawn(string_listener(string_rx));
+    project_info!("String event listener spawned");
+
+    // 清空旧的发送器
+    channels.dyn_channels.clear();
+
+    // 为每个监听器创建独立通道
+    for (name, listener) in dyn_listeners {
+        let (tx, rx) = mpsc::unbounded_channel();
+        channels.dyn_channels.push(DynChannelEntry {
+            name: name.clone(),
+            tx,
+        });
+        tokio::spawn(listener(rx));
+        project_info!("Dynamic event listener '{}' spawned", name);
     }
 }
 
@@ -159,17 +184,23 @@ pub async fn clear_routes() {
 
 #[derive(Debug, Clone)]
 pub struct OperationLogContext {
-    pub request_id: String,
-    pub start_time: DateTime<Utc>,
     pub user_id: Option<String>,
     pub username: Option<String>,
     pub domain: Option<String>,
+    pub module_name: String,
+    pub description: String,
+    pub request_id: String,
     pub method: String,
     pub url: String,
     pub ip: String,
     pub user_agent: Option<String>,
     pub params: Option<Value>,
     pub body: Option<Value>,
+    pub response: Option<Value>,
+    pub start_time: NaiveDateTime,
+    pub end_time: NaiveDateTime,
+    pub duration: i32,
+    pub created_at: NaiveDateTime,
 }
 
 static OPERATION_LOG_CONTEXT: Lazy<Arc<RwLock<Option<OperationLogContext>>>> =
@@ -189,4 +220,23 @@ impl OperationLogContext {
         let mut writer = OPERATION_LOG_CONTEXT.write().await;
         *writer = None;
     }
+}
+
+/// 异步发送字符串事件
+#[inline]
+pub fn send_string_event(msg: String) {
+    tokio::spawn(async move {
+        let sender = get_string_sender().await;
+        let _ = sender.send(msg);
+    });
+}
+
+/// 异步发送动态类型事件
+#[inline]
+pub fn send_dyn_event(event_name: &'static str, event: Box<dyn Any + Send>) {
+    tokio::spawn(async move {
+        if let Some(sender) = get_dyn_sender(event_name).await {
+            let _ = sender.send(event);
+        }
+    });
 }
