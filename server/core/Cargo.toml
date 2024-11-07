@@ -30,4 +30,6 @@ futures = { workspace = true }
 bytes = { workspace = true }
 form_urlencoded = { workspace = true }
 
+tracing = { workspace = true }
+
 [dev-dependencies]

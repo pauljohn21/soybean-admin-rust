@@ -3230,6 +3230,7 @@ dependencies = [
  "tower 0.5.1",
  "tower-layer",
  "tower-service",
+ "tracing",
  "ulid",
  "validator",
 ]

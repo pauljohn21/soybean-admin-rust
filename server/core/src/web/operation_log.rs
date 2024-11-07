@@ -6,7 +6,7 @@ use std::{
 };
 
 use axum::{
-    body::{Body, Bytes},
+    body::{to_bytes, Body, Bytes},
     extract::{ConnectInfo, Request},
     response::Response,
     Extension,
@@ -16,7 +16,7 @@ use chrono::Utc;
 use futures::{future::BoxFuture, StreamExt};
 use http::{Extensions, HeaderMap, Uri};
 use serde_json::Value;
-use server_global::global::OperationLogContext;
+use server_global::global::{self, OperationLogContext};
 use tower_layer::Layer;
 use tower_service::Service;
 
@@ -76,10 +76,7 @@ where
         self.inner.poll_ready(cx)
     }
 
-    fn call(&mut self, req: Request<Body>) -> Self::Future
-    where
-        S::Future: Send + 'static,
-    {
+    fn call(&mut self, req: Request<Body>) -> Self::Future {
         if !self.enabled {
             let mut inner = self.inner.clone();
             return Box::pin(async move { inner.call(req).await });
@@ -87,43 +84,62 @@ where
 
         let mut inner = self.inner.clone();
         Box::pin(async move {
-            let start_time = Utc::now();
+            let start_time = Utc::now().naive_utc();
             let (parts, body) = req.into_parts();
             let headers = &parts.headers;
             let extensions = &parts.extensions;
 
             let (user_id, username, domain) = get_user_info(extensions);
 
-            match buffer_body(body).await {
-                Ok(bytes) => {
-                    let context = OperationLogContext {
-                        request_id: extensions
-                            .get::<RequestId>()
-                            .map(ToString::to_string)
-                            .unwrap_or_else(|| UNKNOWN_REQUEST_ID.to_string()),
-                        start_time,
-                        method: parts.method.to_string(),
-                        url: parts.uri.to_string(),
-                        user_id,
-                        username,
-                        domain,
-                        ip: get_client_ip(extensions, headers),
-                        user_agent: get_user_agent(headers),
-                        params: parse_query_params(&parts.uri),
-                        body: (!bytes.is_empty())
-                            .then(|| serde_json::from_slice(&bytes).ok())
-                            .flatten(),
-                    };
+            let request_id = extensions
+                .get::<RequestId>()
+                .map(ToString::to_string)
+                .unwrap_or_else(|| UNKNOWN_REQUEST_ID.to_string());
 
-                    OperationLogContext::set(context).await;
+            if let Ok(bytes) = buffer_body(body).await {
+                let method = parts.method.to_string();
+                let uri = parts.uri.to_string();
+                let ip = get_client_ip(extensions, headers);
+                let user_agent = get_user_agent(headers);
+                let params = parse_query_params(&parts.uri);
 
-                    let request = Request::from_parts(parts, Body::from(bytes));
-                    inner.call(request).await
-                }
-                Err(_) => {
-                    let request = Request::from_parts(parts, Body::empty());
-                    inner.call(request).await
-                }
+                let req = Request::from_parts(parts, Body::from(bytes.clone()));
+                let response = inner.call(req).await?;
+
+                let (response_parts, response_body) = response.into_parts();
+                let response_bytes = to_bytes(response_body, usize::MAX).await.unwrap_or_default();
+
+                let end_time = Utc::now().naive_utc();
+                let duration = (end_time - start_time).num_milliseconds() as i32;
+
+                let context = OperationLogContext {
+                    user_id,
+                    username,
+                    domain,
+                    module_name: "TODO".to_string(),
+                    description: "TODO".to_string(),
+                    request_id,
+                    method,
+                    url: uri,
+                    ip,
+                    user_agent,
+                    params,
+                    body: (!bytes.is_empty())
+                        .then(|| serde_json::from_slice(&bytes).ok())
+                        .flatten(),
+                    response: serde_json::from_slice(&response_bytes).ok(),
+                    start_time,
+                    end_time,
+                    duration,
+                    created_at: start_time,
+                };
+
+                global::send_dyn_event("sys_operation_log", Box::new(context));
+
+                Ok(Response::from_parts(response_parts, Body::from(response_bytes)))
+            } else {
+                let mut inner = inner;
+                inner.call(Request::from_parts(parts, Body::empty())).await
             }
         })
     }
