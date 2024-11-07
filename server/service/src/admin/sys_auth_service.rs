@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use async_trait::async_trait;
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QueryOrder, QuerySelect,
@@ -9,7 +11,7 @@ use server_core::web::{
     error::AppError,
     jwt::{JwtError, JwtUtils},
 };
-use server_global::global::{get_dyn_event_receiver, get_dyn_event_sender};
+use server_global::global;
 use server_model::admin::{
     entities::{
         prelude::{SysRole, SysUser},
@@ -265,30 +267,21 @@ impl SysAuthService {
         auth_output: &AuthOutput,
         context: &LoginContext,
     ) {
-        if let Some(sender) = get_dyn_event_sender().await {
-            let auth_event = AuthEvent {
-                user_id: user.id.clone(),
-                username: user.username.clone(),
-                domain: user.domain_code.clone(),
-                access_token: auth_output.token.clone(),
-                refresh_token: auth_output.refresh_token.clone(),
-                client_ip: context.client_ip.clone(),
-                client_port: context.client_port,
-                address: context.address.clone(),
-                user_agent: context.user_agent.clone(),
-                request_id: context.request_id.clone(),
-                login_type: context.login_type.clone(),
-            };
+        let auth_event = AuthEvent {
+            user_id: user.id.clone(),
+            username: user.username.clone(),
+            domain: user.domain_code.clone(),
+            access_token: auth_output.token.clone(),
+            refresh_token: auth_output.refresh_token.clone(),
+            client_ip: context.client_ip.clone(),
+            client_port: context.client_port,
+            address: context.address.clone(),
+            user_agent: context.user_agent.clone(),
+            request_id: context.request_id.clone(),
+            login_type: context.login_type.clone(),
+        };
 
-            // 使用 spawn 异步处理事件，避免阻塞登录流程
-            tokio::spawn(async move {
-                if let Err(e) = send_auth_event(sender, auth_event).await {
-                    // 记录错误但不影响主流程
-                    project_error!("Failed to send AuthEvent: {:?}", e);
-                    // TODO: 可以添加重试机制或将失败事件写入特定队列
-                }
-            });
-        }
+        global::send_dyn_event("auth_login", Box::new(auth_event));
     }
 
     #[allow(dead_code)]
@@ -351,14 +344,14 @@ pub async fn generate_auth_output(
     })
 }
 
-#[instrument]
-pub async fn handle_login_jwt() {
-    if let Some(mut receiver) = get_dyn_event_receiver().await {
-        while let Some(event) = receiver.recv().await {
-            if let Some(auth_event) = event.downcast_ref::<AuthEvent>() {
-                if let Err(e) = handle_auth_event(auth_event).await {
-                    project_error!("Failed to handle AuthEvent: {:?}", e);
-                }
+#[instrument(skip(rx))]
+pub async fn auth_login_listener(
+    mut rx: tokio::sync::mpsc::UnboundedReceiver<Box<dyn Any + Send>>,
+) {
+    while let Some(event) = rx.recv().await {
+        if let Some(auth_event) = event.downcast_ref::<AuthEvent>() {
+            if let Err(e) = handle_auth_event(auth_event).await {
+                project_error!("Failed to handle AuthEvent: {:?}", e);
             }
         }
     }
@@ -384,7 +377,7 @@ async fn handle_auth_event(auth_event: &AuthEvent) -> Result<(), EventError> {
 }
 
 #[instrument(skip(rx))]
-pub async fn start_event_listener(mut rx: tokio::sync::mpsc::UnboundedReceiver<String>) {
+pub async fn jwt_created_listener(mut rx: tokio::sync::mpsc::UnboundedReceiver<String>) {
     while let Some(jwt) = rx.recv().await {
         project_info!("JWT created: {}", jwt);
         // TODO: Consider storing the token into the database
