@@ -78,14 +78,22 @@ impl TreeBuilder {
         for node in nodes {
             match pid_fn(&node) {
                 Some(pid) => {
-                    child_map.entry(pid).or_insert_with(|| Vec::with_capacity(4)).push(node);
-                }
+                    child_map
+                        .entry(pid)
+                        .or_insert_with(|| Vec::with_capacity(4))
+                        .push(node);
+                },
                 None => root_nodes.push(node),
             }
         }
 
         // 递归构建树
-        Self::attach_children(&mut root_nodes, &mut child_map, &id_fn, &mut set_children_fn);
+        Self::attach_children(
+            &mut root_nodes,
+            &mut child_map,
+            &id_fn,
+            &mut set_children_fn,
+        );
 
         root_nodes
     }
@@ -137,13 +145,21 @@ impl TreeBuilder {
         for node in nodes {
             match pid_fn(&node) {
                 Some(pid) => {
-                    child_map.entry(pid).or_insert_with(|| Vec::with_capacity(4)).push(node);
-                }
+                    child_map
+                        .entry(pid)
+                        .or_insert_with(|| Vec::with_capacity(4))
+                        .push(node);
+                },
                 None => root_nodes.push(node),
             }
         }
 
-        Self::attach_children(&mut root_nodes, &mut child_map, &id_fn, &mut set_children_fn);
+        Self::attach_children(
+            &mut root_nodes,
+            &mut child_map,
+            &id_fn,
+            &mut set_children_fn,
+        );
 
         root_nodes
     }

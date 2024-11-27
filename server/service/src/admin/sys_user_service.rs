@@ -83,7 +83,11 @@ impl TUserService for SysUserService {
             query = query.filter(condition);
         }
 
-        let total = query.clone().count(db.as_ref()).await.map_err(AppError::from)?;
+        let total = query
+            .clone()
+            .count(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
 
         let paginator = query.paginate(db.as_ref(), params.page_details.size);
         let records = paginator
@@ -157,7 +161,10 @@ impl TUserService for SysUserService {
     async fn delete_user(&self, id: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
 
-        let result = SysUser::delete_by_id(id).exec(db.as_ref()).await.map_err(AppError::from)?;
+        let result = SysUser::delete_by_id(id)
+            .exec(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
 
         if result.rows_affected == 0 {
             return Err(UserError::UserNotFound.into());

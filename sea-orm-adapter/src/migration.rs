@@ -56,7 +56,10 @@ pub async fn up<C: ConnectionTrait>(conn: &C) -> Result<ExecResult, DbErr> {
 }
 
 pub async fn down<C: ConnectionTrait>(conn: &C) -> Result<ExecResult, DbErr> {
-    let drop_table = Table::drop().if_exists().table(CasbinRule::Table).to_owned();
+    let drop_table = Table::drop()
+        .if_exists()
+        .table(CasbinRule::Table)
+        .to_owned();
 
     let builder = conn.get_database_backend();
     conn.execute(builder.build(&drop_table)).await

@@ -107,8 +107,9 @@ impl TAuthService for SysAuthService {
         context: LoginContext,
     ) -> Result<AuthOutput, AppError> {
         // 验证用户并获取角色
-        let (user, role_codes) =
-            self.verify_user(&input.identifier, &input.password, &context.domain).await?;
+        let (user, role_codes) = self
+            .verify_user(&input.identifier, &input.password, &context.domain)
+            .await?;
 
         // 生成认证输出
         let auth_output = generate_auth_output(
@@ -145,7 +146,10 @@ impl TAuthService for SysAuthService {
         let menu_ids = SysRoleMenuEntity::find()
             .select_only()
             .column(SysRoleMenuColumn::MenuId)
-            .join_rev(JoinType::InnerJoin, SysRoleEntity::has_many(SysRoleMenuEntity).into())
+            .join_rev(
+                JoinType::InnerJoin,
+                SysRoleEntity::has_many(SysRoleMenuEntity).into(),
+            )
             .filter(SysRoleColumn::Code.is_in(role_codes.to_vec()))
             .filter(SysRoleMenuColumn::Domain.eq(domain))
             .distinct()
@@ -304,7 +308,8 @@ impl SysAuthService {
         input: LoginInput,
         context: LoginContext,
     ) -> Result<AuthOutput, AppError> {
-        self.check_login_security(&input.identifier, &context.client_ip).await?;
+        self.check_login_security(&input.identifier, &context.client_ip)
+            .await?;
 
         self.pwd_login(input, context).await
     }
@@ -315,7 +320,9 @@ async fn send_auth_event(
     sender: mpsc::UnboundedSender<Box<dyn std::any::Any + Send>>,
     auth_event: AuthEvent,
 ) -> Result<(), EventError> {
-    sender.send(Box::new(auth_event)).map_err(EventError::from)?;
+    sender
+        .send(Box::new(auth_event))
+        .map_err(EventError::from)?;
     Ok(())
 }
 

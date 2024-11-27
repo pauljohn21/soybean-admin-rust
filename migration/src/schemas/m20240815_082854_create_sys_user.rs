@@ -15,7 +15,12 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(SysUser::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(SysUser::Id).string().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(SysUser::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
                     .col(
                         ColumnDef::new(SysUser::Username)
                             .string()
@@ -23,18 +28,43 @@ impl MigrationTrait for Migration {
                             .unique_key()
                             .comment("用户名"),
                     )
-                    .col(ColumnDef::new(SysUser::Password).string().not_null().comment("密码"))
-                    .col(ColumnDef::new(SysUser::Domain).string().not_null().comment("域"))
-                    .col(ColumnDef::new(SysUser::BuiltIn).boolean().not_null().comment("是否内置"))
+                    .col(
+                        ColumnDef::new(SysUser::Password)
+                            .string()
+                            .not_null()
+                            .comment("密码"),
+                    )
+                    .col(
+                        ColumnDef::new(SysUser::Domain)
+                            .string()
+                            .not_null()
+                            .comment("域"),
+                    )
+                    .col(
+                        ColumnDef::new(SysUser::BuiltIn)
+                            .boolean()
+                            .not_null()
+                            .comment("是否内置"),
+                    )
                     .col(ColumnDef::new(SysUser::Avatar).string().comment("头像"))
-                    .col(ColumnDef::new(SysUser::Email).string().unique_key().comment("邮箱"))
+                    .col(
+                        ColumnDef::new(SysUser::Email)
+                            .string()
+                            .unique_key()
+                            .comment("邮箱"),
+                    )
                     .col(
                         ColumnDef::new(SysUser::PhoneNumber)
                             .string()
                             .unique_key()
                             .comment("手机号"),
                     )
-                    .col(ColumnDef::new(SysUser::NickName).string().not_null().comment("昵称"))
+                    .col(
+                        ColumnDef::new(SysUser::NickName)
+                            .string()
+                            .not_null()
+                            .comment("昵称"),
+                    )
                     .col(
                         ColumnDef::new(SysUser::Status)
                             .enumeration(Alias::new("\"Status\""), Status::iter())
@@ -81,7 +111,9 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(SysUser::Table).to_owned()).await
+        manager
+            .drop_table(Table::drop().table(SysUser::Table).to_owned())
+            .await
     }
 }
 

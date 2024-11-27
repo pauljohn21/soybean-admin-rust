@@ -16,7 +16,11 @@ fn search_by_ip_bench(c: &mut Criterion) {
 fn get_block_by_size_bench(c: &mut Criterion) {
     c.bench_function("get_block_by_size_bench", |b| {
         b.iter(|| {
-            black_box(get_block_by_size(get_full_cache(), rand::random::<u16>() as usize, 4));
+            black_box(get_block_by_size(
+                get_full_cache(),
+                rand::random::<u16>() as usize,
+                4,
+            ));
         })
     });
 }

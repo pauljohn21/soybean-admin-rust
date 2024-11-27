@@ -14,8 +14,18 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(SysDomain::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(SysDomain::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(SysDomain::Code).string().not_null().unique_key())
+                    .col(
+                        ColumnDef::new(SysDomain::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(SysDomain::Code)
+                            .string()
+                            .not_null()
+                            .unique_key(),
+                    )
                     .col(ColumnDef::new(SysDomain::Name).string().not_null())
                     .col(ColumnDef::new(SysDomain::Description).string().null())
                     .col(
@@ -38,7 +48,9 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(SysDomain::Table).to_owned()).await
+        manager
+            .drop_table(Table::drop().table(SysDomain::Table).to_owned())
+            .await
     }
 }
 

@@ -107,7 +107,9 @@ where
                 let response = inner.call(req).await?;
 
                 let (response_parts, response_body) = response.into_parts();
-                let response_bytes = to_bytes(response_body, usize::MAX).await.unwrap_or_default();
+                let response_bytes = to_bytes(response_body, usize::MAX)
+                    .await
+                    .unwrap_or_default();
 
                 let end_time = Utc::now().naive_utc();
                 let duration = (end_time - start_time).num_milliseconds() as i32;
@@ -136,7 +138,10 @@ where
 
                 global::send_dyn_event("sys_operation_log", Box::new(context));
 
-                Ok(Response::from_parts(response_parts, Body::from(response_bytes)))
+                Ok(Response::from_parts(
+                    response_parts,
+                    Body::from(response_bytes),
+                ))
             } else {
                 let mut inner = inner;
                 inner.call(Request::from_parts(parts, Body::empty())).await
@@ -183,7 +188,10 @@ async fn buffer_body(body: Body) -> Result<Bytes, Box<dyn std::error::Error + Se
 /// * `Option<String>` - 成功返回用户代理字符串，未找到或解析失败返回 None
 #[inline(always)]
 fn get_user_agent(headers: &HeaderMap) -> Option<String> {
-    headers.get(USER_AGENT_HEADER).and_then(|v| v.to_str().ok()).map(str::to_owned)
+    headers
+        .get(USER_AGENT_HEADER)
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_owned)
 }
 
 /// 获取客户端 IP，优先从扩展中获取
@@ -224,7 +232,11 @@ fn get_user_info(extensions: &Extensions) -> (Option<String>, Option<String>, Op
         return Default::default();
     };
 
-    (Some(user.user_id()), Some(user.username()), Some(user.domain()))
+    (
+        Some(user.user_id()),
+        Some(user.username()),
+        Some(user.domain()),
+    )
 }
 
 /// 解析 URI 查询参数为 JSON 值
@@ -245,9 +257,11 @@ fn parse_query_params(uri: &Uri) -> Option<Value> {
     let capacity = query.matches('&').count() + 1;
     let mut params = HashMap::with_capacity(capacity);
 
-    form_urlencoded::parse(query.as_bytes()).into_owned().for_each(|(k, v)| {
-        params.insert(k, v);
-    });
+    form_urlencoded::parse(query.as_bytes())
+        .into_owned()
+        .for_each(|(k, v)| {
+            params.insert(k, v);
+        });
 
     serde_json::to_value(params).ok()
 }
@@ -301,7 +315,9 @@ mod tests {
 
     /// 验证上下文
     async fn assert_context(method: &str, uri: &str, params: Option<Value>, body: Option<Value>) {
-        let ctx = OperationLogContext::get().await.expect("Context should exist");
+        let ctx = OperationLogContext::get()
+            .await
+            .expect("Context should exist");
         println!("验证上下文: {} {}", method, uri);
         println!("参数: {:?}", params);
         println!("请求体: {:?}", body);
@@ -320,7 +336,12 @@ mod tests {
         let test_cases = vec![
             // 基础场景
             (Method::GET, "/test", None, None),
-            (Method::GET, "/test?key=value", Some(json!({"key": "value"})), None),
+            (
+                Method::GET,
+                "/test?key=value",
+                Some(json!({"key": "value"})),
+                None,
+            ),
             (Method::POST, "/test", None, Some(json!({"data": "test"}))),
             // 边界场景
             (Method::GET, "/test?", Some(json!({})), None), // 空查询参数
@@ -333,7 +354,12 @@ mod tests {
                 Some(json!({"nested": {"data": "test"}})),
             ),
             // 特殊字符场景
-            (Method::GET, "/test?key=hello%20world", Some(json!({"key": "hello world"})), None),
+            (
+                Method::GET,
+                "/test?key=hello%20world",
+                Some(json!({"key": "hello world"})),
+                None,
+            ),
             // 其他 HTTP 方法
             (
                 Method::PUT,
@@ -344,7 +370,12 @@ mod tests {
             (Method::DELETE, "/test/123", None, None),
             (Method::PATCH, "/test", None, Some(json!({"op": "replace"}))),
             // 大小写混合场景
-            (Method::GET, "/TEST?Key=Value", Some(json!({"Key": "Value"})), None),
+            (
+                Method::GET,
+                "/TEST?Key=Value",
+                Some(json!({"Key": "Value"})),
+                None,
+            ),
         ];
 
         let service = tower::service_fn(|_req: Request<Body>| async move {

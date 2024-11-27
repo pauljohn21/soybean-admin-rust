@@ -117,7 +117,7 @@ where
                         .status(StatusCode::UNAUTHORIZED)
                         .body(body::Body::new(Full::from("No authentication token was provided. Please ensure your request includes a valid token.")))
                         .unwrap());
-                }
+                },
             };
 
             let subject = vals.subject.clone();
@@ -138,12 +138,12 @@ where
                             Ok(true) => {
                                 authorized = true;
                                 break;
-                            }
+                            },
                             Ok(false) => continue,
                             Err(_) => {
                                 enforcement_error = true;
                                 break;
-                            }
+                            },
                         }
                     }
 
@@ -172,12 +172,12 @@ where
                             Ok(true) => {
                                 authorized = true;
                                 break;
-                            }
+                            },
                             Ok(false) => continue,
                             Err(_) => {
                                 enforcement_error = true;
                                 break;
-                            }
+                            },
                         }
                     }
 
@@ -200,7 +200,9 @@ where
             } else {
                 Ok(Response::builder()
                     .status(StatusCode::UNAUTHORIZED)
-                    .body(body::Body::new(Full::from("No token provided or invalid token type")))
+                    .body(body::Body::new(Full::from(
+                        "No token provided or invalid token type",
+                    )))
                     .unwrap())
             }
         })

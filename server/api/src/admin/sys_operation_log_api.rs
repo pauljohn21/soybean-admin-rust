@@ -13,6 +13,9 @@ impl SysOperationLogApi {
         Query(params): Query<OperationLogPageRequest>,
         Extension(service): Extension<Arc<SysOperationLogService>>,
     ) -> Result<Res<PaginatedData<SysOperationLogModel>>, AppError> {
-        service.find_paginated_operation_logs(params).await.map(Res::new_data)
+        service
+            .find_paginated_operation_logs(params)
+            .await
+            .map(Res::new_data)
     }
 }

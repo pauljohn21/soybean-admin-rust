@@ -79,7 +79,9 @@ pub(crate) async fn remove_filtered_policy<'conn, 'rule, C: ConnectionTrait>(
         .iter()
         .zip(&COLUMNS[index_of_match_start..])
         .filter(|(value, _)| !value.is_empty())
-        .fold(base_condition, |acc, (value, column)| acc.add(column.eq(*value)));
+        .fold(base_condition, |acc, (value, column)| {
+            acc.add(column.eq(*value))
+        });
 
     Entity::delete_many()
         .filter(conditions)
@@ -118,9 +120,10 @@ fn create_condition_from_rule(prefix: &str, rule: &Rule) -> Condition {
         .iter()
         .zip(COLUMNS.iter())
         .filter(|(value, _)| !value.is_empty())
-        .fold(Condition::all().add(Column::Ptype.starts_with(prefix)), |acc, (value, column)| {
-            acc.add(column.eq(*value))
-        })
+        .fold(
+            Condition::all().add(Column::Ptype.starts_with(prefix)),
+            |acc, (value, column)| acc.add(column.eq(*value)),
+        )
 }
 
 pub(crate) async fn save_policies<'conn, 'rule, C: ConnectionTrait>(

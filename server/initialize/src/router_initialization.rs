@@ -31,10 +31,12 @@ pub async fn initialize_admin_router() -> Router {
     project_info!("Initializing admin router");
 
     let app_config = get_config::<Config>().await.unwrap();
-    let casbin_axum_layer =
-        initialize_casbin("server/resources/rbac_model.conf", app_config.database.url.as_str())
-            .await
-            .unwrap();
+    let casbin_axum_layer = initialize_casbin(
+        "server/resources/rbac_model.conf",
+        app_config.database.url.as_str(),
+    )
+    .await
+    .unwrap();
 
     let audience: Audience = Audience::ManagementPlatform;
 
@@ -187,7 +189,10 @@ where
         )
     });
 
-    let mut router = router.layer(Extension(service)).layer(trace_layer).layer(RequestIdLayer);
+    let mut router = router
+        .layer(Extension(service))
+        .layer(trace_layer)
+        .layer(RequestIdLayer);
     // 开启操作日志 全局开启 不太推荐 操作日志这一业务本身没太大实际意义
     // .layer(OperationLogLayer::new(true));
 
@@ -228,10 +233,10 @@ async fn process_collected_routes() {
     match endpoint_service.sync_endpoints(endpoints).await {
         Ok(_) => {
             project_info!("Endpoints synced successfully")
-        }
+        },
         Err(e) => {
             project_error!("Failed to sync endpoints: {:?}", e)
-        }
+        },
     }
 }
 

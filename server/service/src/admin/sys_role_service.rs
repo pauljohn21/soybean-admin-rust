@@ -66,7 +66,11 @@ impl TRoleService for SysRoleService {
             query = query.filter(condition);
         }
 
-        let total = query.clone().count(db.as_ref()).await.map_err(AppError::from)?;
+        let total = query
+            .clone()
+            .count(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
 
         let paginator = query.paginate(db.as_ref(), params.page_details.size);
         let records = paginator
@@ -111,7 +115,8 @@ impl TRoleService for SysRoleService {
     async fn update_role(&self, input: UpdateRoleInput) -> Result<SysRoleModel, AppError> {
         let db = db_helper::get_db_connection().await?;
 
-        self.check_role_exists(Some(&input.id), &input.role.code).await?;
+        self.check_role_exists(Some(&input.id), &input.role.code)
+            .await?;
 
         let role: SysRoleActiveModel = SysRole::find_by_id(&input.id)
             .one(db.as_ref())
@@ -137,7 +142,10 @@ impl TRoleService for SysRoleService {
 
     async fn delete_role(&self, id: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
-        SysRole::delete_by_id(id).exec(db.as_ref()).await.map_err(AppError::from)?;
+        SysRole::delete_by_id(id)
+            .exec(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
         Ok(())
     }
 }

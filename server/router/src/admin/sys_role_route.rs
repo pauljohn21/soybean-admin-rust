@@ -23,7 +23,12 @@ impl SysRoleRouter {
                 "获取角色详情",
             ),
             RouteInfo::new(base_path, Method::PUT, service_name, "更新角色"),
-            RouteInfo::new(&format!("{}/:id", base_path), Method::DELETE, service_name, "删除角色"),
+            RouteInfo::new(
+                &format!("{}/:id", base_path),
+                Method::DELETE,
+                service_name,
+                "删除角色",
+            ),
         ];
 
         for route in routes {

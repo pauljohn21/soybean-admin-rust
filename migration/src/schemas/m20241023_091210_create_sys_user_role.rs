@@ -13,7 +13,11 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(ColumnDef::new(SysUserRole::UserId).string().not_null())
                     .col(ColumnDef::new(SysUserRole::RoleId).string().not_null())
-                    .primary_key(Index::create().col(SysUserRole::UserId).col(SysUserRole::RoleId))
+                    .primary_key(
+                        Index::create()
+                            .col(SysUserRole::UserId)
+                            .col(SysUserRole::RoleId),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -41,7 +45,9 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(SysUserRole::Table).to_owned()).await
+        manager
+            .drop_table(Table::drop().table(SysUserRole::Table).to_owned())
+            .await
     }
 }
 

@@ -37,8 +37,10 @@ mod tests {
     async fn test_validate_token_success() {
         init().await;
 
-        let claims =
-            create_claims("https://github.com/ByteByteBrew/soybean-admin-rust", "audience");
+        let claims = create_claims(
+            "https://github.com/ByteByteBrew/soybean-admin-rust",
+            "audience",
+        );
         let token = JwtUtils::generate_token(&claims).await.unwrap();
 
         let result = JwtUtils::validate_token(&token, "audience").await;
@@ -49,8 +51,10 @@ mod tests {
     async fn test_validate_token_invalid_audience() {
         init().await;
 
-        let claims =
-            create_claims("https://github.com/ByteByteBrew/soybean-admin-rust", "invalid_audience");
+        let claims = create_claims(
+            "https://github.com/ByteByteBrew/soybean-admin-rust",
+            "invalid_audience",
+        );
         let token = JwtUtils::generate_token(&claims).await.unwrap();
 
         let result = JwtUtils::validate_token(&token, "audience").await;
@@ -84,8 +88,10 @@ mod tests {
     async fn test_validate_token_invalid_signature() {
         init().await;
 
-        let claims =
-            create_claims("https://github.com/ByteByteBrew/soybean-admin-rust", "audience");
+        let claims = create_claims(
+            "https://github.com/ByteByteBrew/soybean-admin-rust",
+            "audience",
+        );
         let token = JwtUtils::generate_token(&claims).await.unwrap();
 
         let mut invalid_token = token.clone();

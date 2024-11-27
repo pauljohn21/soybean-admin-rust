@@ -28,7 +28,10 @@ impl SysUserApi {
         user: User,
     ) -> Result<Res<PaginatedData<UserWithoutPassword>>, AppError> {
         print!("user is {:#?}", user);
-        service.find_paginated_users(params).await.map(Res::new_data)
+        service
+            .find_paginated_users(params)
+            .await
+            .map(Res::new_data)
     }
 
     pub async fn remove_policies(

@@ -64,7 +64,10 @@ impl SysMenuService {
 impl TMenuService for SysMenuService {
     async fn get_menu_list(&self) -> Result<Vec<MenuTree>, AppError> {
         let db = db_helper::get_db_connection().await?;
-        let menus = SysMenu::find().all(db.as_ref()).await.map_err(AppError::from)?;
+        let menus = SysMenu::find()
+            .all(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
 
         let menu_trees: Vec<MenuTree> = menus
             .into_iter()
@@ -204,7 +207,8 @@ impl TMenuService for SysMenuService {
         let db = db_helper::get_db_connection().await?;
         let existing_menu = self.get_menu(input.id).await?;
 
-        self.check_menu_exists(Some(input.id), &input.menu.route_name).await?;
+        self.check_menu_exists(Some(input.id), &input.menu.route_name)
+            .await?;
 
         let mut menu: SysMenuActiveModel = existing_menu.into();
         menu.menu_type = Set(input.menu.menu_type);
@@ -235,7 +239,10 @@ impl TMenuService for SysMenuService {
 
     async fn delete_menu(&self, id: i32, _user: User) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
-        SysMenu::delete_by_id(id).exec(db.as_ref()).await.map_err(AppError::from)?;
+        SysMenu::delete_by_id(id)
+            .exec(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
         Ok(())
     }
 }

@@ -91,8 +91,10 @@ static EVENT_CHANNELS: Lazy<Arc<Mutex<EventChannels>>> = Lazy::new(|| {
 
 type DynFuture = dyn Future<Output = ()> + Send + 'static;
 type StringListener = Box<dyn FnOnce(mpsc::UnboundedReceiver<String>) -> Pin<Box<DynFuture>>>;
-type DynListener =
-    (String, Box<dyn Fn(mpsc::UnboundedReceiver<Box<dyn Any + Send>>) -> Pin<Box<DynFuture>>>);
+type DynListener = (
+    String,
+    Box<dyn Fn(mpsc::UnboundedReceiver<Box<dyn Any + Send>>) -> Pin<Box<DynFuture>>>,
+);
 
 /// 获取字符串事件发送器
 #[inline]

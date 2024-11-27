@@ -13,6 +13,9 @@ impl SysLoginLogApi {
         Query(params): Query<LoginLogPageRequest>,
         Extension(service): Extension<Arc<SysLoginLogService>>,
     ) -> Result<Res<PaginatedData<SysLoginLogModel>>, AppError> {
-        service.find_paginated_login_logs(params).await.map(Res::new_data)
+        service
+            .find_paginated_login_logs(params)
+            .await
+            .map(Res::new_data)
     }
 }

@@ -29,7 +29,12 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(SysMenu::MenuName).string().not_null())
                     .col(ColumnDef::new(SysMenu::IconType).integer().null())
                     .col(ColumnDef::new(SysMenu::Icon).string().null())
-                    .col(ColumnDef::new(SysMenu::RouteName).string().not_null().unique_key())
+                    .col(
+                        ColumnDef::new(SysMenu::RouteName)
+                            .string()
+                            .not_null()
+                            .unique_key(),
+                    )
                     .col(ColumnDef::new(SysMenu::RoutePath).string().not_null())
                     .col(ColumnDef::new(SysMenu::Component).string().not_null())
                     .col(ColumnDef::new(SysMenu::PathParam).string().null())
@@ -62,7 +67,9 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(SysMenu::Table).to_owned()).await
+        manager
+            .drop_table(Table::drop().table(SysMenu::Table).to_owned())
+            .await
     }
 }
 

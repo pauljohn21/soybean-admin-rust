@@ -11,11 +11,20 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(SysLoginLog::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(SysLoginLog::Id).string().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(SysLoginLog::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
                     .col(ColumnDef::new(SysLoginLog::UserId).string().not_null())
                     .col(ColumnDef::new(SysLoginLog::Username).string().not_null())
                     .col(ColumnDef::new(SysLoginLog::Domain).string().not_null())
-                    .col(ColumnDef::new(SysLoginLog::LoginTime).timestamp().not_null())
+                    .col(
+                        ColumnDef::new(SysLoginLog::LoginTime)
+                            .timestamp()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(SysLoginLog::Ip).string().not_null())
                     .col(ColumnDef::new(SysLoginLog::Port).integer().null())
                     .col(ColumnDef::new(SysLoginLog::Address).string().not_null())
@@ -35,7 +44,9 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(SysLoginLog::Table).to_owned()).await
+        manager
+            .drop_table(Table::drop().table(SysLoginLog::Table).to_owned())
+            .await
     }
 }
 

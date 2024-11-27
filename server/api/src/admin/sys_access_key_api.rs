@@ -17,7 +17,10 @@ impl SysAccessKeyApi {
         Query(params): Query<AccessKeyPageRequest>,
         Extension(service): Extension<Arc<SysAccessKeyService>>,
     ) -> Result<Res<PaginatedData<SysAccessKeyModel>>, AppError> {
-        service.find_paginated_access_keys(params).await.map(Res::new_data)
+        service
+            .find_paginated_access_keys(params)
+            .await
+            .map(Res::new_data)
     }
 
     pub async fn create_access_key(

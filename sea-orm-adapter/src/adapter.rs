@@ -133,8 +133,10 @@ impl<C: ConnectionTrait + Send + Sync> Adapter for SeaOrmAdapter<C> {
         ptype: &str,
         rules: Vec<Vec<String>>,
     ) -> Result<bool> {
-        let rules: Vec<_> =
-            rules.iter().filter_map(|x| Self::transform_policy_line(ptype, x)).collect();
+        let rules: Vec<_> = rules
+            .iter()
+            .filter_map(|x| Self::transform_policy_line(ptype, x))
+            .collect();
 
         if rules.is_empty() {
             return Ok(false);
@@ -157,8 +159,10 @@ impl<C: ConnectionTrait + Send + Sync> Adapter for SeaOrmAdapter<C> {
         ptype: &str,
         rules: Vec<Vec<String>>,
     ) -> Result<bool> {
-        let rules: Vec<_> =
-            rules.iter().filter_map(|x| Self::transform_policy_line(ptype, x)).collect();
+        let rules: Vec<_> = rules
+            .iter()
+            .filter_map(|x| Self::transform_policy_line(ptype, x))
+            .collect();
 
         if rules.is_empty() {
             return Ok(false);
@@ -210,7 +214,9 @@ mod tests {
 
         let file_adapter = FileAdapter::new("examples/rbac_policy.csv");
 
-        let m = DefaultModel::from_file("examples/rbac_model.conf").await.unwrap();
+        let m = DefaultModel::from_file("examples/rbac_model.conf")
+            .await
+            .unwrap();
 
         let mut e = Enforcer::new(m, file_adapter).await.unwrap();
         let db_url = {
@@ -337,7 +343,11 @@ mod tests {
             .is_ok());
 
         assert!(!adapter
-            .remove_policy("", "g", to_owned(vec!["alice", "data2_admin", "not_exists"]))
+            .remove_policy(
+                "",
+                "g",
+                to_owned(vec!["alice", "data2_admin", "not_exists"])
+            )
             .await
             .unwrap());
 
@@ -366,20 +376,22 @@ mod tests {
             .unwrap());
 
         assert!(adapter
-            .add_policy("", "g", to_owned(vec!["alice", "data2_admin", "domain1", "domain2"]),)
+            .add_policy(
+                "",
+                "g",
+                to_owned(vec!["alice", "data2_admin", "domain1", "domain2"]),
+            )
             .await
             .is_ok());
-        assert!(
-            adapter
-                .remove_filtered_policy(
-                    "",
-                    "g",
-                    1,
-                    to_owned(vec!["data2_admin", "domain1", "domain2"]),
-                )
-                .await
-                .unwrap()
-        );
+        assert!(adapter
+            .remove_filtered_policy(
+                "",
+                "g",
+                1,
+                to_owned(vec!["data2_admin", "domain1", "domain2"]),
+            )
+            .await
+            .unwrap());
 
         // GitHub issue: https://github.com/casbin-rs/sqlx-adapter/issues/64
         assert!(adapter
@@ -421,7 +433,11 @@ mod tests {
             .await
             .is_ok());
         assert!(adapter
-            .add_policy("", "p", to_owned(vec!["alice_rfp", "pencil_rfp", "get_rfp"]),)
+            .add_policy(
+                "",
+                "p",
+                to_owned(vec!["alice_rfp", "pencil_rfp", "get_rfp"]),
+            )
             .await
             .is_ok());
 

@@ -71,7 +71,10 @@ impl ClientIp {
         }
 
         // 简单的 IPv4 验证
-        ip.split('.').filter_map(|octet| octet.parse::<u8>().ok()).count() == 4
+        ip.split('.')
+            .filter_map(|octet| octet.parse::<u8>().ok())
+            .count()
+            == 4
     }
 
     /// 获取请求头中的所有 IP 相关信息
@@ -97,7 +100,10 @@ impl ClientIp {
             .iter()
             .filter_map(|&header_name| {
                 headers.get(header_name).and_then(|value| {
-                    value.to_str().ok().map(|v| (header_name.to_string(), v.to_string()))
+                    value
+                        .to_str()
+                        .ok()
+                        .map(|v| (header_name.to_string(), v.to_string()))
                 })
             })
             .collect()
@@ -140,7 +146,10 @@ mod tests {
     #[test]
     fn test_get_proxy_chain() {
         let mut headers = HeaderMap::new();
-        headers.insert("X-Forwarded-For", "192.168.1.1, 10.0.0.1, 172.16.0.1".parse().unwrap());
+        headers.insert(
+            "X-Forwarded-For",
+            "192.168.1.1, 10.0.0.1, 172.16.0.1".parse().unwrap(),
+        );
         let chain = ClientIp::get_proxy_chain(&headers);
         assert_eq!(chain.len(), 3);
         assert_eq!(chain[0], "192.168.1.1");

@@ -58,7 +58,9 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::OK);
         println!("headers is {:?}", response.headers());
-        let body_bytes = axum::body::to_bytes(response.into_body(), 1000).await.unwrap();
+        let body_bytes = axum::body::to_bytes(response.into_body(), 1000)
+            .await
+            .unwrap();
         let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
         println!("body_str is {}", body_str);
     }

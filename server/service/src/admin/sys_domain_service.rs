@@ -83,7 +83,11 @@ impl TDomainService for SysDomainService {
             query = query.filter(condition);
         }
 
-        let total = query.clone().count(db.as_ref()).await.map_err(AppError::from)?;
+        let total = query
+            .clone()
+            .count(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
 
         let paginator = query.paginate(db.as_ref(), params.page_details.size);
         let records = paginator
@@ -100,7 +104,8 @@ impl TDomainService for SysDomainService {
     }
 
     async fn create_domain(&self, input: CreateDomainInput) -> Result<SysDomainModel, AppError> {
-        self.check_domain_exists(None, &input.code, &input.name).await?;
+        self.check_domain_exists(None, &input.code, &input.name)
+            .await?;
 
         let db = db_helper::get_db_connection().await?;
 
@@ -152,7 +157,10 @@ impl TDomainService for SysDomainService {
         }
 
         let db = db_helper::get_db_connection().await?;
-        SysDomain::delete_by_id(id).exec(db.as_ref()).await.map_err(AppError::from)?;
+        SysDomain::delete_by_id(id)
+            .exec(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
         Ok(())
     }
 }

@@ -48,7 +48,11 @@ impl TAccessKeyService for SysAccessKeyService {
             query = query.filter(condition);
         }
 
-        let total = query.clone().count(db.as_ref()).await.map_err(AppError::from)?;
+        let total = query
+            .clone()
+            .count(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
 
         let paginator = query.paginate(db.as_ref(), params.page_details.size);
         let records = paginator
@@ -81,13 +85,19 @@ impl TAccessKeyService for SysAccessKeyService {
             ..Default::default()
         };
 
-        let result = access_key.insert(db.as_ref()).await.map_err(AppError::from)?;
+        let result = access_key
+            .insert(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
         Ok(result)
     }
 
     async fn delete_access_key(&self, id: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
-        SysAccessKey::delete_by_id(id).exec(db.as_ref()).await.map_err(AppError::from)?;
+        SysAccessKey::delete_by_id(id)
+            .exec(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
         Ok(())
     }
 }

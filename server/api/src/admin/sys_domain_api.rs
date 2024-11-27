@@ -17,7 +17,10 @@ impl SysDomainApi {
         Query(params): Query<DomainPageRequest>,
         Extension(service): Extension<Arc<SysDomainService>>,
     ) -> Result<Res<PaginatedData<SysDomainModel>>, AppError> {
-        service.find_paginated_domains(params).await.map(Res::new_data)
+        service
+            .find_paginated_domains(params)
+            .await
+            .map(Res::new_data)
     }
 
     pub async fn create_domain(

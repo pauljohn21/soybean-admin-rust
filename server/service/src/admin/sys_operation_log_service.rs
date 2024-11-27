@@ -51,7 +51,11 @@ impl TOperationLogService for SysOperationLogService {
             query = query.filter(condition);
         }
 
-        let total = query.clone().count(db.as_ref()).await.map_err(AppError::from)?;
+        let total = query
+            .clone()
+            .count(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
 
         let paginator = query.paginate(db.as_ref(), params.page_details.size);
         let records = paginator

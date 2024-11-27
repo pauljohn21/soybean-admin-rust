@@ -16,7 +16,10 @@ impl SysRoleApi {
         Query(params): Query<RolePageRequest>,
         Extension(service): Extension<Arc<SysRoleService>>,
     ) -> Result<Res<PaginatedData<SysRoleModel>>, AppError> {
-        service.find_paginated_roles(params).await.map(Res::new_data)
+        service
+            .find_paginated_roles(params)
+            .await
+            .map(Res::new_data)
     }
 
     pub async fn create_role(

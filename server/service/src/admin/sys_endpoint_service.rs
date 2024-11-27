@@ -85,11 +85,14 @@ impl TEndpointService for SysEndpointService {
         let db = db_helper::get_db_connection().await?;
 
         // 获取数据库中现有的所有端点
-        let existing_endpoints =
-            SysEndpoint::find().all(db.as_ref()).await.map_err(AppError::from)?;
+        let existing_endpoints = SysEndpoint::find()
+            .all(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
 
         // 批量更新和插入新的端点
-        self.batch_update_endpoints(db.as_ref(), new_endpoints.clone()).await?;
+        self.batch_update_endpoints(db.as_ref(), new_endpoints.clone())
+            .await?;
 
         // 只有在数据库中已经存在端点的情况下才执行删除操作
         if !existing_endpoints.is_empty() {
@@ -106,7 +109,8 @@ impl TEndpointService for SysEndpointService {
 
             // 批量删除不再存在的端点
             if !endpoints_to_remove.is_empty() {
-                self.batch_remove_endpoints(db.as_ref(), endpoints_to_remove).await?;
+                self.batch_remove_endpoints(db.as_ref(), endpoints_to_remove)
+                    .await?;
             }
         }
 
@@ -128,7 +132,11 @@ impl TEndpointService for SysEndpointService {
             query = query.filter(condition);
         }
 
-        let total = query.clone().count(db.as_ref()).await.map_err(AppError::from)?;
+        let total = query
+            .clone()
+            .count(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
 
         let paginator = query.paginate(db.as_ref(), params.page_details.size);
         let records = paginator

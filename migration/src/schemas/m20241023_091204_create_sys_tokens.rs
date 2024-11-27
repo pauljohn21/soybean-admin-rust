@@ -11,7 +11,12 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(SysTokens::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(SysTokens::Id).string().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(SysTokens::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
                     .col(ColumnDef::new(SysTokens::AccessToken).string().not_null())
                     .col(ColumnDef::new(SysTokens::RefreshToken).string().not_null())
                     .col(ColumnDef::new(SysTokens::Status).string().not_null())
@@ -38,7 +43,9 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(SysTokens::Table).to_owned()).await
+        manager
+            .drop_table(Table::drop().table(SysTokens::Table).to_owned())
+            .await
     }
 }
 

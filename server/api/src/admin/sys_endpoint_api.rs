@@ -13,6 +13,9 @@ impl SysEndpointApi {
         Query(params): Query<EndpointPageRequest>,
         Extension(service): Extension<Arc<SysEndpointService>>,
     ) -> Result<Res<PaginatedData<SysEndpointModel>>, AppError> {
-        service.find_paginated_endpoints(params).await.map(Res::new_data)
+        service
+            .find_paginated_endpoints(params)
+            .await
+            .map(Res::new_data)
     }
 }

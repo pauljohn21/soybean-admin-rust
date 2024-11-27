@@ -80,7 +80,9 @@ impl JwtUtils {
         let keys_arc = global::KEYS.get().ok_or(JwtError::KeysNotInitialized)?;
 
         let keys = keys_arc.lock().await;
-        let validation_arc = global::VALIDATION.get().ok_or(JwtError::ValidationNotInitialized)?;
+        let validation_arc = global::VALIDATION
+            .get()
+            .ok_or(JwtError::ValidationNotInitialized)?;
         let validation = validation_arc.lock().await;
 
         let mut validation_clone = validation.clone();

@@ -13,7 +13,7 @@ impl MigrationTrait for Migration {
         let db = manager.get_connection();
 
         match db.get_database_backend() {
-            DbBackend::MySql | DbBackend::Sqlite => {}
+            DbBackend::MySql | DbBackend::Sqlite => {},
             DbBackend::Postgres => {
                 // Create Status enum
                 manager
@@ -34,7 +34,7 @@ impl MigrationTrait for Migration {
                             .to_owned(),
                     )
                     .await?;
-            }
+            },
         }
 
         Ok(())
@@ -44,13 +44,17 @@ impl MigrationTrait for Migration {
         let db = manager.get_connection();
 
         match db.get_database_backend() {
-            DbBackend::MySql | DbBackend::Sqlite => {}
+            DbBackend::MySql | DbBackend::Sqlite => {},
             DbBackend::Postgres => {
                 // Drop Status enum
-                manager.drop_type(Type::drop().name(Alias::new("Status")).to_owned()).await?;
+                manager
+                    .drop_type(Type::drop().name(Alias::new("Status")).to_owned())
+                    .await?;
                 // Drop MenuType enum
-                manager.drop_type(Type::drop().name(Alias::new("MenuType")).to_owned()).await?;
-            }
+                manager
+                    .drop_type(Type::drop().name(Alias::new("MenuType")).to_owned())
+                    .await?;
+            },
         }
 
         Ok(())

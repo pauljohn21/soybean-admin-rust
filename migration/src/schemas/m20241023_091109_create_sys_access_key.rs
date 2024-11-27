@@ -14,9 +14,19 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(SysAccessKey::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(SysAccessKey::Id).string().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(SysAccessKey::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
                     .col(ColumnDef::new(SysAccessKey::Domain).string().not_null())
-                    .col(ColumnDef::new(SysAccessKey::AccessKeyId).string().not_null().unique_key())
+                    .col(
+                        ColumnDef::new(SysAccessKey::AccessKeyId)
+                            .string()
+                            .not_null()
+                            .unique_key(),
+                    )
                     .col(
                         ColumnDef::new(SysAccessKey::AccessKeySecret)
                             .string()
@@ -42,7 +52,9 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(SysAccessKey::Table).to_owned()).await
+        manager
+            .drop_table(Table::drop().table(SysAccessKey::Table).to_owned())
+            .await
     }
 }
 

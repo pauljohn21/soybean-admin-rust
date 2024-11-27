@@ -8,7 +8,10 @@ pub async fn initialize_event_channel() {
     global::register_event_listeners(
         Box::new(|rx| Box::pin(jwt_created_listener(rx))),
         &[
-            ("auth_login".to_string(), Box::new(|rx| Box::pin(auth_login_listener(rx)))),
+            (
+                "auth_login".to_string(),
+                Box::new(|rx| Box::pin(auth_login_listener(rx))),
+            ),
             (
                 "sys_operation_log".to_string(),
                 Box::new(|rx| Box::pin(sys_operation_log_listener(rx))),

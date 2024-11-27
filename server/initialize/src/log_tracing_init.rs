@@ -12,7 +12,9 @@ pub async fn initialize_log_tracing() {
     let env_filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info,sea_orm=info"));
 
-    let fmt_layer = tracing_subscriber::fmt::layer().with_target(true).with_ansi(true);
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_target(true)
+        .with_ansi(true);
 
     let subscriber = Registry::default()
         .with(env_filter)

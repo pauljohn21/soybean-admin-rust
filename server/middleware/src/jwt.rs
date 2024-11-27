@@ -18,7 +18,7 @@ pub async fn jwt_auth_middleware(
                 "No token provided or invalid token type",
             )
             .into_response();
-        }
+        },
     };
 
     match JwtUtils::validate_token(&token, audience).await {
@@ -32,10 +32,10 @@ pub async fn jwt_auth_middleware(
             req.extensions_mut().insert(user);
             req.extensions_mut().insert(vals);
             next.run(req).await.into_response()
-        }
+        },
         Err(err) => {
             Res::<String>::new_error(StatusCode::UNAUTHORIZED.as_u16(), err.to_string().as_str())
                 .into_response()
-        }
+        },
     }
 }

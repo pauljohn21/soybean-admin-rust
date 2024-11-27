@@ -71,7 +71,9 @@ async fn handler() {}
 #[cfg_attr(feature = "runtime-tokio", tokio::test)]
 #[cfg_attr(feature = "runtime-async-std", async_std::test)]
 async fn test_middleware() {
-    let m = DefaultModel::from_file("examples/rbac_with_pattern_model.conf").await.unwrap();
+    let m = DefaultModel::from_file("examples/rbac_with_pattern_model.conf")
+        .await
+        .unwrap();
 
     let a = FileAdapter::new("examples/rbac_with_pattern_policy.csv");
 

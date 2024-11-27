@@ -11,7 +11,12 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(SysEndpoint::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(SysEndpoint::Id).string().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(SysEndpoint::Id)
+                            .string()
+                            .not_null()
+                            .primary_key(),
+                    )
                     .col(ColumnDef::new(SysEndpoint::Path).string().not_null())
                     .col(ColumnDef::new(SysEndpoint::Method).string().not_null())
                     .col(ColumnDef::new(SysEndpoint::Action).string().not_null())
@@ -31,7 +36,9 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(SysEndpoint::Table).to_owned()).await
+        manager
+            .drop_table(Table::drop().table(SysEndpoint::Table).to_owned())
+            .await
     }
 }
 

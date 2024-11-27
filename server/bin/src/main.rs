@@ -25,13 +25,16 @@ async fn main() {
         Err(e) => {
             eprintln!("Failed to get server address: {}", e);
             return;
-        }
+        },
     };
 
     // run it
     let listener = TcpListener::bind(&addr).await.unwrap();
     // tracing::debug!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
-        .await
-        .unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .unwrap();
 }

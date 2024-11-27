@@ -41,7 +41,10 @@ where
     type Rejection = ValidationError;
 
     async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
-        let content_type = req.headers().get(CONTENT_TYPE).and_then(|value| value.to_str().ok());
+        let content_type = req
+            .headers()
+            .get(CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok());
 
         let data = match content_type.as_deref() {
             Some(ct) if ct.contains(mime::APPLICATION_JSON.as_ref()) => {
@@ -49,13 +52,13 @@ where
                     .await
                     .map_err(|e| ValidationError::JsonError(e.to_string()))?;
                 data
-            }
+            },
             Some(ct) if ct.contains(mime::APPLICATION_WWW_FORM_URLENCODED.as_ref()) => {
                 let Form(data) = Form::<T>::from_request(req, state)
                     .await
                     .map_err(|_| ValidationError::FormError)?;
                 data
-            }
+            },
             _ => return Err(ValidationError::DataMissing),
         };
 
@@ -70,7 +73,7 @@ impl IntoResponse for ValidationError {
             ValidationError::JsonError(msg) => (StatusCode::BAD_REQUEST, msg),
             ValidationError::FormError => {
                 (StatusCode::BAD_REQUEST, "Invalid form data".to_string())
-            }
+            },
             ValidationError::Validation(errors) => {
                 let error_messages: serde_json::Map<String, JsonValue> = errors
                     .field_errors()
@@ -99,10 +102,10 @@ impl IntoResponse for ValidationError {
                     )
                     .unwrap(),
                 )
-            }
+            },
             ValidationError::DataMissing => {
                 (StatusCode::BAD_REQUEST, "Data is missing".to_string())
-            }
+            },
         };
 
         Res::<String>::new_error(status.as_u16(), &error_message).into_response()

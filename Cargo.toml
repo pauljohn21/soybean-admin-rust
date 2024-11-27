@@ -10,11 +10,14 @@ exclude = []
 resolver = "2"
 
 [profile.release]
-opt-level = 3               # 最大程度优化代码执行性能。
-debug = false               # 不生成调试信息，以减小最终二进制文件的大小。
-lto = true                  # 启用链接时优化（Link Time Optimization），可以进一步提高性能和减少最终二进制的大小。
-codegen-units = 1           # 将代码生成单元设置为1，以允许编译器在编译时进行更广泛的优化，但会增加编译时间。
-panic = 'abort'             # 在遇到 panic 时使程序立即终止，而不是展开栈。这可以减小二进制大小，也能略微提高性能。
+opt-level = 3               # 最高级别的优化，以获得最佳性能
+lto = "fat"                 # 启用全程序链接时优化，可能会显著提高性能，但会增加编译时间
+codegen-units = 1           # 使用单一代码生成单元，允许更多的跨模块优化
+panic = 'abort'             # 在 panic 时直接终止程序，减小二进制大小并略微提高性能
+strip = true                # 去除符号信息，进一步减小二进制大小
+debug = false               # 不包含调试信息，减小二进制大小
+incremental = false         # 禁用增量编译，确保每次构建都是完整的优化
+overflow-checks = false     # 禁用整数溢出检查，略微提高性能（但要小心使用）
 
 [profile.dev]
 split-debuginfo = "unpacked"

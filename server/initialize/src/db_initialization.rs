@@ -14,11 +14,11 @@ pub async fn init_primary_connection() {
         Ok(db) => {
             *GLOBAL_PRIMARY_DB.write().await = Some(Arc::new(db));
             project_info!("Primary database connection initialized");
-        }
+        },
         Err(e) => {
             project_error!("Failed to connect to primary database: {}", e);
             process::exit(1);
-        }
+        },
     }
 }
 
@@ -37,15 +37,18 @@ async fn init_db_connection(name: &str, db_config: &DatabaseConfig) -> Result<()
     let opt = build_connect_options(db_config);
     match Database::connect(opt).await {
         Ok(db) => {
-            GLOBAL_DB_POOL.write().await.insert(name.to_string(), Arc::new(db));
+            GLOBAL_DB_POOL
+                .write()
+                .await
+                .insert(name.to_string(), Arc::new(db));
             project_info!("Database '{}' initialized", name);
             Ok(())
-        }
+        },
         Err(e) => {
             let error_msg = format!("Failed to connect to database '{}': {}", name, e);
             project_error!("{}", error_msg);
             Err(error_msg)
-        }
+        },
     }
 }
 
@@ -76,7 +79,9 @@ pub async fn add_or_update_db_pool_connection(
 
 pub async fn remove_db_pool_connection(name: &str) -> Result<(), String> {
     let mut db_pool = GLOBAL_DB_POOL.write().await;
-    db_pool.remove(name).ok_or_else(|| "Connection not found".to_string())?;
+    db_pool
+        .remove(name)
+        .ok_or_else(|| "Connection not found".to_string())?;
     project_info!("Database connection '{}' removed", name);
     Ok(())
 }
@@ -114,7 +119,10 @@ mod tests {
         init_primary_connection().await;
 
         let connection = get_primary_db_connection().await;
-        assert!(connection.is_some(), "Master database connection does not exist");
+        assert!(
+            connection.is_some(),
+            "Master database connection does not exist"
+        );
     }
 
     #[tokio::test]
@@ -124,7 +132,11 @@ mod tests {
 
         let config = get_config::<Config>().await.unwrap().as_ref().clone();
         let result = init_db_pool_connections(config.databases).await;
-        assert!(result.is_ok(), "Failed to initialize db_pool connections: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to initialize db_pool connections: {:?}",
+            result.err()
+        );
 
         let db_config = DatabaseConfig {
             url: "postgres://postgres:123456@localhost:5432/soybean-admin-rust-backend".to_string(),
@@ -138,13 +150,22 @@ mod tests {
         assert!(add_result.is_ok(), "Failed to add database connection");
 
         let connection = get_db_pool_connection("test_connection").await;
-        assert!(connection.is_some(), "Database connection 'test_connection' does not exist");
+        assert!(
+            connection.is_some(),
+            "Database connection 'test_connection' does not exist"
+        );
         println!("Added and retrieved database connection successfully.");
 
-        println!("Current pool size after addition: {}", GLOBAL_DB_POOL.read().await.len());
+        println!(
+            "Current pool size after addition: {}",
+            GLOBAL_DB_POOL.read().await.len()
+        );
 
         let remove_result = remove_db_pool_connection("test_connection").await;
-        assert!(remove_result.is_ok(), "Failed to remove database connection");
+        assert!(
+            remove_result.is_ok(),
+            "Failed to remove database connection"
+        );
 
         let connection_after_removal = get_db_pool_connection("test_connection").await;
         assert!(
@@ -152,6 +173,9 @@ mod tests {
             "Database connection 'test_connection' still exists after removal"
         );
 
-        println!("Current pool size after removal: {}", GLOBAL_DB_POOL.read().await.len());
+        println!(
+            "Current pool size after removal: {}",
+            GLOBAL_DB_POOL.read().await.len()
+        );
     }
 }

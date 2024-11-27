@@ -47,7 +47,10 @@ impl SysAuthenticationApi {
             domain: "built-in".to_string(),
         };
 
-        service.pwd_login(input, login_context).await.map(Res::new_data)
+        service
+            .pwd_login(input, login_context)
+            .await
+            .map(Res::new_data)
     }
 
     pub async fn get_user_info(
@@ -66,7 +69,9 @@ impl SysAuthenticationApi {
         Extension(user): Extension<User>,
         Extension(service): Extension<Arc<SysAuthService>>,
     ) -> Result<Res<UserRoute>, AppError> {
-        let routes = service.get_user_routes(&user.subject(), &user.domain()).await?;
+        let routes = service
+            .get_user_routes(&user.subject(), &user.domain())
+            .await?;
 
         Ok(Res::new_data(routes))
     }

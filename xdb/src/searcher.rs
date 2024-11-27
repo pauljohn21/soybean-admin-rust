@@ -38,17 +38,17 @@ pub fn get_block_by_size(bytes: &[u8], offset: usize, length: usize) -> usize {
                 let mut buf = [0u8; 4];
                 std::ptr::copy_nonoverlapping(ptr, buf.as_mut_ptr(), 4);
                 u32::from_ne_bytes(buf) as usize
-            }
+            },
             2 => {
                 let mut buf = [0u8; 2];
                 std::ptr::copy_nonoverlapping(ptr, buf.as_mut_ptr(), 2);
                 u16::from_ne_bytes(buf) as usize
-            }
+            },
             _ => {
                 let mut result = 0usize;
                 std::ptr::copy_nonoverlapping(ptr, &mut result as *mut usize as *mut u8, length);
                 result
-            }
+            },
         }
     }
 }
