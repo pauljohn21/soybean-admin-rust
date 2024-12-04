@@ -5,6 +5,7 @@ pub use sys_endpoint_api::SysEndpointApi;
 pub use sys_login_log_api::SysLoginLogApi;
 pub use sys_menu_api::SysMenuApi;
 pub use sys_operation_log_api::SysOperationLogApi;
+pub use sys_organization_api::SysOrganizationApi;
 pub use sys_role_api::SysRoleApi;
 pub use sys_user_api::SysUserApi;
 
@@ -15,5 +16,6 @@ mod sys_endpoint_api;
 mod sys_login_log_api;
 mod sys_menu_api;
 mod sys_operation_log_api;
+mod sys_organization_api;
 mod sys_role_api;
 mod sys_user_api;
