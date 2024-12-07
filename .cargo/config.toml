@@ -1,27 +1,91 @@
-[target.x86_64-pc-windows-msvc]
+# ======================================
+# Core Build Configuration
+# ======================================
+[build]
+jobs = 16
+pipelining = true
+rustflags = []
+incremental = false
+
+[rust]
+channel = "stable"
+debuginfo = 2
+parallel-compiler = true
+deny-warnings = true
+components = ["rustc", "rust-std", "cargo", "rust-analyzer"]
+
+# ======================================
+# Development Profile
+# ======================================
+[profile.dev]
+opt-level = 0
+debug = true
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = "unwind"
+incremental = true
+codegen-units = 256
+rpath = false
+
+# ======================================
+# Release Profile
+# ======================================
+[profile.release]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+lto = true
+panic = "abort"
+incremental = false
+codegen-units = 1
+rpath = false
+strip = true
+
+# ======================================
+# Universal Optimizations
+# ======================================
+[target.'cfg(all())']
 rustflags = [
-    "-C", "opt-level=3", # 高级别优化
-    "-C", "target-cpu=native", # 针对本地 CPU 优化
-    "-C", "codegen-units=1", # 降低代码生成单元数量以提高优化质量
-    "-C", "link-args=/LTCG", # 启用链接时代码生成
-    "-C", "link-args=/OPT:REF", # 优化参考
-    "-C", "link-args=/OPT:ICF", # 优化重复代码折叠
-    "-C", "target-feature=+crt-static", # 静态链接 C 运行时
-    "-C", "link-args=/DEBUG:NONE" # 不生成调试信息
+    # Performance
+    "-C", "target-feature=+crt-static",
+    "-C", "force-frame-pointers=yes",
+    "-C", "link-arg=-fuse-ld=lld",
+    # Quality
+    "-D", "warnings"
 ]
 
-[target.x86_64-unknown-linux-gnu]
-linker = "clang" # 使用 Clang 作为链接器
+# ======================================
+# Release Mode Optimizations
+# ======================================
+[target.'cfg(not(debug_assertions))']
 rustflags = [
-    "-C", "opt-level=3", # 高级别优化
-    "-C", "target-cpu=native", # 针对本地 CPU 优化
-    "-C", "codegen-units=1", # 降低代码生成单元数量以提高优化质量
-    "-C", "link-arg=-fuse-ld=lld", # 使用 LLVM 的 lld 链接器
-    "-C", "link-arg=-Wl,-O1", # 链接器优化
-    "-C", "link-arg=-Wl,--gc-sections", # 移除未使用的节
+    # Performance
+    "-C", "opt-level=3",
+    "-C", "target-cpu=native",
+    "-C", "codegen-units=1",
+    "-C", "embed-bitcode=yes",
+    # Enable dylib LTO
+    "-Z", "dylib-lto"
 ]
 
-# Tokio 相关配置（根据需要）
-[target.'cfg(tokio_unstable)']
-rustflags = ["--cfg", "tokio_unstable"] # 启用 Tokio 不稳定特性
+# ======================================
+# Architecture Optimizations (Release Only)
+# ======================================
+[target.'cfg(all(target_arch = "x86_64", not(debug_assertions)))']
+rustflags = ["-C", "target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+avx,+avx2,+fma,+f16c,+popcnt,+fxsr,+bmi1,+bmi2"]
 
+[target.'cfg(all(target_arch = "aarch64", not(debug_assertions)))']
+rustflags = ["-C", "target-feature=+neon,+fp-armv8,+crypto,+aes,+sha2,+crc"]
+
+# ======================================
+# Documentation
+# ======================================
+[doc]
+browser = "firefox"
+opts = [
+    "--enable-index-page",
+    "--enable-search",
+    "--document-private-items"
+]
