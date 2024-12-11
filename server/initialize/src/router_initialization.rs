@@ -30,9 +30,9 @@ use tracing::info_span;
 
 use crate::{initialize_casbin, project_error, project_info};
 
-async fn apply_layers(
+async fn apply_layers<T: Send + Sync + 'static>(
     router: Router,
-    service: Arc<dyn Send + Sync + 'static>,
+    service: Arc<T>,
     need_casbin: bool,
     need_auth: bool,
     api_validation: Option<ApiKeyValidation>,
