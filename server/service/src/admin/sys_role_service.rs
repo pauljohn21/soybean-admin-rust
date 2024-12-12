@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::Utc;
+use chrono::Local;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, Condition, EntityTrait, PaginatorTrait, QueryFilter, Set,
 };
@@ -132,7 +132,7 @@ impl TRoleService for SysRoleService {
             name: Set(input.role.name),
             description: Set(input.role.description),
 
-            updated_at: Set(Some(Utc::now().naive_utc())),
+            updated_at: Set(Some(Local::now().naive_local())),
             ..role
         };
 

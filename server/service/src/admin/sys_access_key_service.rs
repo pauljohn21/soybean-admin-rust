@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::Utc;
+use chrono::Local;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, Condition, EntityTrait, PaginatorTrait, QueryFilter, Set,
 };
@@ -80,7 +80,7 @@ impl TAccessKeyService for SysAccessKeyService {
             description: Set(input.description),
             access_key_id: Set(format!("AK{}", Ulid::new().to_string())),
             access_key_secret: Set(format!("SK{}", Ulid::new().to_string())),
-            created_at: Set(Utc::now().naive_utc()),
+            created_at: Set(Local::now().naive_local()),
             created_by: Set("system".to_string()),
             ..Default::default()
         };

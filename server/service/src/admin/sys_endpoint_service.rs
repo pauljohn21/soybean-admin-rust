@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::Utc;
+use chrono::Local;
 use sea_orm::{
     ColumnTrait, Condition, DatabaseConnection, DeleteResult, EntityTrait, IntoActiveModel,
     PaginatorTrait, QueryFilter, Set,
@@ -35,7 +35,7 @@ impl SysEndpointService {
         db: &DatabaseConnection,
         endpoints: Vec<SysEndpointModel>,
     ) -> Result<(), AppError> {
-        let now = Utc::now().naive_utc();
+        let now = Local::now().naive_local();
         let active_models: Vec<SysEndpointActiveModel> = endpoints
             .into_iter()
             .map(|endpoint| {

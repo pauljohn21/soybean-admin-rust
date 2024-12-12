@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::Local;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use server_constant::definition::consts::TokenStatus;
 use server_core::web::error::AppError;
@@ -21,7 +21,7 @@ pub struct AccessTokenEvent {
 
 impl AccessTokenEvent {
     pub async fn handle(self, db: &DatabaseConnection) -> Result<(), AppError> {
-        let now = Utc::now().naive_utc();
+        let now = Local::now().naive_local();
 
         SysTokensActiveModel {
             id: Set(Ulid::new().to_string()),

@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::Utc;
+use chrono::Local;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use server_core::web::{auth::User, error::AppError};
 use server_model::admin::{
@@ -230,7 +230,7 @@ impl TMenuService for SysMenuService {
         menu.href = Set(input.menu.href);
         menu.multi_tab = Set(input.menu.multi_tab);
 
-        menu.updated_at = Set(Some(Utc::now().naive_utc()));
+        menu.updated_at = Set(Some(Local::now().naive_local()));
         menu.updated_by = Set(Some(user.user_id()));
 
         let updated_menu = menu.update(db.as_ref()).await.map_err(AppError::from)?;

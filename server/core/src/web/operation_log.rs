@@ -12,7 +12,7 @@ use axum::{
     Extension,
 };
 use bytes::BytesMut;
-use chrono::Utc;
+use chrono::Local;
 use futures::{future::BoxFuture, StreamExt};
 use http::{Extensions, HeaderMap, Uri};
 use serde_json::Value;
@@ -84,7 +84,7 @@ where
 
         let mut inner = self.inner.clone();
         Box::pin(async move {
-            let start_time = Utc::now().naive_utc();
+            let start_time = Local::now().naive_local();
             let (parts, body) = req.into_parts();
             let headers = &parts.headers;
             let extensions = &parts.extensions;
@@ -111,7 +111,7 @@ where
                     .await
                     .unwrap_or_default();
 
-                let end_time = Utc::now().naive_utc();
+                let end_time = Local::now().naive_local();
                 let duration = (end_time - start_time).num_milliseconds() as i32;
 
                 let context = OperationLogContext {

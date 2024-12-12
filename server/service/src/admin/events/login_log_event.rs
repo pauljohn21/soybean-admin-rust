@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::Local;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use server_core::web::error::AppError;
 use server_model::admin::entities::sys_login_log::ActiveModel as SysLoginLogActiveModel;
@@ -23,14 +23,14 @@ impl LoginLogEvent {
             user_id: Set(self.user_id),
             username: Set(self.username.clone()),
             domain: Set(self.domain),
-            login_time: Set(Utc::now().naive_utc()),
+            login_time: Set(Local::now().naive_local()),
             ip: Set(self.ip),
             port: Set(self.port),
             address: Set(self.address),
             user_agent: Set(self.user_agent),
             request_id: Set(self.request_id),
             r#type: Set(self.login_type),
-            created_at: Set(Utc::now().naive_utc()),
+            created_at: Set(Local::now().naive_local()),
             created_by: Set(self.username),
         }
         .insert(db)
