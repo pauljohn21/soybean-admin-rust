@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{body::Body, http::StatusCode, response::IntoResponse, Extension, Router};
 use axum_casbin::CasbinAxumLayer;
-use chrono::Utc;
+use chrono::Local;
 use http::Request;
 use server_config::Config;
 use server_constant::definition::Audience;
@@ -30,17 +30,36 @@ use tracing::info_span;
 
 use crate::{initialize_casbin, project_error, project_info};
 
+#[derive(Clone)]
+pub enum Services<T: Send + Sync + 'static> {
+    None(std::marker::PhantomData<T>),
+    Single(Arc<T>),
+    #[allow(dead_code)]
+    Multiple(Arc<T>, Vec<Arc<dyn Send + Sync + 'static>>),
+}
+
 async fn apply_layers<T: Send + Sync + 'static>(
     router: Router,
-    service: Arc<T>,
+    services: Services<T>,
     need_casbin: bool,
     need_auth: bool,
     api_validation: Option<ApiKeyValidation>,
     casbin: Option<CasbinAxumLayer>,
     audience: Audience,
 ) -> Router {
-    let mut router = router
-        .layer(Extension(service))
+    let mut router = match services {
+        Services::None(_) => router,
+        Services::Single(service) => router.layer(Extension(service)),
+        Services::Multiple(primary, additional) => {
+            let mut r = router.layer(Extension(primary));
+            for service in additional {
+                r = r.layer(Extension(service));
+            }
+            r
+        },
+    };
+
+    router = router
         .layer(
             TraceLayer::new_for_http().make_span_with(|request: &Request<Body>| {
                 let request_id = request
@@ -131,7 +150,7 @@ pub async fn initialize_admin_router() -> Router {
             app = app.merge(
                 apply_layers(
                     $router,
-                    Arc::new(()),
+                    Services::None(std::marker::PhantomData::<()>),
                     $need_casbin,
                     $need_auth,
                     $api_validation,
@@ -145,7 +164,24 @@ pub async fn initialize_admin_router() -> Router {
             app = app.merge(
                 apply_layers(
                     $router,
-                    Arc::new($service),
+                    Services::Single(Arc::new($service)),
+                    $need_casbin,
+                    $need_auth,
+                    $api_validation,
+                    casbin.clone(),
+                    audience,
+                )
+                .await,
+            );
+        };
+        ($router:expr, $primary:expr, [$($additional:expr),+], $need_casbin:expr, $need_auth:expr, $api_validation:expr) => {
+            app = app.merge(
+                apply_layers(
+                    $router,
+                    Services::Multiple(
+                        Arc::new($primary),
+                        vec![$(Arc::new($additional) as Arc<dyn Send + Sync>),+]
+                    ),
                     $need_casbin,
                     $need_auth,
                     $api_validation,
@@ -289,7 +325,7 @@ async fn process_collected_routes() {
                 resource,
                 controller: route.service_name,
                 summary: Some(route.summary),
-                created_at: Utc::now().naive_utc(),
+                created_at: Local::now().naive_local(),
                 updated_at: None,
             }
         })
