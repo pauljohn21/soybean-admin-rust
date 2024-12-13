@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use sea_orm::{ColumnTrait, Condition, EntityTrait, PaginatorTrait, QueryFilter};
+use sea_orm::{ColumnTrait, Condition, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder};
 use server_core::web::{error::AppError, page::PaginatedData};
 use server_model::admin::{
     entities::{
@@ -39,6 +39,8 @@ impl TLoginLogService for SysLoginLogService {
                 .add(SysLoginLogColumn::UserAgent.contains(keywords));
             query = query.filter(condition);
         }
+
+        query = query.order_by_desc(SysLoginLogColumn::CreatedAt);
 
         let total = query
             .clone()

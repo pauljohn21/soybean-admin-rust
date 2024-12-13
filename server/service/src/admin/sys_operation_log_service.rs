@@ -2,7 +2,8 @@ use std::any::Any;
 
 use async_trait::async_trait;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, Condition, EntityTrait, PaginatorTrait, QueryFilter, Set,
+    ActiveModelTrait, ColumnTrait, Condition, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
+    Set,
 };
 use server_core::web::{error::AppError, page::PaginatedData};
 use server_global::{global::OperationLogContext, project_error};
@@ -50,6 +51,8 @@ impl TOperationLogService for SysOperationLogService {
                 .add(SysOperationLogColumn::UserAgent.contains(keywords));
             query = query.filter(condition);
         }
+
+        query = query.order_by_desc(SysOperationLogColumn::CreatedAt);
 
         let total = query
             .clone()
