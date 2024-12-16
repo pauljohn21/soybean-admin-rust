@@ -6,12 +6,13 @@ use chrono::Local;
 use http::Request;
 use server_config::Config;
 use server_constant::definition::Audience;
+use server_core::sign::{
+    api_key_middleware, protect_route, ApiKeySource, ApiKeyValidation, ComplexApiKeyConfig,
+    ComplexApiKeyValidator, SimpleApiKeyConfig, SimpleApiKeyValidator,
+};
 use server_core::web::{RequestId, RequestIdLayer};
 use server_global::global::{clear_routes, get_collected_routes, get_config};
-use server_middleware::{
-    api_key_middleware, jwt_auth_middleware, protect_route, ApiKeySource, ApiKeyValidation,
-    ComplexApiKeyConfig, ComplexApiKeyValidator, SimpleApiKeyConfig, SimpleApiKeyValidator,
-};
+use server_middleware::jwt_auth_middleware;
 use server_router::admin::{
     SysAccessKeyRouter, SysAuthenticationRouter, SysDomainRouter, SysEndpointRouter,
     SysLoginLogRouter, SysMenuRouter, SysOperationLogRouter, SysOrganizationRouter, SysRoleRouter,

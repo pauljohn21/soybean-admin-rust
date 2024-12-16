@@ -32,4 +32,12 @@ form_urlencoded = { workspace = true }
 
 tracing = { workspace = true }
 
+once_cell = { workspace = true }
+ring = "0.17"
+hex = "0.4"
+md-5 = "0.10"
+urlencoding = "2.1"
+parking_lot = "0.12"
+moka = { version = "0.12", features = ["sync"] }
+
 [dev-dependencies]

@@ -6,10 +6,11 @@ use axum::{
     response::IntoResponse,
 };
 use once_cell::sync::Lazy;
-use server_core::web::res::Res;
 use std::{collections::HashSet, sync::RwLock};
 
-use crate::api_key::{ComplexApiKeyValidator, SimpleApiKeyValidator};
+use crate::web::res::Res;
+
+use super::{ComplexApiKeyValidator, SimpleApiKeyValidator};
 
 /// Global set of protected paths.
 ///
