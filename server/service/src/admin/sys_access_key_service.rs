@@ -1,9 +1,13 @@
 use async_trait::async_trait;
 use chrono::Local;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, Condition, EntityTrait, PaginatorTrait, QueryFilter, Set,
+    ActiveModelTrait, ColumnTrait, Condition, DatabaseTransaction, EntityTrait, PaginatorTrait,
+    QueryFilter, Set, TransactionTrait,
 };
-use server_core::web::{error::AppError, page::PaginatedData};
+use server_core::{
+    sign::ValidatorType,
+    web::{error::AppError, page::PaginatedData},
+};
 use server_model::admin::{
     entities::{
         prelude::SysAccessKey,
@@ -17,6 +21,8 @@ use server_model::admin::{
 use ulid::Ulid;
 
 use crate::helper::db_helper;
+
+use super::sys_access_key_error::AccessKeyError;
 
 #[async_trait]
 pub trait TAccessKeyService {
@@ -33,6 +39,52 @@ pub trait TAccessKeyService {
 
 #[derive(Clone)]
 pub struct SysAccessKeyService;
+
+impl SysAccessKeyService {
+    async fn create_access_key_in_transaction(
+        &self,
+        txn: &DatabaseTransaction,
+        access_key: SysAccessKeyActiveModel,
+    ) -> Result<SysAccessKeyModel, AppError> {
+        let result = access_key.insert(txn).await.map_err(AppError::from)?;
+
+        // 添加到验证器
+        server_core::sign::add_key(ValidatorType::Simple, &result.access_key_id, None).await;
+        server_core::sign::add_key(
+            ValidatorType::Complex,
+            &result.access_key_id,
+            Some(&result.access_key_secret),
+        )
+        .await;
+
+        Ok(result)
+    }
+
+    async fn delete_access_key_in_transaction(
+        &self,
+        txn: &DatabaseTransaction,
+        id: &str,
+    ) -> Result<(), AppError> {
+        // 先获取 access key 信息
+        let access_key = SysAccessKey::find_by_id(id)
+            .one(txn)
+            .await
+            .map_err(AppError::from)?
+            .ok_or_else(|| AppError::from(AccessKeyError::AccessKeyNotFound))?;
+
+        // 从数据库中删除
+        SysAccessKey::delete_by_id(id)
+            .exec(txn)
+            .await
+            .map_err(AppError::from)?;
+
+        // 从验证器中移除
+        server_core::sign::remove_key(ValidatorType::Simple, &access_key.access_key_id).await;
+        server_core::sign::remove_key(ValidatorType::Complex, &access_key.access_key_id).await;
+
+        Ok(())
+    }
+}
 
 #[async_trait]
 impl TAccessKeyService for SysAccessKeyService {
@@ -73,31 +125,53 @@ impl TAccessKeyService for SysAccessKeyService {
         input: CreateAccessKeyInput,
     ) -> Result<SysAccessKeyModel, AppError> {
         let db = db_helper::get_db_connection().await?;
+        let txn = db.begin().await.map_err(AppError::from)?;
+
+        let access_key_id = format!("AK{}", Ulid::new().to_string());
+        let access_key_secret = format!("SK{}", Ulid::new().to_string());
 
         let access_key = SysAccessKeyActiveModel {
+            id: Set(Ulid::new().to_string()),
             domain: Set(input.domain),
             status: Set(input.status),
             description: Set(input.description),
-            access_key_id: Set(format!("AK{}", Ulid::new().to_string())),
-            access_key_secret: Set(format!("SK{}", Ulid::new().to_string())),
+            access_key_id: Set(access_key_id),
+            access_key_secret: Set(access_key_secret),
             created_at: Set(Local::now().naive_local()),
             created_by: Set("system".to_string()),
             ..Default::default()
         };
 
-        let result = access_key
-            .insert(db.as_ref())
+        let result = match self
+            .create_access_key_in_transaction(&txn, access_key)
             .await
-            .map_err(AppError::from)?;
+        {
+            Ok(result) => {
+                txn.commit().await.map_err(AppError::from)?;
+                result
+            },
+            Err(e) => {
+                txn.rollback().await.map_err(AppError::from)?;
+                return Err(e);
+            },
+        };
+
         Ok(result)
     }
 
     async fn delete_access_key(&self, id: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
-        SysAccessKey::delete_by_id(id)
-            .exec(db.as_ref())
-            .await
-            .map_err(AppError::from)?;
-        Ok(())
+        let txn = db.begin().await.map_err(AppError::from)?;
+
+        match self.delete_access_key_in_transaction(&txn, id).await {
+            Ok(_) => {
+                txn.commit().await.map_err(AppError::from)?;
+                Ok(())
+            },
+            Err(e) => {
+                txn.rollback().await.map_err(AppError::from)?;
+                Err(e)
+            },
+        }
     }
 }
