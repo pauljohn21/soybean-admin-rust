@@ -8,7 +8,7 @@ use server_config::Config;
 use server_constant::definition::Audience;
 use server_core::sign::{
     api_key_middleware, protect_route, ApiKeySource, ApiKeyValidation, ComplexApiKeyConfig,
-    ComplexApiKeyValidator, SimpleApiKeyConfig, SimpleApiKeyValidator,
+    SimpleApiKeyConfig, ValidatorType,
 };
 use server_core::web::{RequestId, RequestIdLayer};
 use server_global::global::{clear_routes, get_collected_routes, get_config};
@@ -112,9 +112,11 @@ pub async fn initialize_admin_router() -> Router {
     .unwrap();
 
     // 初始化验证器
+    server_core::sign::init_validators(None).await;
+
     let simple_validation = {
-        let validator = SimpleApiKeyValidator::new();
-        validator.add_key("test-api-key".to_string());
+        let validator = server_core::sign::get_simple_validator().await;
+        server_core::sign::add_key(ValidatorType::Simple, "test-api-key", None).await;
         ApiKeyValidation::Simple(
             validator,
             SimpleApiKeyConfig {
@@ -125,8 +127,13 @@ pub async fn initialize_admin_router() -> Router {
     };
 
     let complex_validation = {
-        let validator = ComplexApiKeyValidator::new(None);
-        validator.add_key_secret("test-access-key".to_string(), "test-secret-key".to_string());
+        let validator = server_core::sign::get_complex_validator().await;
+        server_core::sign::add_key(
+            ValidatorType::Complex,
+            "test-access-key",
+            Some("test-secret-key"),
+        )
+        .await;
         ApiKeyValidation::Complex(
             validator,
             ComplexApiKeyConfig {
