@@ -83,6 +83,7 @@ pub struct SysAuthService;
 
 impl SysAuthService {
     /// 查找第一个有效的路由路径
+    #[allow(dead_code)]
     fn find_first_valid_route(routes: &[MenuRoute]) -> Option<String> {
         for route in routes {
             if !route.path.is_empty() && route.path != "/" {
@@ -210,7 +211,8 @@ impl TAuthService for SysAuthService {
             },
         );
 
-        let home = Self::find_first_valid_route(&routes).unwrap_or_else(|| "/home".to_string());
+        // let home = Self::find_first_valid_route(&routes).unwrap_or_else(|| "/home".to_string());
+        let home = "home".to_string();
 
         Ok(UserRoute { routes, home })
     }
