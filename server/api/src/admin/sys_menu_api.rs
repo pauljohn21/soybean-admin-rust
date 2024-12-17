@@ -53,4 +53,15 @@ impl SysMenuApi {
         print!("user is {:#?}", user);
         service.delete_menu(id, user).await.map(Res::new_data)
     }
+
+    pub async fn get_auth_routes(
+        Path(role_id): Path<String>,
+        Extension(service): Extension<Arc<SysMenuService>>,
+        Extension(user): Extension<User>,
+    ) -> Result<Res<Vec<i32>>, AppError> {
+        service
+            .get_menu_ids_by_role_id(role_id, user.domain())
+            .await
+            .map(Res::new_data)
+    }
 }

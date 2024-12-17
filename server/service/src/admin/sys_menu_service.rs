@@ -1,14 +1,15 @@
 use async_trait::async_trait;
 use chrono::Local;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
+use sea_orm::{ActiveModelTrait, ColumnTrait, Condition, EntityTrait, QueryFilter, Set};
 use server_core::web::{auth::User, error::AppError};
 use server_model::admin::{
     entities::{
-        prelude::SysMenu,
+        prelude::{SysMenu, SysRoleMenu},
         sea_orm_active_enums::Status,
         sys_menu::{
             ActiveModel as SysMenuActiveModel, Column as SysMenuColumn, Model as SysMenuModel,
         },
+        sys_role_menu::Column as SysRoleMenuColumn,
     },
     input::{CreateMenuInput, UpdateMenuInput},
     output::{MenuRoute, MenuTree, RouteMeta},
@@ -35,6 +36,11 @@ pub trait TMenuService {
         user: User,
     ) -> Result<SysMenuModel, AppError>;
     async fn delete_menu(&self, id: i32, user: User) -> Result<(), AppError>;
+    async fn get_menu_ids_by_role_id(
+        &self,
+        role_id: String,
+        domain: String,
+    ) -> Result<Vec<i32>, AppError>;
 }
 
 #[derive(Clone)]
@@ -244,5 +250,42 @@ impl TMenuService for SysMenuService {
             .await
             .map_err(AppError::from)?;
         Ok(())
+    }
+
+    async fn get_menu_ids_by_role_id(
+        &self,
+        role_id: String,
+        domain: String,
+    ) -> Result<Vec<i32>, AppError> {
+        let db = db_helper::get_db_connection().await?;
+
+        let role_menus = SysRoleMenu::find()
+            .filter(
+                Condition::all()
+                    .add(SysRoleMenuColumn::RoleId.eq(role_id))
+                    .add(SysRoleMenuColumn::Domain.eq(domain)),
+            )
+            .all(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
+
+        let menu_ids: Vec<i32> = role_menus.iter().map(|rm| rm.menu_id).collect();
+
+        if menu_ids.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let menus = SysMenu::find()
+            .filter(
+                Condition::all()
+                    .add(SysMenuColumn::Id.is_in(menu_ids))
+                    .add(SysMenuColumn::Status.eq(Status::ENABLED))
+                    .add(SysMenuColumn::Constant.eq(false)),
+            )
+            .all(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
+
+        Ok(menus.iter().map(|menu| menu.id).collect())
     }
 }

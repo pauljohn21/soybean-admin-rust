@@ -38,6 +38,12 @@ impl SysMenuRouter {
                 service_name,
                 "删除菜单",
             ),
+            RouteInfo::new(
+                &format!("{}/auth-route/:roleId", base_path),
+                Method::GET,
+                service_name,
+                "获取角色菜单",
+            ),
         ];
 
         for route in routes {
@@ -49,7 +55,8 @@ impl SysMenuRouter {
             .route("/", post(SysMenuApi::create_menu))
             .route("/:id", get(SysMenuApi::get_menu))
             .route("/", put(SysMenuApi::update_menu))
-            .route("/:id", delete(SysMenuApi::delete_menu));
+            .route("/:id", delete(SysMenuApi::delete_menu))
+            .route("/auth-route/:roleId", get(SysMenuApi::get_auth_routes));
 
         Router::new().nest(base_path, router)
     }
