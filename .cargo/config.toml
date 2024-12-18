@@ -40,6 +40,7 @@ incremental = false
 codegen-units = 1
 rpath = false
 strip = true
+split-debuginfo = "off"
 
 # ======================================
 # Universal Optimizations
@@ -48,6 +49,8 @@ strip = true
 rustflags = [
     "-C", "target-cpu=native",
     "-C", "force-frame-pointers=no",
+    "-C", "link-arg=-s",
+    "-C", "prefer-dynamic=no",
     "-D", "warnings"
 ]
 
@@ -58,7 +61,8 @@ rustflags = [
 rustflags = [
     "-C", "opt-level=3",
     "-C", "codegen-units=1",
-    "-C", "embed-bitcode=yes"
+    "-C", "embed-bitcode=yes",
+    "-C", "target-feature=+crt-static"
 ]
 
 # ======================================
@@ -66,17 +70,17 @@ rustflags = [
 # ======================================
 [target.'cfg(all(target_arch = "x86_64", not(debug_assertions)))']
 rustflags = [
-    "-C", "target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+avx,+avx2,+fma,+f16c,+popcnt,+fxsr,+bmi1,+bmi2"
+    "-C", "target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+avx,+avx2,+fma,+f16c,+popcnt,+fxsr,+bmi1,+bmi2,+lzcnt,+movbe"
 ]
 
 [target.'cfg(all(target_arch = "aarch64", not(debug_assertions)))']
 rustflags = [
-    "-C", "target-feature=+neon,+fp-armv8,+crypto,+aes,+sha2,+crc"
+    "-C", "target-feature=+neon,+fp-armv8,+crypto,+aes,+sha2,+crc,+lse,+rdm,+rcpc,+dotprod"
 ]
 
 [target.'cfg(all(target_arch = "aarch64", target_os = "macos", not(debug_assertions)))']
 rustflags = [
-    "-C", "target-feature=+neon,+fp-armv8,+crypto,+aes,+sha2,+crc,+dotprod,+fp16"
+    "-C", "target-feature=+neon,+fp-armv8,+crypto,+aes,+sha2,+crc,+lse,+rdm,+rcpc,+dotprod,+fp16,+i8mm"
 ]
 
 # ======================================

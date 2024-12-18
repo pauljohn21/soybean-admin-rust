@@ -21,7 +21,7 @@ migrate-down:
 
 # 构建项目
 build:
-	cargo build
+	cargo build --bin server --release
 
 # 运行测试
 test:
