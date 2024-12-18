@@ -4,15 +4,13 @@
 [build]
 jobs = 16
 pipelining = true
-rustflags = []
 incremental = false
 
 [rust]
 channel = "stable"
-debuginfo = 2
+debuginfo = 0
 parallel-compiler = true
 deny-warnings = true
-components = ["rustc", "rust-std", "cargo", "rust-analyzer"]
 
 # ======================================
 # Development Profile
@@ -36,7 +34,7 @@ opt-level = 3
 debug = false
 debug-assertions = false
 overflow-checks = false
-lto = true
+lto = "fat"
 panic = "abort"
 incremental = false
 codegen-units = 1
@@ -48,10 +46,8 @@ strip = true
 # ======================================
 [target.'cfg(all())']
 rustflags = [
-    # Performance
-    "-C", "target-feature=+crt-static",
-    "-C", "force-frame-pointers=yes",
-    # Quality
+    "-C", "target-cpu=native",
+    "-C", "force-frame-pointers=no",
     "-D", "warnings"
 ]
 
@@ -60,31 +56,40 @@ rustflags = [
 # ======================================
 [target.'cfg(not(debug_assertions))']
 rustflags = [
-    # Performance
     "-C", "opt-level=3",
-    "-C", "target-cpu=native",
     "-C", "codegen-units=1",
-    "-C", "embed-bitcode=yes",
-    # Enable dylib LTO
-    "-Z", "dylib-lto"
+    "-C", "embed-bitcode=yes"
 ]
 
 # ======================================
 # Architecture Optimizations (Release Only)
 # ======================================
 [target.'cfg(all(target_arch = "x86_64", not(debug_assertions)))']
-rustflags = ["-C", "target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+avx,+avx2,+fma,+f16c,+popcnt,+fxsr,+bmi1,+bmi2"]
+rustflags = [
+    "-C", "target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+avx,+avx2,+fma,+f16c,+popcnt,+fxsr,+bmi1,+bmi2"
+]
 
 [target.'cfg(all(target_arch = "aarch64", not(debug_assertions)))']
-rustflags = ["-C", "target-feature=+neon,+fp-armv8,+crypto,+aes,+sha2,+crc"]
+rustflags = [
+    "-C", "target-feature=+neon,+fp-armv8,+crypto,+aes,+sha2,+crc"
+]
+
+[target.'cfg(all(target_arch = "aarch64", target_os = "macos", not(debug_assertions)))']
+rustflags = [
+    "-C", "target-feature=+neon,+fp-armv8,+crypto,+aes,+sha2,+crc,+dotprod,+fp16"
+]
+
+# ======================================
+# Package Optimizations
+# ======================================
+[profile.release.package."*"]
+opt-level = 3
+codegen-units = 1
+incremental = false
 
 # ======================================
 # Documentation
 # ======================================
 [doc]
 browser = "firefox"
-opts = [
-    "--enable-index-page",
-    "--enable-search",
-    "--document-private-items"
-]
+opts = ["--enable-index-page", "--enable-search", "--document-private-items"]
