@@ -10,6 +10,12 @@ use server_service::admin::{
 pub struct SysMenuApi;
 
 impl SysMenuApi {
+    pub async fn tree_menu(
+        Extension(service): Extension<Arc<SysMenuService>>,
+    ) -> Result<Res<Vec<MenuTree>>, AppError> {
+        service.tree_menu().await.map(Res::new_data)
+    }
+
     pub async fn get_menu_list(
         Extension(service): Extension<Arc<SysMenuService>>,
     ) -> Result<Res<Vec<MenuTree>>, AppError> {

@@ -20,6 +20,8 @@ use crate::{admin::sys_menu_error::MenuError, helper::db_helper};
 
 #[async_trait]
 pub trait TMenuService {
+    async fn tree_menu(&self) -> Result<Vec<MenuTree>, AppError>;
+
     async fn get_menu_list(&self) -> Result<Vec<MenuTree>, AppError>;
 
     async fn get_constant_routes(&self) -> Result<Vec<MenuRoute>, AppError>;
@@ -47,6 +49,51 @@ pub trait TMenuService {
 pub struct SysMenuService;
 
 impl SysMenuService {
+    fn build_menu_tree(menu: &SysMenuModel) -> MenuTree {
+        MenuTree {
+            id: menu.id,
+            pid: menu.pid.clone(),
+            menu_type: menu.menu_type.clone(),
+            menu_name: menu.menu_name.clone(),
+            icon_type: menu.icon_type.clone(),
+            icon: menu.icon.clone(),
+            route_name: menu.route_name.clone(),
+            route_path: menu.route_path.clone(),
+            component: menu.component.clone(),
+            path_param: menu.path_param.clone(),
+            status: menu.status.clone(),
+            active_menu: menu.active_menu.clone(),
+            hide_in_menu: menu.hide_in_menu,
+            sequence: menu.sequence,
+            i18n_key: menu.i18n_key.clone(),
+            keep_alive: menu.keep_alive,
+            constant: menu.constant,
+            href: menu.href.clone(),
+            multi_tab: menu.multi_tab,
+            created_at: menu.created_at,
+            created_by: menu.created_by.clone(),
+            updated_at: menu.updated_at,
+            updated_by: menu.updated_by.clone(),
+            children: None,
+        }
+    }
+
+    fn build_tree_structure(menu_trees: Vec<MenuTree>) -> Vec<MenuTree> {
+        TreeBuilder::build(
+            menu_trees,
+            |node| node.id,
+            |node| {
+                if node.pid == "0" {
+                    None
+                } else {
+                    Some(node.pid.parse::<i32>().unwrap_or(-1))
+                }
+            },
+            |node| node.sequence,
+            |node, children| node.children = Some(children),
+        )
+    }
+
     async fn check_menu_exists(&self, id: Option<i32>, route_name: &str) -> Result<(), AppError> {
         let db = db_helper::get_db_connection().await?;
 
@@ -68,6 +115,20 @@ impl SysMenuService {
 
 #[async_trait]
 impl TMenuService for SysMenuService {
+    async fn tree_menu(&self) -> Result<Vec<MenuTree>, AppError> {
+        let db = db_helper::get_db_connection().await?;
+
+        let menus = SysMenu::find()
+            .filter(SysMenuColumn::Constant.eq(false))
+            .filter(SysMenuColumn::Status.eq(Status::ENABLED))
+            .all(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
+
+        let menu_trees: Vec<MenuTree> = menus.iter().map(Self::build_menu_tree).collect();
+        Ok(Self::build_tree_structure(menu_trees))
+    }
+
     async fn get_menu_list(&self) -> Result<Vec<MenuTree>, AppError> {
         let db = db_helper::get_db_connection().await?;
         let menus = SysMenu::find()
@@ -75,51 +136,8 @@ impl TMenuService for SysMenuService {
             .await
             .map_err(AppError::from)?;
 
-        let menu_trees: Vec<MenuTree> = menus
-            .into_iter()
-            .map(|menu| MenuTree {
-                id: menu.id,
-                pid: menu.pid,
-                menu_type: menu.menu_type,
-                menu_name: menu.menu_name,
-                icon_type: menu.icon_type,
-                icon: menu.icon,
-                route_name: menu.route_name,
-                route_path: menu.route_path,
-                component: menu.component,
-                path_param: menu.path_param,
-                status: menu.status,
-                active_menu: menu.active_menu,
-                hide_in_menu: menu.hide_in_menu,
-                sequence: menu.sequence,
-                i18n_key: menu.i18n_key,
-                keep_alive: menu.keep_alive,
-                constant: menu.constant,
-                href: menu.href,
-                multi_tab: menu.multi_tab,
-                created_at: menu.created_at,
-                created_by: menu.created_by,
-                updated_at: menu.updated_at,
-                updated_by: menu.updated_by,
-                children: None,
-            })
-            .collect();
-
-        let tree = TreeBuilder::build(
-            menu_trees,
-            |node| node.id,
-            |node| {
-                if node.pid == "0" {
-                    None
-                } else {
-                    Some(node.pid.parse::<i32>().unwrap_or(-1))
-                }
-            },
-            |node| node.sequence,
-            |node, children| node.children = Some(children),
-        );
-
-        Ok(tree)
+        let menu_trees: Vec<MenuTree> = menus.iter().map(Self::build_menu_tree).collect();
+        Ok(Self::build_tree_structure(menu_trees))
     }
 
     async fn get_constant_routes(&self) -> Result<Vec<MenuRoute>, AppError> {
