@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use async_trait::async_trait;
 use chrono::Local;
 use sea_orm::{
@@ -14,6 +16,7 @@ use server_model::admin::{
         },
     },
     input::EndpointPageRequest,
+    output::EndpointTree,
 };
 
 use crate::helper::db_helper;
@@ -25,6 +28,8 @@ pub trait TEndpointService {
         &self,
         params: EndpointPageRequest,
     ) -> Result<PaginatedData<SysEndpointModel>, AppError>;
+
+    async fn tree_endpoint(&self) -> Result<Vec<EndpointTree>, AppError>;
 }
 
 pub struct SysEndpointService;
@@ -76,6 +81,43 @@ impl SysEndpointService {
             .exec(db)
             .await
             .map_err(AppError::from)
+    }
+
+    fn create_endpoint_tree(&self, endpoints: &[SysEndpointModel]) -> Vec<EndpointTree> {
+        let mut controller_map: BTreeMap<String, EndpointTree> = BTreeMap::new();
+
+        for endpoint in endpoints {
+            let controller = endpoint.controller.clone();
+
+            let controller_node =
+                controller_map
+                    .entry(controller.clone())
+                    .or_insert(EndpointTree {
+                        id: format!("controller-{}", controller),
+                        path: String::new(),
+                        method: String::new(),
+                        action: String::new(),
+                        resource: String::new(),
+                        controller: controller.clone(),
+                        summary: None,
+                        children: Some(Vec::new()),
+                    });
+
+            if let Some(children) = &mut controller_node.children {
+                children.push(EndpointTree {
+                    id: endpoint.id.to_string(),
+                    path: endpoint.path.clone(),
+                    method: endpoint.method.clone(),
+                    action: endpoint.action.clone(),
+                    resource: endpoint.resource.clone(),
+                    controller: endpoint.controller.clone(),
+                    summary: endpoint.summary.clone(),
+                    children: Some(Vec::new()),
+                });
+            }
+        }
+
+        controller_map.into_values().collect()
     }
 }
 
@@ -150,5 +192,15 @@ impl TEndpointService for SysEndpointService {
             total,
             records,
         })
+    }
+
+    async fn tree_endpoint(&self) -> Result<Vec<EndpointTree>, AppError> {
+        let db = db_helper::get_db_connection().await?;
+        let endpoints = SysEndpoint::find()
+            .all(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
+
+        Ok(self.create_endpoint_tree(&endpoints))
     }
 }

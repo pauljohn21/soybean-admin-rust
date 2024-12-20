@@ -7,7 +7,7 @@ use axum::{
 use axum_casbin::{casbin::MgmtApi, CasbinAxumLayer};
 use server_core::web::{auth::User, error::AppError, page::PaginatedData, res::Res};
 use server_service::admin::{
-    EndpointPageRequest, SysEndpointModel, SysEndpointService, TEndpointService,
+    EndpointPageRequest, EndpointTree, SysEndpointModel, SysEndpointService, TEndpointService,
 };
 
 pub struct SysEndpointApi;
@@ -47,5 +47,11 @@ impl SysEndpointApi {
             .collect();
 
         Ok(Res::new_data(formatted_policies))
+    }
+
+    pub async fn tree_endpoint(
+        Extension(service): Extension<Arc<SysEndpointService>>,
+    ) -> Result<Res<Vec<EndpointTree>>, AppError> {
+        service.tree_endpoint().await.map(Res::new_data)
     }
 }

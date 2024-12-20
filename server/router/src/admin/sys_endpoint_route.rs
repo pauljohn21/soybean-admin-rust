@@ -17,6 +17,12 @@ impl SysEndpointRouter {
                 service_name,
                 "获取角色API权限",
             ),
+            RouteInfo::new(
+                &format!("{}/tree", base_path),
+                Method::GET,
+                service_name,
+                "获取接口树",
+            ),
         ];
 
         for route in routes {
@@ -28,7 +34,8 @@ impl SysEndpointRouter {
             .route(
                 "/auth-api-endpoint/:roleCode",
                 get(SysEndpointApi::get_auth_endpoints),
-            );
+            )
+            .route("/tree", get(SysEndpointApi::tree_endpoint));
 
         Router::new().nest(base_path, router)
     }
