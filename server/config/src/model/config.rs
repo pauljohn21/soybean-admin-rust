@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::{DatabaseConfig, JwtConfig, ServerConfig};
+use super::{DatabaseConfig, JwtConfig, RedisConfig, ServerConfig};
 use crate::DatabasesConfig;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -9,4 +9,7 @@ pub struct Config {
     pub databases: Option<Vec<DatabasesConfig>>,
     pub server: ServerConfig,
     pub jwt: JwtConfig,
+
+    pub redis: RedisConfig,
+    pub redises: Option<Vec<RedisConfig>>,
 }
