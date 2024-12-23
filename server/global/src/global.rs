@@ -10,6 +10,7 @@ use chrono::NaiveDateTime;
 use http::Method;
 use jsonwebtoken::{DecodingKey, EncodingKey, Validation};
 use once_cell::sync::Lazy;
+use redis::{cluster::ClusterClient, Client};
 use sea_orm::DatabaseConnection;
 use serde_json::Value;
 use tokio::sync::{mpsc, Mutex, OnceCell, RwLock};
@@ -42,6 +43,19 @@ pub async fn get_config<T: 'static + Any + Send + Sync>() -> Option<Arc<T>> {
 pub static GLOBAL_PRIMARY_DB: Lazy<RwLock<Option<Arc<DatabaseConnection>>>> =
     Lazy::new(|| RwLock::new(None));
 pub static GLOBAL_DB_POOL: Lazy<RwLock<HashMap<String, Arc<DatabaseConnection>>>> =
+    Lazy::new(|| RwLock::new(HashMap::new()));
+
+// Redis连接
+#[derive(Clone)]
+pub enum RedisConnection {
+    Single(Arc<Client>),
+    Cluster(Arc<ClusterClient>),
+}
+
+pub static GLOBAL_PRIMARY_REDIS: Lazy<RwLock<Option<RedisConnection>>> =
+    Lazy::new(|| RwLock::new(None));
+
+pub static GLOBAL_REDIS_POOL: Lazy<RwLock<HashMap<String, RedisConnection>>> =
     Lazy::new(|| RwLock::new(HashMap::new()));
 
 //*****************************************************************************
