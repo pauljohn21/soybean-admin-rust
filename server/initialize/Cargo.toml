@@ -31,6 +31,8 @@ chrono = { workspace = true, features = ["clock"] }
 
 http = { workspace = true }
 
+redis = { workspace = true }
+
 [dev-dependencies]
 axum-test-helpers = { workspace = true }
 tower = { workspace = true, features = ["full"] }

@@ -17,6 +17,9 @@ async fn main() {
     server_initialize::initialize_keys_and_validation().await;
     server_initialize::initialize_event_channel().await;
 
+    server_initialize::init_primary_redis().await;
+    server_initialize::init_redis_pools().await;
+
     // build our application with a route
     let app = server_initialize::initialize_admin_router().await;
 
