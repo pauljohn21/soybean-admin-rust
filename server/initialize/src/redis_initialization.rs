@@ -1,4 +1,4 @@
-#[allow(dead_code)]
+#![allow(dead_code)]
 use redis::{cluster::ClusterClient, Client};
 use server_config::{OptionalConfigs, RedisConfig, RedisMode, RedisesConfig};
 use server_global::global::{get_config, RedisConnection, GLOBAL_PRIMARY_REDIS, GLOBAL_REDIS_POOL};
