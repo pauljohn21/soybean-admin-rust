@@ -11,3 +11,6 @@ jwt:
     jwt_secret: "soybean-admin-rust"
     issuer: "https://github.com/ByteByteBrew/soybean-admin-rust"
     expire: 7200
+redis:
+    mode: single
+    url: "redis://:123456@localhost:6379/10"

@@ -11,3 +11,16 @@ jwt:
     jwt_secret: "soybean-admin-rust"
     issuer: "https://github.com/ByteByteBrew/soybean-admin-rust"
     expire: 7200
+# 由于本项目最终目标可能仅仅作为一般rbac项目,因此redis作为可选组件,可以根据实际情况进行按需使用
+redis:
+    mode: single
+    url: "redis://:123456@localhost:6379/10"
+redises:
+    - name: "cache"
+      redis:
+          mode: single
+          url: "redis://:123456@localhost:6379/11"
+    - name: "test"
+      redis:
+          mode: single
+          url: "redis://:123456@localhost:6379/12"
