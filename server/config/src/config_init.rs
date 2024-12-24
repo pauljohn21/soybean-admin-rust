@@ -32,7 +32,9 @@ pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
     global::init_config::<ServerConfig>(config.server).await;
     global::init_config::<JwtConfig>(config.jwt).await;
 
-    global::init_config::<RedisConfig>(config.redis).await;
+    if let Some(redis_config) = config.redis {
+        global::init_config::<RedisConfig>(redis_config).await;
+    }
     global::init_config::<OptionalConfigs<RedisesConfig>>(config.redises.into()).await;
 
     project_info!("Configuration initialized successfully");

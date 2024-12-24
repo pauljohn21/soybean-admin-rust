@@ -81,7 +81,7 @@ pub struct Config {
     pub jwt: JwtConfig,
 
     /// 主 Redis 配置
-    pub redis: RedisConfig,
+    pub redis: Option<RedisConfig>,
 
     /// 可选的 Redis 连接池配置
     /// 用于配置多个命名的 Redis 连接
