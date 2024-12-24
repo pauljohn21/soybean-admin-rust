@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::{DatabaseConfig, JwtConfig, RedisConfig, ServerConfig};
+use super::{DatabaseConfig, JwtConfig, RedisConfig, RedisesConfig, ServerConfig};
 use crate::DatabasesConfig;
 
 /// 应用程序配置结构
@@ -85,5 +85,5 @@ pub struct Config {
 
     /// 可选的 Redis 连接池配置
     /// 用于配置多个命名的 Redis 连接
-    pub redises: Option<Vec<RedisConfig>>,
+    pub redises: Option<Vec<RedisesConfig>>,
 }

@@ -3,7 +3,8 @@ use thiserror::Error;
 use tokio::fs;
 
 use crate::{
-    model::Config, project_error, project_info, DatabaseConfig, JwtConfig, RedisConfig,
+    model::{Config, OptionalConfigs},
+    project_error, project_info, DatabaseConfig, JwtConfig, RedisConfig, RedisesConfig,
     ServerConfig,
 };
 
@@ -32,6 +33,7 @@ pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
     global::init_config::<JwtConfig>(config.jwt).await;
 
     global::init_config::<RedisConfig>(config.redis).await;
+    global::init_config::<OptionalConfigs<RedisesConfig>>(config.redises.into()).await;
 
     project_info!("Configuration initialized successfully");
     Ok(())
