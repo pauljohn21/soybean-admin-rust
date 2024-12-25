@@ -1,4 +1,5 @@
 use axum::response::{IntoResponse, Response};
+use redis::RedisError;
 use sea_orm::DbErr;
 
 use crate::web::{jwt::JwtError, res::Res};
@@ -29,6 +30,7 @@ impl ApiError for AppError {
         self.message.to_string()
     }
 }
+
 impl ApiError for DbErr {
     fn code(&self) -> u16 {
         match self {
@@ -71,5 +73,30 @@ impl From<JwtError> for AppError {
             code: 400,
             message: err.to_string(),
         }
+    }
+}
+
+impl From<RedisError> for AppError {
+    fn from(err: RedisError) -> Self {
+        use redis::ErrorKind;
+        let code = match err.kind() {
+            ErrorKind::ResponseError => 500,        // Redis响应错误
+            ErrorKind::AuthenticationFailed => 401, // 认证失败
+            ErrorKind::TypeError => 400,            // 类型错误
+            ErrorKind::ExecAbortError => 500,       // 执行中止
+            ErrorKind::BusyLoadingError => 503,     // Redis正在加载
+            ErrorKind::InvalidClientConfig => 400,  // 客户端配置错误
+            ErrorKind::IoError => 503,              // IO错误，可能是网络问题
+            ErrorKind::ExtensionError => 500,       // 扩展错误
+            _ => 500,                               // 其他错误
+        };
+
+        let message = if let Some(redis_code) = err.code() {
+            format!("[{}] {}", redis_code, err)
+        } else {
+            format!("{}", err)
+        };
+
+        AppError { code, message }
     }
 }

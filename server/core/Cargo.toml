@@ -21,6 +21,8 @@ chrono = { workspace = true }
 sea-orm = { workspace = true }
 ulid = { workspace = true }
 
+redis = { workspace = true }
+
 http = { workspace = true }
 tower = { workspace = true }
 tower-layer = { workspace = true }

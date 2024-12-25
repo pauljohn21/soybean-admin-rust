@@ -3370,6 +3370,7 @@ dependencies = [
  "moka",
  "once_cell",
  "parking_lot",
+ "redis",
  "ring",
  "sea-orm",
  "serde",
