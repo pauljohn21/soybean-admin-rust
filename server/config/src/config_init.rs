@@ -1,4 +1,5 @@
 use server_global::global;
+use std::path::Path;
 use thiserror::Error;
 use tokio::fs;
 
@@ -12,8 +13,29 @@ use crate::{
 pub enum ConfigError {
     #[error("Failed to read config file: {0}")]
     ReadError(#[from] std::io::Error),
-    #[error("Failed to parse config file: {0}")]
-    ParseError(#[from] serde_yaml::Error),
+    #[error("Failed to parse YAML config: {0}")]
+    YamlError(#[from] serde_yaml::Error),
+    #[error("Failed to parse TOML config: {0}")]
+    TomlError(#[from] toml::de::Error),
+    #[error("Failed to parse JSON config: {0}")]
+    JsonError(#[from] serde_json::Error),
+    #[error("Unsupported config file format: {0}")]
+    UnsupportedFormat(String),
+}
+
+async fn parse_config(file_path: &str, content: String) -> Result<Config, ConfigError> {
+    let extension = Path::new(file_path)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    match extension.as_str() {
+        "yaml" | "yml" => Ok(serde_yaml::from_str(&content)?),
+        "toml" => Ok(toml::from_str(&content)?),
+        "json" => Ok(serde_json::from_str(&content)?),
+        _ => Err(ConfigError::UnsupportedFormat(extension)),
+    }
 }
 
 pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
@@ -22,9 +44,9 @@ pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
         ConfigError::ReadError(e)
     })?;
 
-    let config: Config = serde_yaml::from_str(&config_data).map_err(|e| {
+    let config = parse_config(file_path, config_data).await.map_err(|e| {
         project_error!("Failed to parse config file: {}", e);
-        ConfigError::ParseError(e)
+        e
     })?;
 
     global::init_config::<Config>(config.clone()).await;
@@ -57,15 +79,27 @@ mod tests {
         });
     }
 
-    #[tokio::test]
-    async fn test_valid_config() {
+    #[cfg_attr(test, tokio::test)]
+    async fn test_yaml_config() {
         init_logger();
-
         let result = init_from_file("examples/application.yaml").await;
         assert!(result.is_ok());
-
         let db_config = global::get_config::<DatabaseConfig>().await.unwrap();
         info!("db_config is {:?}", db_config);
         assert_eq!(db_config.url, "postgres://user:password@localhost/db");
+    }
+
+    #[cfg_attr(test, tokio::test)]
+    async fn test_toml_config() {
+        init_logger();
+        let result = init_from_file("examples/application.toml").await;
+        assert!(result.is_ok());
+    }
+
+    #[cfg_attr(test, tokio::test)]
+    async fn test_json_config() {
+        init_logger();
+        let result = init_from_file("examples/application.json").await;
+        assert!(result.is_ok());
     }
 }
