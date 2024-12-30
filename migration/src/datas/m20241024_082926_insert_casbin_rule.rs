@@ -26,6 +26,8 @@ impl MigrationTrait for Migration {
             ('p', 'ROLE_SUPER', 'built-in', '/route/:id', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/route', 'PUT', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/route/:id', 'DELETE', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/route/tree', 'GET', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/route/auth-route/:roleId', 'GET', '', ''),
 
             ('p', 'ROLE_SUPER', 'built-in', '/role', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/role', 'POST', '', ''),
@@ -38,7 +40,18 @@ impl MigrationTrait for Migration {
             ('p', 'ROLE_SUPER', 'built-in', '/user', 'POST', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/user/:id', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/user', 'PUT', '', ''),
-            ('p', 'ROLE_SUPER', 'built-in', '/user/:id', 'DELETE', '', '')
+            ('p', 'ROLE_SUPER', 'built-in', '/user/:id', 'DELETE', '', ''),
+
+            ('p', 'ROLE_SUPER', 'built-in', '/api-endpoint', 'GET', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/api-endpoint/auth-api-endpoint/:roleCode', 'GET', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/api-endpoint/tree', 'GET', '', ''),
+
+            ('p', 'ROLE_SUPER', 'built-in', '/access-key', 'GET', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/access-key', 'POST', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/access-key/:id', 'DELETE', '', ''),
+
+            ('p', 'ROLE_SUPER', 'built-in', '/login-log', 'GET', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/operation-log', 'GET', '', '')
             "#
             .to_string(),
         );
