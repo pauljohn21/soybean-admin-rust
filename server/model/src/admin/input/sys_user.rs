@@ -12,6 +12,7 @@ pub struct UserPageRequest {
 }
 
 #[derive(Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct UserInput {
     pub domain: String,
     #[validate(length(

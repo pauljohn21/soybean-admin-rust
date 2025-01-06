@@ -16,6 +16,7 @@ use server_model::admin::{
 
 use super::sys_role_error::RoleError;
 use crate::helper::db_helper;
+use ulid::Ulid;
 
 #[async_trait]
 pub trait TRoleService {
@@ -92,10 +93,14 @@ impl TRoleService for SysRoleService {
         self.check_role_exists(None, &input.code).await?;
 
         let role = SysRoleActiveModel {
+            id: Set(Ulid::new().to_string()),
             pid: Set(input.pid),
             code: Set(input.code),
             name: Set(input.name),
+            status: Set(input.status),
             description: Set(input.description),
+            created_at: Set(Local::now().naive_local()),
+            created_by: Set("TODO".to_string()),
             ..Default::default()
         };
 

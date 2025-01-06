@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use chrono::Local;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, Condition, EntityTrait, PaginatorTrait, QueryFilter, Set,
 };
@@ -6,12 +7,14 @@ use server_core::web::{error::AppError, page::PaginatedData};
 use server_model::admin::{
     entities::{
         prelude::SysDomain,
+        sea_orm_active_enums::Status,
         sys_domain::{
             ActiveModel as SysDomainActiveModel, Column as SysDomainColumn, Model as SysDomainModel,
         },
     },
     input::{CreateDomainInput, DomainPageRequest, UpdateDomainInput},
 };
+use ulid::Ulid;
 
 use crate::{admin::sys_domain_error::DomainError, helper::db_helper};
 
@@ -110,9 +113,13 @@ impl TDomainService for SysDomainService {
         let db = db_helper::get_db_connection().await?;
 
         let domain = SysDomainActiveModel {
+            id: Set(Ulid::new().to_string()),
             code: Set(input.code),
             name: Set(input.name),
             description: Set(input.description),
+            status: Set(Status::ENABLED),
+            created_at: Set(Local::now().naive_local()),
+            created_by: Set("TODO".to_string()),
             ..Default::default()
         };
 

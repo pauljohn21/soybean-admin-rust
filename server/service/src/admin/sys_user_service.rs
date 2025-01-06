@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use chrono::Local;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, Condition, EntityTrait, IntoActiveModel, PaginatorTrait,
     QueryFilter, Set,
@@ -14,6 +15,7 @@ use server_model::admin::{
     input::{CreateUserInput, UpdateUserInput, UserPageRequest},
     output::UserWithoutPassword,
 };
+use ulid::Ulid;
 
 use super::sys_user_error::UserError;
 use crate::helper::db_helper;
@@ -111,15 +113,18 @@ impl TUserService for SysUserService {
 
         let db = db_helper::get_db_connection().await?;
         let user = SysUserActiveModel {
+            id: Set(Ulid::new().to_string()),
             domain: Set(input.domain),
             username: Set(input.username),
-            password: Set(input.password), /* Note: In a real application, you should hash the
-                                            * password */
+            password: Set(input.password),
+            built_in: Set(false),
             nick_name: Set(input.nick_name),
             avatar: Set(input.avatar),
             email: Set(input.email),
             phone_number: Set(input.phone_number),
             status: Set(input.status),
+            created_at: Set(Local::now().naive_local()),
+            created_by: Set("TODO".to_string()),
             ..Default::default()
         };
 
