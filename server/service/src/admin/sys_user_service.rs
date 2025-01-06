@@ -15,6 +15,7 @@ use server_model::admin::{
     input::{CreateUserInput, UpdateUserInput, UserPageRequest},
     output::UserWithoutPassword,
 };
+use server_utils::SecureUtil;
 use ulid::Ulid;
 
 use super::sys_user_error::UserError;
@@ -116,7 +117,7 @@ impl TUserService for SysUserService {
             id: Set(Ulid::new().to_string()),
             domain: Set(input.domain),
             username: Set(input.username),
-            password: Set(input.password),
+            password: Set(SecureUtil::hash_password(input.password.as_bytes()).unwrap()),
             built_in: Set(false),
             nick_name: Set(input.nick_name),
             avatar: Set(input.avatar),
