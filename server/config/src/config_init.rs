@@ -5,8 +5,8 @@ use tokio::fs;
 
 use crate::{
     model::{Config, OptionalConfigs},
-    project_error, project_info, DatabaseConfig, JwtConfig, RedisConfig, RedisesConfig,
-    ServerConfig,
+    project_error, project_info, DatabaseConfig, JwtConfig, MongoConfig, RedisConfig,
+    RedisesConfig, ServerConfig,
 };
 
 #[derive(Debug, Error)]
@@ -58,6 +58,11 @@ pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
         global::init_config::<RedisConfig>(redis_config).await;
     }
     global::init_config::<OptionalConfigs<RedisesConfig>>(config.redises.into()).await;
+
+    if let Some(mongo_config) = config.mongo {
+        global::init_config::<MongoConfig>(mongo_config).await;
+    }
+    global::init_config::<OptionalConfigs<MongoConfig>>(config.mongoes.into()).await;
 
     project_info!("Configuration initialized successfully");
     Ok(())
