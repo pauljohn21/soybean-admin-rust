@@ -9,6 +9,7 @@ use std::{
 use chrono::NaiveDateTime;
 use http::Method;
 use jsonwebtoken::{DecodingKey, EncodingKey, Validation};
+use mongodb::Client as MongoClient;
 use once_cell::sync::Lazy;
 use redis::{cluster::ClusterClient, Client};
 use sea_orm::DatabaseConnection;
@@ -56,6 +57,13 @@ pub static GLOBAL_PRIMARY_REDIS: Lazy<RwLock<Option<RedisConnection>>> =
     Lazy::new(|| RwLock::new(None));
 
 pub static GLOBAL_REDIS_POOL: Lazy<RwLock<HashMap<String, RedisConnection>>> =
+    Lazy::new(|| RwLock::new(HashMap::new()));
+
+// MongoDB 连接
+pub static GLOBAL_PRIMARY_MONGO: Lazy<RwLock<Option<Arc<MongoClient>>>> =
+    Lazy::new(|| RwLock::new(None));
+
+pub static GLOBAL_MONGO_POOL: Lazy<RwLock<HashMap<String, Arc<MongoClient>>>> =
     Lazy::new(|| RwLock::new(HashMap::new()));
 
 //*****************************************************************************
