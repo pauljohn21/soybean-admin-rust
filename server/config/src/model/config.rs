@@ -1,7 +1,9 @@
 use serde::Deserialize;
 
-use super::{DatabaseConfig, JwtConfig, MongoConfig, RedisConfig, RedisesConfig, ServerConfig};
-use crate::DatabasesConfig;
+use super::{
+    DatabaseConfig, DatabasesInstancesConfig, JwtConfig, MongoConfig, MongoInstancesConfig,
+    RedisConfig, RedisInstancesConfig, ServerConfig,
+};
 
 /// 应用程序配置结构
 ///
@@ -30,11 +32,13 @@ use crate::DatabasesConfig;
 /// # 配置项说明
 ///
 /// - `database`: 主数据库配置，用于配置默认的数据库连接
-/// - `databases`: 可选的数据库连接池配置，用于配置多个命名的数据库连接
+/// - `database_instances`: 可选的数据库连接池配置，用于配置多个命名的数据库连接
 /// - `server`: HTTP 服务器配置，包含监听地址和端口等
 /// - `jwt`: JWT 认证配置，包含密钥和过期时间等
 /// - `redis`: 主 Redis 配置，用于配置默认的 Redis 连接
-/// - `redises`: 可选的 Redis 连接池配置，用于配置多个命名的 Redis 连接
+/// - `redis_instances`: 可选的 Redis 连接池配置，用于配置多个命名的 Redis 连接
+/// - `mongo`: 主 MongoDB 配置，用于配置默认的 MongoDB 连接
+/// - `mongo_instances`: 可选的 MongoDB 连接池配置，用于配置多个命名的 MongoDB 连接
 ///
 /// # 示例配置（YAML）
 /// ```yaml
@@ -42,7 +46,7 @@ use crate::DatabasesConfig;
 ///   url: "postgres://user:pass@localhost:5432/dbname"
 ///   max_connections: 10
 ///
-/// databases:
+/// database_instances:
 ///   - name: "other_db"
 ///     url: "postgres://user:pass@localhost:5432/other_db"
 ///
@@ -58,7 +62,7 @@ use crate::DatabasesConfig;
 ///   mode: "single"
 ///   url: "redis://:password@localhost:6379/0"
 ///
-/// redises:
+/// redis_instances:
 ///   - name: "cache"
 ///     mode: "cluster"
 ///     urls:
@@ -72,7 +76,7 @@ pub struct Config {
 
     /// 可选的数据库连接池配置
     /// 用于配置多个命名的数据库连接
-    pub databases: Option<Vec<DatabasesConfig>>,
+    pub database_instances: Option<Vec<DatabasesInstancesConfig>>,
 
     /// HTTP 服务器配置
     pub server: ServerConfig,
@@ -85,12 +89,12 @@ pub struct Config {
 
     /// 可选的 Redis 连接池配置
     /// 用于配置多个命名的 Redis 连接
-    pub redises: Option<Vec<RedisesConfig>>,
+    pub redis_instances: Option<Vec<RedisInstancesConfig>>,
 
     /// 主 MongoDB 配置
     pub mongo: Option<MongoConfig>,
 
     /// 可选的 MongoDB 连接池配置
     /// 用于配置多个命名的 MongoDB 连接
-    pub mongoes: Option<Vec<MongoConfig>>,
+    pub mongo_instances: Option<Vec<MongoInstancesConfig>>,
 }

@@ -10,7 +10,7 @@ pub struct DatabaseConfig {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct DatabasesConfig {
+pub struct DatabasesInstancesConfig {
     pub name: String,
     pub database: DatabaseConfig,
 }

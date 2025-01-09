@@ -3812,6 +3812,7 @@ dependencies = [
  "http-body-util",
  "jsonwebtoken",
  "log",
+ "mongodb",
  "redis",
  "sea-orm",
  "sea-orm-adapter",

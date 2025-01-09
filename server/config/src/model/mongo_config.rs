@@ -14,7 +14,7 @@ pub struct MongoConfig {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct MongosConfig {
+pub struct MongoInstancesConfig {
     pub name: String,
     pub mongo: MongoConfig,
 }

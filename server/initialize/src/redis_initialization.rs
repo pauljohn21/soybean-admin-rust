@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use redis::{cluster::ClusterClient, Client};
-use server_config::{OptionalConfigs, RedisConfig, RedisMode, RedisesConfig};
+use server_config::{OptionalConfigs, RedisConfig, RedisInstancesConfig, RedisMode};
 use server_global::global::{get_config, RedisConnection, GLOBAL_PRIMARY_REDIS, GLOBAL_REDIS_POOL};
 use std::{process, sync::Arc};
 
@@ -96,10 +96,12 @@ async fn test_cluster_connection(client: &ClusterClient) -> Result<(), String> {
     Ok(())
 }
 
-pub async fn init_redis_pool(redises_config: Option<Vec<RedisesConfig>>) -> Result<(), String> {
-    if let Some(redises) = redises_config {
-        for redis_config in redises {
-            init_redis_connection(&redis_config.name, &redis_config.redis).await?;
+pub async fn init_redis_pool(
+    redis_instances_config: Option<Vec<RedisInstancesConfig>>,
+) -> Result<(), String> {
+    if let Some(redis_instances) = redis_instances_config {
+        for redis_instance in redis_instances {
+            init_redis_connection(&redis_instance.name, &redis_instance.redis).await?;
         }
     }
     Ok(())
@@ -125,9 +127,11 @@ async fn init_redis_connection(name: &str, config: &RedisConfig) -> Result<(), S
 
 /// 初始化所有 Redis 连接
 pub async fn init_redis_pools() {
-    if let Some(redises_config) = get_config::<OptionalConfigs<RedisesConfig>>().await {
-        if let Some(redises) = &redises_config.configs {
-            let _ = init_redis_pool(Some(redises.clone())).await;
+    if let Some(redis_instances_config) =
+        get_config::<OptionalConfigs<RedisInstancesConfig>>().await
+    {
+        if let Some(redis_instances) = &redis_instances_config.configs {
+            let _ = init_redis_pool(Some(redis_instances.clone())).await;
         }
     }
 }
@@ -249,7 +253,7 @@ mod tests {
         setup_logger();
         init().await;
 
-        let single_config = server_config::RedisesConfig {
+        let single_config = server_config::RedisInstancesConfig {
             name: "test_single".to_string(),
             redis: RedisConfig {
                 mode: RedisMode::Single,

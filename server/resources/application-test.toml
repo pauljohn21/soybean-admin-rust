@@ -20,14 +20,14 @@ expire = 7200
 mode = "single"
 url = "redis://:123456@localhost:6379/10"
 
-[[redises]]
+[[redis_instances]]
 name = "cache"
-[redises.redis]
+[redis_instances.redis]
 mode = "single"
 url = "redis://:123456@localhost:6379/11"
 
-[[redises]]
+[[redis_instances]]
 name = "test"
-[redises.redis]
+[redis_instances.redis]
 mode = "single"
 url = "redis://:123456@localhost:6379/12"

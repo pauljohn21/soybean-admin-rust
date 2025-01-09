@@ -2,7 +2,7 @@
 use std::{process, sync::Arc, time::Duration};
 
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-use server_config::{DatabaseConfig, DatabasesConfig};
+use server_config::{DatabaseConfig, DatabasesInstancesConfig};
 use server_global::global::{get_config, GLOBAL_DB_POOL, GLOBAL_PRIMARY_DB};
 
 use crate::{project_error, project_info};
@@ -23,7 +23,7 @@ pub async fn init_primary_connection() {
 }
 
 pub async fn init_db_pool_connections(
-    databases_config: Option<Vec<DatabasesConfig>>,
+    databases_config: Option<Vec<DatabasesInstancesConfig>>,
 ) -> Result<(), String> {
     if let Some(dbs) = databases_config {
         for db_config in dbs {
@@ -131,7 +131,7 @@ mod tests {
         init().await;
 
         let config = get_config::<Config>().await.unwrap().as_ref().clone();
-        let result = init_db_pool_connections(config.databases).await;
+        let result = init_db_pool_connections(config.database_instances).await;
         assert!(
             result.is_ok(),
             "Failed to initialize db_pool connections: {:?}",

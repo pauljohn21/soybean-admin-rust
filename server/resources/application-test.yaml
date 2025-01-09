@@ -22,7 +22,7 @@ jwt:
 #         - "redis://soybean:123456@127.0.0.1:7004"
 #         - "redis://soybean:123456@127.0.0.1:7005"
 #         - "redis://soybean:123456@127.0.0.1:7006"
-# redises:
+# redis_instances:
 #     - name: "cache"
 #       redis:
 #           mode: single

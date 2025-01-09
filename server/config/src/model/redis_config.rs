@@ -36,7 +36,7 @@ pub enum RedisMode {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct RedisesConfig {
+pub struct RedisInstancesConfig {
     pub name: String,
     pub redis: RedisConfig,
 }

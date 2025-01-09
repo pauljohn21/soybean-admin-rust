@@ -19,7 +19,7 @@
         "mode": "single",
         "url": "redis://:123456@localhost:6379/10"
     },
-    "redises": [
+    "redis_instances": [
         {
             "name": "cache",
             "redis": {
