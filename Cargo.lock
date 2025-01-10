@@ -3760,6 +3760,7 @@ dependencies = [
  "md-5",
  "mime",
  "moka",
+ "mongodb",
  "once_cell",
  "parking_lot",
  "redis",
@@ -3878,6 +3879,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "mongodb",
  "redis",
  "sea-orm",
  "server-constant",

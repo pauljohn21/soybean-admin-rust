@@ -1,4 +1,5 @@
 use axum::response::{IntoResponse, Response};
+use mongodb::error::{Error as MongoError, ErrorKind};
 use redis::RedisError;
 use sea_orm::DbErr;
 
@@ -98,5 +99,38 @@ impl From<RedisError> for AppError {
         };
 
         AppError { code, message }
+    }
+}
+
+impl From<MongoError> for AppError {
+    fn from(err: MongoError) -> Self {
+        let code = match *err.kind {
+            ErrorKind::Authentication { .. } => 401,        // 认证错误
+            ErrorKind::InvalidArgument { .. } => 400,       // 参数错误
+            ErrorKind::DnsResolve { .. } => 503,            // DNS解析错误
+            ErrorKind::ConnectionPoolCleared { .. } => 503, // 连接池错误
+            ErrorKind::Io(_) => 503,                        // IO错误
+            ErrorKind::Command(_) => 400,                   // 命令执行错误
+            ErrorKind::Write(_) => 500,                     // 写入错误
+            ErrorKind::ServerSelection { .. } => 503,       // 服务器选择错误
+            ErrorKind::Transaction { .. } => 500,           // 事务错误
+            ErrorKind::Internal { .. } => 500,              // 内部错误
+            ErrorKind::BsonDeserialization(_) => 400,       // BSON反序列化错误
+            ErrorKind::BsonSerialization(_) => 400,         // BSON序列化错误
+            ErrorKind::InvalidResponse { .. } => 500,       // 无效响应
+            ErrorKind::IncompatibleServer { .. } => 503,    // 服务器不兼容
+            ErrorKind::SessionsNotSupported => 503,         // 不支持会话
+            ErrorKind::InvalidTlsConfig { .. } => 500,      // TLS配置错误
+            ErrorKind::MissingResumeToken => 500,           // 缺少恢复令牌
+            ErrorKind::GridFs(_) => 500,                    // GridFS错误
+            ErrorKind::Custom(_) => 500,                    // 自定义错误
+            ErrorKind::Shutdown => 503,                     // 关闭错误
+            _ => 500,                                       // 其他未知错误
+        };
+
+        AppError {
+            code,
+            message: err.to_string(),
+        }
     }
 }
