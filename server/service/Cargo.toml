@@ -21,3 +21,4 @@ chrono = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
 
 redis ={ workspace = true }
+mongodb = { workspace = true }
