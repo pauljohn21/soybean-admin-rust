@@ -19,6 +19,8 @@ async fn main() {
 
     server_initialize::init_primary_redis().await;
     server_initialize::init_redis_pools().await;
+    server_initialize::init_primary_mongo().await;
+    server_initialize::init_mongo_pools().await;
 
     // build our application with a route
     let app = server_initialize::initialize_admin_router().await;
