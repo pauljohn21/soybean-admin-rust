@@ -69,3 +69,8 @@ pub async fn init_validators(config: Option<ApiKeyConfig>) {
     let complex_validator = ComplexApiKeyValidator::new(config);
     *API_KEY_VALIDATORS.1.write().await = complex_validator;
 }
+
+#[derive(Debug, Clone)]
+pub struct ApiKeyEvent {
+    pub api_key: String,
+}

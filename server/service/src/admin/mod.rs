@@ -14,7 +14,9 @@ pub use server_model::admin::{
     input::*,
     output::*,
 };
-pub use sys_access_key_service::{SysAccessKeyService, TAccessKeyService};
+pub use sys_access_key_service::{
+    api_key_validate_listener, SysAccessKeyService, TAccessKeyService,
+};
 pub use sys_auth_service::{
     auth_login_listener, jwt_created_listener, SysAuthService, TAuthService,
 };

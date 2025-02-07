@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use async_trait::async_trait;
 use chrono::Local;
 use sea_orm::{
@@ -5,9 +7,10 @@ use sea_orm::{
     QueryFilter, Set, TransactionTrait,
 };
 use server_core::{
-    sign::ValidatorType,
+    sign::{ApiKeyEvent, ValidatorType},
     web::{error::AppError, page::PaginatedData},
 };
+use server_global::project_info;
 use server_model::admin::{
     entities::{
         prelude::SysAccessKey,
@@ -18,6 +21,7 @@ use server_model::admin::{
     },
     input::{AccessKeyPageRequest, CreateAccessKeyInput},
 };
+use tracing::instrument;
 use ulid::Ulid;
 
 use crate::helper::db_helper;
@@ -172,6 +176,17 @@ impl TAccessKeyService for SysAccessKeyService {
                 txn.rollback().await.map_err(AppError::from)?;
                 Err(e)
             },
+        }
+    }
+}
+
+#[instrument(skip(rx))]
+pub async fn api_key_validate_listener(
+    mut rx: tokio::sync::mpsc::UnboundedReceiver<Box<dyn Any + Send>>,
+) {
+    while let Some(event) = rx.recv().await {
+        if let Some(api_key_event) = event.downcast_ref::<ApiKeyEvent>() {
+            project_info!("API key validated: {:?}", api_key_event);
         }
     }
 }

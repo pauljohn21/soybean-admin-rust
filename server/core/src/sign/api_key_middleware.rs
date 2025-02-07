@@ -6,11 +6,12 @@ use axum::{
     response::IntoResponse,
 };
 use once_cell::sync::Lazy;
+use server_global::global;
 use std::{collections::HashSet, sync::RwLock};
 
 use crate::web::res::Res;
 
-use super::{ComplexApiKeyValidator, SimpleApiKeyValidator};
+use super::{ApiKeyEvent, ComplexApiKeyValidator, SimpleApiKeyValidator};
 
 /// Global set of protected paths.
 ///
@@ -175,6 +176,12 @@ fn validate_request(
             }
             .ok_or("Missing API key")?;
 
+            global::send_dyn_event(
+                "api_key_validate",
+                Box::new(ApiKeyEvent {
+                    api_key: api_key.to_owned(),
+                }),
+            );
             Ok(validator.validate_key(api_key))
         },
         ApiKeyValidation::Complex(validator, config) => {
@@ -197,6 +204,12 @@ fn validate_request(
                 .map(|(k, v)| (k.clone(), v.clone()))
                 .collect();
 
+            global::send_dyn_event(
+                "api_key_validate",
+                Box::new(ApiKeyEvent {
+                    api_key: api_key.to_owned(),
+                }),
+            );
             Ok(validator.validate_signature(
                 api_key,
                 &params_for_signing,
