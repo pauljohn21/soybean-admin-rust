@@ -1,3 +1,4 @@
+use server_constant::definition::consts::SystemEvent;
 use server_global::global;
 
 pub async fn initialize_event_channel() {
@@ -10,15 +11,15 @@ pub async fn initialize_event_channel() {
         Box::new(|rx| Box::pin(jwt_created_listener(rx))),
         &[
             (
-                "auth_login".to_string(),
+                SystemEvent::AuthLoggedInEvent.to_string(),
                 Box::new(|rx| Box::pin(auth_login_listener(rx))),
             ),
             (
-                "sys_operation_log".to_string(),
+                SystemEvent::AuditOperationLoggedEvent.to_string(),
                 Box::new(|rx| Box::pin(sys_operation_log_listener(rx))),
             ),
             (
-                "api_key_validate".to_string(),
+                SystemEvent::AuthApiKeyValidatedEvent.to_string(),
                 Box::new(|rx| Box::pin(api_key_validate_listener(rx))),
             ),
         ],

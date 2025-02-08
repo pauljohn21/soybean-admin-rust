@@ -21,3 +21,15 @@ impl TokenStatus {
         matches!(self, TokenStatus::Active)
     }
 }
+
+/// 系统事件类型枚举
+#[derive(Debug, Clone, PartialEq, Eq, AsRefStr, Display, EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum SystemEvent {
+    /// 用户认证登录事件
+    AuthLoggedInEvent,
+    /// 系统操作日志事件
+    AuditOperationLoggedEvent,
+    /// API密钥验证事件
+    AuthApiKeyValidatedEvent,
+}

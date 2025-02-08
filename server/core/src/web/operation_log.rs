@@ -16,6 +16,7 @@ use chrono::Local;
 use futures::{future::BoxFuture, StreamExt};
 use http::{Extensions, HeaderMap, Uri};
 use serde_json::Value;
+use server_constant::definition::consts::SystemEvent;
 use server_global::global::{self, OperationLogContext};
 use tower_layer::Layer;
 use tower_service::Service;
@@ -136,7 +137,10 @@ where
                     created_at: start_time,
                 };
 
-                global::send_dyn_event("sys_operation_log", Box::new(context));
+                global::send_dyn_event(
+                    SystemEvent::AuditOperationLoggedEvent.as_ref(),
+                    Box::new(context),
+                );
 
                 Ok(Response::from_parts(
                     response_parts,

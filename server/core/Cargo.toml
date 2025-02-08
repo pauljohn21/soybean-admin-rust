@@ -7,6 +7,7 @@ edition.workspace = true
 
 [dependencies]
 server-config = { path = "../config" }
+server-constant = { path = "../constant" }
 server-global = { path = "../global" }
 
 serde = { workspace = true, features = ["derive"] }

@@ -6,6 +6,7 @@ use axum::{
     response::IntoResponse,
 };
 use once_cell::sync::Lazy;
+use server_constant::definition::consts::SystemEvent;
 use server_global::global;
 use std::{collections::HashSet, sync::RwLock};
 
@@ -177,7 +178,7 @@ fn validate_request(
             .ok_or("Missing API key")?;
 
             global::send_dyn_event(
-                "api_key_validate",
+                SystemEvent::AuthApiKeyValidatedEvent.as_ref(),
                 Box::new(ApiKeyEvent {
                     api_key: api_key.to_owned(),
                 }),
@@ -205,7 +206,7 @@ fn validate_request(
                 .collect();
 
             global::send_dyn_event(
-                "api_key_validate",
+                SystemEvent::AuthApiKeyValidatedEvent.as_ref(),
                 Box::new(ApiKeyEvent {
                     api_key: api_key.to_owned(),
                 }),

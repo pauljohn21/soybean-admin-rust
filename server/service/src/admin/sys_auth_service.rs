@@ -5,7 +5,7 @@ use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QueryOrder, QuerySelect,
     RelationTrait,
 };
-use server_constant::definition::Audience;
+use server_constant::definition::{consts::SystemEvent, Audience};
 use server_core::web::{
     auth::Claims,
     error::AppError,
@@ -287,10 +287,12 @@ impl SysAuthService {
             login_type: context.login_type.clone(),
         };
 
-        global::send_dyn_event("auth_login", Box::new(auth_event));
+        global::send_dyn_event(
+            SystemEvent::AuthLoggedInEvent.as_ref(),
+            Box::new(auth_event),
+        );
     }
 
-    #[allow(dead_code)]
     async fn check_login_security(
         &self,
         _username: &str,
