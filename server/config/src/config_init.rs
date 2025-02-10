@@ -5,8 +5,8 @@ use tokio::fs;
 
 use crate::{
     model::{Config, OptionalConfigs},
-    project_error, project_info, DatabaseConfig, JwtConfig, MongoConfig, MongoInstancesConfig,
-    RedisConfig, RedisInstancesConfig, ServerConfig,
+    project_error, project_info, DatabaseConfig, DatabasesInstancesConfig, JwtConfig, MongoConfig,
+    MongoInstancesConfig, RedisConfig, RedisInstancesConfig, ServerConfig,
 };
 
 #[derive(Debug, Error)]
@@ -51,6 +51,12 @@ pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
 
     global::init_config::<Config>(config.clone()).await;
     global::init_config::<DatabaseConfig>(config.database).await;
+
+    global::init_config::<OptionalConfigs<DatabasesInstancesConfig>>(
+        config.database_instances.into(),
+    )
+    .await;
+
     global::init_config::<ServerConfig>(config.server).await;
     global::init_config::<JwtConfig>(config.jwt).await;
 

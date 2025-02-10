@@ -2,7 +2,7 @@
 use std::{process, sync::Arc, time::Duration};
 
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-use server_config::{DatabaseConfig, DatabasesInstancesConfig};
+use server_config::{DatabaseConfig, DatabasesInstancesConfig, OptionalConfigs};
 use server_global::global::{get_config, GLOBAL_DB_POOL, GLOBAL_PRIMARY_DB};
 
 use crate::{project_error, project_info};
@@ -19,6 +19,17 @@ pub async fn init_primary_connection() {
             project_error!("Failed to connect to primary database: {}", e);
             process::exit(1);
         },
+    }
+}
+
+/// 初始化多数据库连接
+pub async fn init_db_pools() {
+    if let Some(databases_instances_config) =
+        get_config::<OptionalConfigs<DatabasesInstancesConfig>>().await
+    {
+        if let Some(databases_instances) = &databases_instances_config.configs {
+            let _ = init_db_pool_connections(Some(databases_instances.clone())).await;
+        }
     }
 }
 

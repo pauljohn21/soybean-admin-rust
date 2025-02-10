@@ -1,6 +1,6 @@
 pub use casbin_initialization::initialize_casbin;
 pub use config_initialization::initialize_config;
-pub use db_initialization::{get_primary_db_connection, init_primary_connection};
+pub use db_initialization::{init_db_pools, init_primary_connection};
 pub use event_channel_initialization::initialize_event_channel;
 pub use ip2region_initialization::init_xdb;
 pub use jwt_initialization::initialize_keys_and_validation;

@@ -14,6 +14,7 @@ async fn main() {
     server_initialize::initialize_config(config_path).await;
     let _ = server_initialize::init_xdb().await;
     server_initialize::init_primary_connection().await;
+    server_initialize::init_db_pools().await;
     server_initialize::initialize_keys_and_validation().await;
     server_initialize::initialize_event_channel().await;
 
