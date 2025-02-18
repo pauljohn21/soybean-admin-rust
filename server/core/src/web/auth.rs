@@ -1,5 +1,5 @@
+use async_trait::async_trait;
 use axum::{
-    async_trait,
     extract::{FromRequest, Request},
     http::StatusCode,
 };
@@ -109,16 +109,21 @@ impl From<Claims> for User {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for User
+impl<S> FromRequest<S> for User
 where
-    B: Send,
+    S: Send + Sync + 'static,
 {
     type Rejection = Res<String>;
 
-    async fn from_request(req: Request, _state: &B) -> Result<Self, Self::Rejection> {
-        req.extensions()
-            .get::<User>()
-            .cloned()
-            .ok_or_else(|| Res::new_error(StatusCode::UNAUTHORIZED.as_u16(), "Unauthorized"))
+    fn from_request(
+        req: Request,
+        _state: &S,
+    ) -> impl std::future::Future<Output = Result<Self, Self::Rejection>> + Send {
+        async move {
+            req.extensions()
+                .get::<User>()
+                .cloned()
+                .ok_or_else(|| Res::new_error(StatusCode::UNAUTHORIZED.as_u16(), "Unauthorized"))
+        }
     }
 }

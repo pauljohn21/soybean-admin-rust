@@ -31,7 +31,7 @@ impl SysAccessKeyRouter {
         let router = Router::new()
             .route("/", get(SysAccessKeyApi::get_paginated_access_keys))
             .route("/", post(SysAccessKeyApi::create_access_key))
-            .route("/:id", delete(SysAccessKeyApi::delete_access_key));
+            .route("/{id}", delete(SysAccessKeyApi::delete_access_key));
 
         Router::new().nest(base_path, router)
     }

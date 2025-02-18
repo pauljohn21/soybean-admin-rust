@@ -38,9 +38,9 @@ impl SysRoleRouter {
         let router = Router::new()
             .route("/", get(SysRoleApi::get_paginated_roles))
             .route("/", post(SysRoleApi::create_role))
-            .route("/:id", get(SysRoleApi::get_role))
+            .route("/{id}", get(SysRoleApi::get_role))
             .route("/", put(SysRoleApi::update_role))
-            .route("/:id", delete(SysRoleApi::delete_role));
+            .route("/{id}", delete(SysRoleApi::delete_role));
 
         Router::new().nest(base_path, router)
     }

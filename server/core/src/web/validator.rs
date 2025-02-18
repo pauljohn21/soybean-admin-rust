@@ -1,5 +1,5 @@
+use async_trait::async_trait;
 use axum::{
-    async_trait,
     extract::{rejection::JsonRejection, FromRequest, Request},
     http::{header::CONTENT_TYPE, StatusCode},
     response::{IntoResponse, Response},
@@ -40,30 +40,35 @@ where
 {
     type Rejection = ValidationError;
 
-    async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
-        let content_type = req
-            .headers()
-            .get(CONTENT_TYPE)
-            .and_then(|value| value.to_str().ok());
+    fn from_request(
+        req: Request,
+        state: &S,
+    ) -> impl std::future::Future<Output = Result<Self, Self::Rejection>> + Send {
+        async move {
+            let content_type = req
+                .headers()
+                .get(CONTENT_TYPE)
+                .and_then(|value| value.to_str().ok());
 
-        let data = match content_type.as_deref() {
-            Some(ct) if ct.contains(mime::APPLICATION_JSON.as_ref()) => {
-                let Json(data) = Json::<T>::from_request(req, state)
-                    .await
-                    .map_err(|e| ValidationError::JsonError(e.to_string()))?;
-                data
-            },
-            Some(ct) if ct.contains(mime::APPLICATION_WWW_FORM_URLENCODED.as_ref()) => {
-                let Form(data) = Form::<T>::from_request(req, state)
-                    .await
-                    .map_err(|_| ValidationError::FormError)?;
-                data
-            },
-            _ => return Err(ValidationError::DataMissing),
-        };
+            let data = match content_type.as_deref() {
+                Some(ct) if ct.contains(mime::APPLICATION_JSON.as_ref()) => {
+                    let Json(data) = Json::<T>::from_request(req, state)
+                        .await
+                        .map_err(|e| ValidationError::JsonError(e.to_string()))?;
+                    data
+                },
+                Some(ct) if ct.contains(mime::APPLICATION_WWW_FORM_URLENCODED.as_ref()) => {
+                    let Form(data) = Form::<T>::from_request(req, state)
+                        .await
+                        .map_err(|_| ValidationError::FormError)?;
+                    data
+                },
+                _ => return Err(ValidationError::DataMissing),
+            };
 
-        data.validate().map_err(ValidationError::from)?;
-        Ok(ValidatedForm(data))
+            data.validate().map_err(ValidationError::from)?;
+            Ok(ValidatedForm(data))
+        }
     }
 }
 

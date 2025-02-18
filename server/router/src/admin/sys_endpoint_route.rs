@@ -32,7 +32,7 @@ impl SysEndpointRouter {
         let router = Router::new()
             .route("/", get(SysEndpointApi::get_paginated_endpoints))
             .route(
-                "/auth-api-endpoint/:roleCode",
+                "/auth-api-endpoint/{roleCode}",
                 get(SysEndpointApi::get_auth_endpoints),
             )
             .route("/tree", get(SysEndpointApi::tree_endpoint));

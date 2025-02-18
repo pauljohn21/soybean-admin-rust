@@ -57,9 +57,9 @@ impl SysUserRouter {
             .route("/users", get(SysUserApi::get_all_users))
             .route("/", get(SysUserApi::get_paginated_users))
             .route("/", post(SysUserApi::create_user))
-            .route("/:id", get(SysUserApi::get_user))
+            .route("/{id}", get(SysUserApi::get_user))
             .route("/", put(SysUserApi::update_user))
-            .route("/:id", delete(SysUserApi::delete_user))
+            .route("/{id}", delete(SysUserApi::delete_user))
             .route("/add_policies", get(SysUserApi::add_policies))
             .route("/remove_policies", get(SysUserApi::remove_policies));
 

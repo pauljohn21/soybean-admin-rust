@@ -60,10 +60,10 @@ impl SysMenuRouter {
             .route("/tree", get(SysMenuApi::tree_menu))
             .route("/", get(SysMenuApi::get_menu_list))
             .route("/", post(SysMenuApi::create_menu))
-            .route("/:id", get(SysMenuApi::get_menu))
+            .route("/{id}", get(SysMenuApi::get_menu))
             .route("/", put(SysMenuApi::update_menu))
-            .route("/:id", delete(SysMenuApi::delete_menu))
-            .route("/auth-route/:roleId", get(SysMenuApi::get_auth_routes));
+            .route("/{id}", delete(SysMenuApi::delete_menu))
+            .route("/auth-route/{roleId}", get(SysMenuApi::get_auth_routes));
 
         Router::new().nest(base_path, router)
     }

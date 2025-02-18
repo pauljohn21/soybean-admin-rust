@@ -38,9 +38,9 @@ impl SysDomainRouter {
         let router = Router::new()
             .route("/", get(SysDomainApi::get_paginated_domains))
             .route("/", post(SysDomainApi::create_domain))
-            .route("/:id", get(SysDomainApi::get_domain))
+            .route("/{id}", get(SysDomainApi::get_domain))
             .route("/", put(SysDomainApi::update_domain))
-            .route("/:id", delete(SysDomainApi::delete_domain));
+            .route("/{id}", delete(SysDomainApi::delete_domain));
 
         Router::new().nest(base_path, router)
     }
