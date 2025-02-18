@@ -39,6 +39,8 @@ pub trait TAccessKeyService {
         input: CreateAccessKeyInput,
     ) -> Result<SysAccessKeyModel, AppError>;
     async fn delete_access_key(&self, id: &str) -> Result<(), AppError>;
+
+    async fn initialize_access_key(&self) -> Result<(), AppError>;
 }
 
 #[derive(Clone)]
@@ -177,6 +179,28 @@ impl TAccessKeyService for SysAccessKeyService {
                 Err(e)
             },
         }
+    }
+
+    async fn initialize_access_key(&self) -> Result<(), AppError> {
+        let db = db_helper::get_db_connection().await?;
+
+        let access_keys = SysAccessKey::find()
+            .all(db.as_ref())
+            .await
+            .map_err(AppError::from)?;
+
+        for access_key in access_keys {
+            server_core::sign::add_key(ValidatorType::Simple, &access_key.access_key_id, None)
+                .await;
+            server_core::sign::add_key(
+                ValidatorType::Complex,
+                &access_key.access_key_id,
+                Some(&access_key.access_key_secret),
+            )
+            .await;
+        }
+
+        Ok(())
     }
 }
 
