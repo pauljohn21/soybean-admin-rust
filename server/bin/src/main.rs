@@ -23,10 +23,11 @@ async fn main() {
     server_initialize::init_primary_mongo().await;
     server_initialize::init_mongo_pools().await;
 
-    server_initialize::initialize_access_key().await;
-
     // build our application with a route
     let app = server_initialize::initialize_admin_router().await;
+
+    //需要初始化验证器init_validators之后才能初始化访问密钥
+    server_initialize::initialize_access_key().await;
 
     let addr = match server_initialize::get_server_address().await {
         Ok(addr) => addr,
