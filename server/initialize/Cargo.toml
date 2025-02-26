@@ -33,6 +33,7 @@ http = { workspace = true }
 
 redis = { workspace = true }
 mongodb = { workspace = true }
+aws-sdk-s3 = { workspace = true }
 
 [dev-dependencies]
 axum-test-helpers = { workspace = true }

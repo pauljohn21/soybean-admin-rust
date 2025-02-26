@@ -1,4 +1,5 @@
 pub use access_key_initialization::initialize_access_key;
+pub use aws_s3_initialization::initialize_s3;
 pub use casbin_initialization::initialize_casbin;
 pub use config_initialization::initialize_config;
 pub use db_initialization::{init_db_pools, init_primary_connection};
@@ -13,6 +14,7 @@ pub use server_global::{project_error, project_info};
 pub use server_initialization::get_server_address;
 
 mod access_key_initialization;
+mod aws_s3_initialization;
 mod casbin_initialization;
 mod config_initialization;
 mod db_initialization;

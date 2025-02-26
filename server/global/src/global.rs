@@ -6,6 +6,7 @@ use std::{
     sync::Arc,
 };
 
+use aws_sdk_s3::Client as S3Client;
 use chrono::NaiveDateTime;
 use http::Method;
 use jsonwebtoken::{DecodingKey, EncodingKey, Validation};
@@ -64,6 +65,17 @@ pub static GLOBAL_PRIMARY_MONGO: Lazy<RwLock<Option<Arc<MongoClient>>>> =
     Lazy::new(|| RwLock::new(None));
 
 pub static GLOBAL_MONGO_POOL: Lazy<RwLock<HashMap<String, Arc<MongoClient>>>> =
+    Lazy::new(|| RwLock::new(HashMap::new()));
+
+//*****************************************************************************
+// AWS S3 Clients
+//*****************************************************************************
+
+// 主要的 S3 客户端
+pub static GLOBAL_PRIMARY_S3: Lazy<RwLock<Option<Arc<S3Client>>>> = Lazy::new(|| RwLock::new(None));
+
+// 命名的 S3 客户端池
+pub static GLOBAL_S3_POOL: Lazy<RwLock<HashMap<String, Arc<S3Client>>>> =
     Lazy::new(|| RwLock::new(HashMap::new()));
 
 //*****************************************************************************
