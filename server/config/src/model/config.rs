@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 use super::{
     DatabaseConfig, DatabasesInstancesConfig, JwtConfig, MongoConfig, MongoInstancesConfig,
-    RedisConfig, RedisInstancesConfig, ServerConfig,
+    RedisConfig, RedisInstancesConfig, S3Config, S3InstancesConfig, ServerConfig,
 };
 
 /// 应用程序配置结构
@@ -97,4 +97,11 @@ pub struct Config {
     /// 可选的 MongoDB 连接池配置
     /// 用于配置多个命名的 MongoDB 连接
     pub mongo_instances: Option<Vec<MongoInstancesConfig>>,
+
+    /// 主 S3 配置
+    pub s3: Option<S3Config>,
+
+    /// 可选的 S3 连接池配置
+    /// 用于配置多个命名的 S3 连接
+    pub s3_instances: Option<Vec<S3InstancesConfig>>,
 }
