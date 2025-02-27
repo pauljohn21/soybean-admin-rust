@@ -6,7 +6,8 @@ use tokio::fs;
 use crate::{
     model::{Config, OptionalConfigs},
     project_error, project_info, DatabaseConfig, DatabasesInstancesConfig, JwtConfig, MongoConfig,
-    MongoInstancesConfig, RedisConfig, RedisInstancesConfig, ServerConfig,
+    MongoInstancesConfig, RedisConfig, RedisInstancesConfig, S3Config, S3InstancesConfig,
+    ServerConfig,
 };
 
 #[derive(Debug, Error)]
@@ -71,6 +72,11 @@ pub async fn init_from_file(file_path: &str) -> Result<(), ConfigError> {
     }
     global::init_config::<OptionalConfigs<MongoInstancesConfig>>(config.mongo_instances.into())
         .await;
+
+    if let Some(s3_config) = config.s3 {
+        global::init_config::<S3Config>(s3_config).await;
+    }
+    global::init_config::<OptionalConfigs<S3InstancesConfig>>(config.s3_instances.into()).await;
 
     project_info!("Configuration initialized successfully");
     Ok(())

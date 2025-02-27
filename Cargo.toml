@@ -145,4 +145,6 @@ askama = "0.12"                                                 # 类型安全�
 askama_derive = "0.12"                                          # askama 的派生宏支持
 convert_case = "0.7"                                            # 字符串命名风格转换工具
 
-aws-sdk-s3 = { version = "1.76.0", features = ["behavior-version-latest"] }
+aws-config = "1.5.17"
+aws-sdk-config = "1.63.0"
+aws-sdk-s3 = { version = "1.77.0", features = ["behavior-version-latest"] }

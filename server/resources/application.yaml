@@ -16,3 +16,8 @@ redis:
     url: "redis://:123456@localhost:6379/10"
 mongo:
     uri: "mongodb://localhost:27017"
+s3:
+    region: "oss-cn-beijing"
+    access_key_id: "x"
+    secret_access_key: "x"
+    endpoint: "https://oss-cn-beijing.aliyuncs.com"
