@@ -12,6 +12,7 @@ server-global = { path = "../global" }
 server-model = { path = "../model" }
 server-utils = { path = "../utils" }
 
+axum-casbin = { path = "../../axum-casbin" }
 async-trait = { workspace = true }
 tokio = { workspace = true, features = ["sync", "rt"] }
 sea-orm = { workspace = true, features = ["runtime-tokio-native-tls", "macros"] }

@@ -20,6 +20,7 @@ pub use sys_access_key_service::{
 pub use sys_auth_service::{
     auth_login_listener, jwt_created_listener, SysAuthService, TAuthService,
 };
+pub use sys_authorization_service::{SysAuthorizationService, TAuthorizationService};
 pub use sys_domain_service::{SysDomainService, TDomainService};
 pub use sys_endpoint_service::{SysEndpointService, TEndpointService};
 pub use sys_login_log_service::{SysLoginLogService, TLoginLogService};
@@ -34,6 +35,7 @@ pub mod dto;
 pub mod errors;
 mod sys_access_key_service;
 mod sys_auth_service;
+mod sys_authorization_service;
 mod sys_domain_service;
 mod sys_endpoint_service;
 mod sys_login_log_service;
