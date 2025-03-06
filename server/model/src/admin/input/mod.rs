@@ -1,5 +1,6 @@
 pub use sys_access_key::{AccessKeyPageRequest, CreateAccessKeyInput};
 pub use sys_authentication::LoginInput;
+pub use sys_authorization::{AssignPermissionDto, AssignRouteDto, AssignUserDto};
 pub use sys_domain::{CreateDomainInput, DomainPageRequest, UpdateDomainInput};
 pub use sys_endpoint::EndpointPageRequest;
 pub use sys_login_log::LoginLogPageRequest;
@@ -11,6 +12,7 @@ pub use sys_user::{CreateUserInput, UpdateUserInput, UserPageRequest};
 
 mod sys_access_key;
 mod sys_authentication;
+mod sys_authorization;
 mod sys_domain;
 mod sys_endpoint;
 mod sys_login_log;

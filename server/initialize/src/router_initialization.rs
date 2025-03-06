@@ -20,9 +20,9 @@ use server_router::admin::{
 };
 use server_service::{
     admin::{
-        SysAccessKeyService, SysAuthService, SysDomainService, SysEndpointService,
-        SysLoginLogService, SysMenuService, SysOperationLogService, SysOrganizationService,
-        SysRoleService, SysUserService, TEndpointService,
+        SysAccessKeyService, SysAuthService, SysAuthorizationService, SysDomainService,
+        SysEndpointService, SysLoginLogService, SysMenuService, SysOperationLogService,
+        SysOrganizationService, SysRoleService, SysUserService, TEndpointService,
     },
     SysEndpoint,
 };
@@ -35,8 +35,6 @@ use crate::{initialize_casbin, project_error, project_info};
 pub enum Services<T: Send + Sync + 'static> {
     None(std::marker::PhantomData<T>),
     Single(Arc<T>),
-    #[allow(dead_code)]
-    Multiple(Arc<T>, Vec<Arc<dyn Send + Sync + 'static>>),
 }
 
 async fn apply_layers<T: Send + Sync + 'static>(
@@ -51,13 +49,6 @@ async fn apply_layers<T: Send + Sync + 'static>(
     let mut router = match services {
         Services::None(_) => router,
         Services::Single(service) => router.layer(Extension(service)),
-        Services::Multiple(primary, additional) => {
-            let mut r = router.layer(Extension(primary));
-            for service in additional {
-                r = r.layer(Extension(service));
-            }
-            r
-        },
     };
 
     router = router
@@ -182,23 +173,6 @@ pub async fn initialize_admin_router() -> Router {
                 .await,
             );
         };
-        ($router:expr, $primary:expr, [$($additional:expr),+], $need_casbin:expr, $need_auth:expr, $api_validation:expr) => {
-            app = app.merge(
-                apply_layers(
-                    $router,
-                    Services::Multiple(
-                        Arc::new($primary),
-                        vec![$(Arc::new($additional) as Arc<dyn Send + Sync>),+]
-                    ),
-                    $need_casbin,
-                    $need_auth,
-                    $api_validation,
-                    casbin.clone(),
-                    audience,
-                )
-                .await,
-            );
-        };
     }
 
     merge_router!(
@@ -208,6 +182,26 @@ pub async fn initialize_admin_router() -> Router {
         false,
         None
     );
+
+    let auth_router = SysAuthenticationRouter::init_authorization_router()
+        .await
+        .layer(Extension(Arc::new(SysAuthService) as Arc<SysAuthService>))
+        .layer(Extension(
+            Arc::new(SysAuthorizationService) as Arc<SysAuthorizationService>
+        ));
+
+    let auth_router = apply_layers(
+        auth_router,
+        Services::None(std::marker::PhantomData::<()>),
+        true,
+        true,
+        None,
+        casbin.clone(),
+        audience,
+    )
+    .await;
+
+    app = app.merge(auth_router);
 
     merge_router!(
         SysAuthenticationRouter::init_protected_router().await,

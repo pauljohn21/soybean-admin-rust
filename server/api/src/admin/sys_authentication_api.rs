@@ -1,13 +1,15 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use axum::{extract::ConnectInfo, http::HeaderMap, Extension};
+use axum_casbin::CasbinAxumLayer;
 use axum_extra::{headers::UserAgent, TypedHeader};
 use server_core::web::{
     auth::User, error::AppError, res::Res, util::ClientIp, validator::ValidatedForm, RequestId,
 };
 use server_service::{
     admin::{
-        dto::sys_auth_dto::LoginContext, AuthOutput, LoginInput, SysAuthService, TAuthService,
+        dto::sys_auth_dto::LoginContext, AssignPermissionDto, AssignRouteDto, AuthOutput,
+        LoginInput, SysAuthService, SysAuthorizationService, TAuthService, TAuthorizationService,
         UserInfoOutput, UserRoute,
     },
     Audience,
@@ -74,5 +76,36 @@ impl SysAuthenticationApi {
             .await?;
 
         Ok(Res::new_data(routes))
+    }
+
+    /// 为角色分配权限
+    ///
+    /// 将指定的权限分配给指定域中的角色。
+    pub async fn assign_permission(
+        Extension(service): Extension<Arc<SysAuthorizationService>>,
+        Extension(mut cache_enforcer): Extension<CasbinAxumLayer>,
+        ValidatedForm(input): ValidatedForm<AssignPermissionDto>,
+    ) -> Result<Res<()>, AppError> {
+        let enforcer = cache_enforcer.get_enforcer();
+
+        service
+            .assign_permission(input.domain, input.role_id, input.permissions, enforcer)
+            .await?;
+
+        Ok(Res::new_data(()))
+    }
+
+    /// 为角色分配路由
+    ///
+    /// 将指定的路由分配给指定域中的角色。
+    pub async fn assign_routes(
+        Extension(service): Extension<Arc<SysAuthorizationService>>,
+        ValidatedForm(input): ValidatedForm<AssignRouteDto>,
+    ) -> Result<Res<()>, AppError> {
+        service
+            .assign_routes(input.domain, input.role_id, input.route_ids)
+            .await?;
+
+        Ok(Res::new_data(()))
     }
 }
