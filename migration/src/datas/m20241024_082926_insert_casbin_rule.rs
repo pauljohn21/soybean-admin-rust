@@ -22,6 +22,7 @@ impl MigrationTrait for Migration {
             ('p', 'ROLE_SUPER', 'built-in', '/domain', 'PUT', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/domain/:id', 'DELETE', '', ''),
 
+            ('p', 'ROLE_SUPER', 'built-in', '/route', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/route', 'POST', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/route/:id', 'GET', '', ''),
             ('p', 'ROLE_SUPER', 'built-in', '/route', 'PUT', '', ''),
@@ -51,8 +52,11 @@ impl MigrationTrait for Migration {
             ('p', 'ROLE_SUPER', 'built-in', '/access-key/:id', 'DELETE', '', ''),
 
             ('p', 'ROLE_SUPER', 'built-in', '/login-log', 'GET', '', ''),
-            ('p', 'ROLE_SUPER', 'built-in', '/operation-log', 'GET', '', '')
-            "#
+            ('p', 'ROLE_SUPER', 'built-in', '/operation-log', 'GET', '', ''),
+
+            ('p', 'ROLE_SUPER', 'built-in', '/authorization/assign-permission', 'POST', '', ''),
+            ('p', 'ROLE_SUPER', 'built-in', '/authorization/assign-routes', 'POST', '', '')
+        "#
             .to_string(),
         );
 
