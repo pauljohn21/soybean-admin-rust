@@ -1,3 +1,10 @@
+# 定义项目相关变量
+PROJECT_NAME := soybean-admin-rust
+REDIS_PROJECT_NAME := $(PROJECT_NAME)-redis
+DEPLOY_DIR := deploy
+REDIS_COMPOSE_FILE := docker-compose-redis-cluster.yml
+MIGRATION_DIR := migration/src
+
 # 格式化所有 Rust 代码
 fmt:
 	cargo fmt --all
@@ -6,16 +13,13 @@ fmt:
 run-server:
 	cargo run --bin server
 
-# 运行数据库迁移
-# 注意：不带参数时，默认执行 "up" 操作
+# 数据库迁移相关命令
 run-migration:
 	cargo run --bin migration
 
-# 执行向上迁移（应用所有未应用的迁移）
 migrate-up:
 	cargo run --bin migration -- up
 
-# 执行向下迁移（回滚最后一次迁移）
 migrate-down:
 	cargo run --bin migration -- down
 
@@ -32,46 +36,55 @@ clean:
 	cargo clean
 
 # Docker相关命令
+# 定义通用的docker-compose命令模板
+define docker_compose_cmd
+	cd $(DEPLOY_DIR) && docker-compose -p $(PROJECT_NAME) $(1)
+endef
+
+define redis_cluster_cmd
+	cd $(DEPLOY_DIR) && docker-compose -p $(REDIS_PROJECT_NAME) -f $(REDIS_COMPOSE_FILE) $(1)
+endef
+
 # 启动所有服务
 docker-up:
-	cd deploy && docker-compose -p soybean-admin-rust up -d
+	$(call docker_compose_cmd,up -d)
 
 # 停止所有服务
 docker-down:
-	cd deploy && docker-compose -p soybean-admin-rust down
+	$(call docker_compose_cmd,down)
 
 # 停止所有服务并删除数据卷
 docker-down-v:
-	cd deploy && docker-compose -p soybean-admin-rust down -v
+	$(call docker_compose_cmd,down -v)
 
 # 查看服务状态
 docker-ps:
-	cd deploy && docker-compose -p soybean-admin-rust ps
+	$(call docker_compose_cmd,ps)
 
 # 查看服务日志
 docker-logs:
-	cd deploy && docker-compose -p soybean-admin-rust logs -f
+	$(call docker_compose_cmd,logs -f)
 
 # Redis 集群相关命令
 # 启动 Redis 集群
 redis-cluster-up:
-	cd deploy && docker-compose -p soybean-admin-rust-redis -f docker-compose-redis-cluster.yml up -d
+	$(call redis_cluster_cmd,up -d)
 
 # 停止 Redis 集群
 redis-cluster-down:
-	cd deploy && docker-compose -p soybean-admin-rust-redis -f docker-compose-redis-cluster.yml down
+	$(call redis_cluster_cmd,down)
 
 # 停止 Redis 集群并删除数据卷
 redis-cluster-down-v:
-	cd deploy && docker-compose -p soybean-admin-rust-redis -f docker-compose-redis-cluster.yml down -v
+	$(call redis_cluster_cmd,down -v)
 
 # 查看 Redis 集群状态
 redis-cluster-ps:
-	cd deploy && docker-compose -p soybean-admin-rust-redis -f docker-compose-redis-cluster.yml ps
+	$(call redis_cluster_cmd,ps)
 
 # 查看 Redis 集群日志
 redis-cluster-logs:
-	cd deploy && docker-compose -p soybean-admin-rust-redis -f docker-compose-redis-cluster.yml logs -f
+	$(call redis_cluster_cmd,logs -f)
 
 # 检查 Redis 集群信息
 redis-cluster-info:
@@ -86,27 +99,28 @@ redis-cluster-nodes:
 default: fmt run-server
 
 # 声明所有任务为伪目标
-.PHONY: fmt run-server run-migration migrate-up migrate-down build test clean \
-	docker-up docker-down docker-down-v docker-ps docker-logs \
-	redis-cluster-up redis-cluster-down redis-cluster-down-v redis-cluster-ps redis-cluster-logs redis-cluster-info redis-cluster-nodes \
+.PHONY: fmt run-server run-migration migrate-up migrate-down build test clean
+	docker-up docker-down docker-down-v docker-ps docker-logs
+	redis-cluster-up redis-cluster-down redis-cluster-down-v redis-cluster-ps redis-cluster-logs redis-cluster-info redis-cluster-nodes
 	generate-schema-migration generate-data-migration
+
+# 迁移文件生成通用函数
+define check_name_param
+	@if [ -z "$(name)" ]; then
+		echo "Error: Please provide a name for the $(1) migration.";
+		echo "Usage: make $(2) name=$(3)";
+		exit 1;
+	fi
+endef
 
 # 生成表结构迁移文件
 # 用法: make generate-schema-migration name=table_name
 # 例如: make generate-schema-migration name=sys_role
 generate-schema-migration:
-	@if [ -z "$(name)" ]; then \
-		echo "Error: Please provide a name for the schema migration."; \
-		echo "Usage: make generate-schema-migration name=table_name"; \
-		exit 1; \
-	fi
-	sea-orm-cli migrate generate --migration-dir migration/src/schemas create_$(name)
+	$(call check_name_param,schema,generate-schema-migration,table_name)
+	sea-orm-cli migrate generate --migration-dir $(MIGRATION_DIR)/schemas create_$(name)
 
 # 生成数据迁移文件
 generate-data-migration:
-	@if [ -z "$(name)" ]; then \
-		echo "Error: Please provide a name for the data migration."; \
-		echo "Usage: make generate-data-migration name=insert_default_data"; \
-		exit 1; \
-	fi
-	sea-orm-cli migrate generate --migration-dir migration/src/datas insert_$(name)
+	$(call check_name_param,data,generate-data-migration,insert_default_data)
+	sea-orm-cli migrate generate --migration-dir $(MIGRATION_DIR)/datas insert_$(name)
