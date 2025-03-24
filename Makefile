@@ -25,7 +25,7 @@ migrate-down:
 
 # 构建项目
 build:
-	cargo build --bin server --release
+	cargo build --bin server --release --no-default-features
 
 # 运行测试
 test:

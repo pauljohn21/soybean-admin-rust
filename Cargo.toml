@@ -66,7 +66,7 @@ casbin = { version = "2.10", default-features = false }         # 角色访问�
 # =========================================
 # 数据库 ORM 和适配器（底层数据库操作）
 # =========================================
-sea-orm = { version = "1.1", default-features = false }         # SeaORM，Rust 的 ORM 框架
+sea-orm = { version = "1.1", default-features = false, features = ["runtime-tokio-native-tls", "macros"] }         # SeaORM，Rust 的 ORM 框架
 redis = "0.29"
 
 # =========================================

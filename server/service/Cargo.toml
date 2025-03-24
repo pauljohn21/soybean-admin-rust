@@ -15,11 +15,14 @@ server-utils = { path = "../utils" }
 axum-casbin = { path = "../../axum-casbin" }
 async-trait = { workspace = true }
 tokio = { workspace = true, features = ["sync", "rt"] }
-sea-orm = { workspace = true, features = ["runtime-tokio-native-tls", "macros"] }
+sea-orm = { workspace = true }
 thiserror = { workspace = true }
 ulid = { workspace = true }
 chrono = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
-
-redis ={ workspace = true }
+redis = { workspace = true }
 mongodb = { workspace = true }
+
+[features]
+default = ["debug-print"]
+debug-print = ["sea-orm/debug-print"]
