@@ -9,8 +9,11 @@ pub async fn initialize_log_tracing() {
         return;
     }
 
-    let env_filter =
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info,sea_orm=info"));
+    let env_filter = if cfg!(debug_assertions) {
+        EnvFilter::new("debug,sea_orm=debug")
+    } else {
+        EnvFilter::new("info,sea_orm=info")
+    };
 
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_target(true)
@@ -26,5 +29,9 @@ pub async fn initialize_log_tracing() {
         return;
     }
 
-    project_info!("Log tracing initialized successfully");
+    if cfg!(debug_assertions) {
+        project_info!("Log tracing initialized successfully in debug mode");
+    } else {
+        project_info!("Log tracing initialized successfully in release mode");
+    }
 }
