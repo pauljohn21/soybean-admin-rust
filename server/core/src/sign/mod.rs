@@ -1,14 +1,19 @@
 mod api_key;
 mod api_key_middleware;
+mod memory_nonce_store;
+mod nonce_store;
+mod redis_nonce_store;
 
 pub use api_key::{
-    ApiKeyConfig, ComplexApiKeyValidator, MemoryNonceStore, SignatureAlgorithm,
-    SimpleApiKeyValidator,
+    ApiKeyConfig, ComplexApiKeyValidator, SignatureAlgorithm, SimpleApiKeyValidator,
 };
 pub use api_key_middleware::{
     api_key_middleware, protect_route, ApiKeySource, ApiKeyValidation, ComplexApiKeyConfig,
     SimpleApiKeyConfig,
 };
+pub use memory_nonce_store::{create_memory_nonce_store_factory, MemoryNonceStore};
+pub use nonce_store::{NonceStore, NonceStoreFactory};
+pub use redis_nonce_store::{create_redis_nonce_store_factory, RedisNonceStore};
 
 use once_cell::sync::Lazy;
 use std::sync::Arc;
@@ -66,7 +71,20 @@ pub async fn remove_key(validator_type: ValidatorType, key: &str) {
 }
 
 pub async fn init_validators(config: Option<ApiKeyConfig>) {
-    let complex_validator = ComplexApiKeyValidator::new(config);
+    // 使用默认的内存 nonce 存储
+    init_validators_with_nonce_store(config, create_memory_nonce_store_factory()).await;
+}
+
+/// 使用指定的 nonce 存储工厂函数初始化验证器
+///
+/// # 参数
+/// * `config` - 可选的 API 密钥验证配置
+/// * `nonce_store_factory` - 用于创建 nonce 存储的工厂函数
+pub async fn init_validators_with_nonce_store(
+    config: Option<ApiKeyConfig>,
+    nonce_store_factory: NonceStoreFactory,
+) {
+    let complex_validator = ComplexApiKeyValidator::with_nonce_store(config, nonce_store_factory);
     *API_KEY_VALIDATORS.1.write().await = complex_validator;
 }
 

@@ -1,5 +1,4 @@
 use md5::{Digest, Md5};
-use moka::sync::Cache;
 use parking_lot::RwLock;
 use ring::{digest, hmac};
 use std::{
@@ -8,6 +7,8 @@ use std::{
     sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
+
+use crate::sign::nonce_store::{create_memory_store_factory, NonceStore, NonceStoreFactory};
 
 /// Supported signature algorithms for API key validation.
 ///
@@ -57,53 +58,6 @@ pub const TIMESTAMP_DISPARITY_MS: i64 = 300_000; // 5 minutes
 
 /// Capacity hints for collections
 const DEFAULT_CAPACITY: usize = 32;
-
-/// In-memory store for managing nonces with automatic expiration.
-///
-/// Uses moka cache to store nonces with a TTL of 10 minutes. Once a nonce
-/// expires, it can be reused. This helps prevent replay attacks while
-/// maintaining memory efficiency.
-#[derive(Clone)]
-pub struct MemoryNonceStore {
-    nonces: Cache<String, ()>,
-}
-
-impl Default for MemoryNonceStore {
-    #[inline]
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl MemoryNonceStore {
-    /// Creates a new instance of MemoryNonceStore with a 10-minute TTL.
-    #[inline]
-    pub fn new() -> Self {
-        Self {
-            nonces: Cache::builder()
-                .time_to_live(std::time::Duration::from_secs(NONCE_TTL_SECS))
-                .build(),
-        }
-    }
-
-    /// Validates and stores a nonce.
-    ///
-    /// # Arguments
-    /// * `nonce` - The nonce string to validate and store
-    ///
-    /// # Returns
-    /// * `true` if the nonce is valid and not previously used
-    /// * `false` if the nonce is invalid or has been used before
-    #[inline]
-    pub fn check_and_set(&self, nonce: &str) -> bool {
-        if self.nonces.contains_key(nonce) {
-            false
-        } else {
-            self.nonces.insert(nonce.to_string(), ());
-            true
-        }
-    }
-}
 
 /// Simple API key validator that checks against a set of predefined keys.
 ///
@@ -175,7 +129,8 @@ impl Default for SimpleApiKeyValidator {
 #[derive(Clone)]
 pub struct ComplexApiKeyValidator {
     secrets: Arc<RwLock<HashMap<String, String>>>,
-    nonce_store: Arc<MemoryNonceStore>,
+    nonce_store: NonceStore,
+    nonce_store_factory: NonceStoreFactory,
     config: ApiKeyConfig,
 }
 
@@ -186,11 +141,31 @@ impl ComplexApiKeyValidator {
     /// * `config` - Optional API key validation configuration. If None, uses default configuration.
     #[inline]
     pub fn new(config: Option<ApiKeyConfig>) -> Self {
+        Self::with_nonce_store(config, create_memory_store_factory())
+    }
+
+    /// 创建一个新的 ComplexApiKeyValidator 实例，使用指定的 nonce 存储工厂函数
+    ///
+    /// # 参数
+    /// * `config` - 可选的 API 密钥验证配置。如果为 None，则使用默认配置。
+    /// * `nonce_store_factory` - 用于创建 nonce 存储的工厂函数
+    #[inline]
+    pub fn with_nonce_store(
+        config: Option<ApiKeyConfig>,
+        nonce_store_factory: NonceStoreFactory,
+    ) -> Self {
         Self {
             secrets: Arc::new(RwLock::new(HashMap::with_capacity(DEFAULT_CAPACITY))),
-            nonce_store: Arc::new(MemoryNonceStore::new()),
+            nonce_store: (nonce_store_factory)(),
+            nonce_store_factory,
             config: config.unwrap_or_default(),
         }
+    }
+
+    /// 获取一个新的 nonce 存储实例
+    #[inline]
+    pub fn get_new_nonce_store(&self) -> NonceStore {
+        (self.nonce_store_factory)()
     }
 
     /// Validates if a timestamp is within the allowed 5-minute window.
@@ -262,7 +237,12 @@ impl ComplexApiKeyValidator {
             return false;
         }
 
-        if !self.nonce_store.check_and_set(nonce) {
+        let check_result = tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current()
+                .block_on(async { self.nonce_store.check_and_set(nonce).await })
+        });
+
+        if !check_result {
             return false;
         }
 
@@ -343,17 +323,18 @@ mod tests {
         assert!(!validator.validate_key("invalid-key"));
     }
 
-    #[test]
-    fn test_nonce_store() {
+    #[tokio::test]
+    async fn test_nonce_store() {
+        use crate::sign::memory_nonce_store::MemoryNonceStore;
         let store = MemoryNonceStore::new();
-        assert!(store.check_and_set("nonce1"));
-        assert!(!store.check_and_set("nonce1"));
-        thread::sleep(std::time::Duration::from_secs(NONCE_TTL_SECS + 1));
-        assert!(store.check_and_set("nonce1"));
+        assert!(store.check_and_set("nonce1").await);
+        assert!(!store.check_and_set("nonce1").await);
+        tokio::time::sleep(std::time::Duration::from_secs(NONCE_TTL_SECS + 1)).await;
+        assert!(store.check_and_set("nonce1").await);
     }
 
-    #[test]
-    fn test_complex_validator() {
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_complex_validator() {
         let validator = ComplexApiKeyValidator::new(Some(ApiKeyConfig {
             algorithm: SignatureAlgorithm::Md5,
         }));
