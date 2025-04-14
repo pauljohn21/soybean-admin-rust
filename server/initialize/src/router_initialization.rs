@@ -103,7 +103,19 @@ pub async fn initialize_admin_router() -> Router {
     .unwrap();
 
     // 初始化验证器
-    server_core::sign::init_validators(None).await;
+    // 根据是否配置了 Redis 来选择 nonce 存储实现
+    let nonce_store_factory =
+        if let Some(_) = crate::redis_initialization::get_primary_redis().await {
+            // 如果 Redis 可用，使用 Redis 作为 nonce 存储
+            project_info!("Using Redis for nonce storage");
+            server_core::sign::create_redis_nonce_store_factory("api_key")
+        } else {
+            // 否则使用内存存储
+            project_info!("Using memory for nonce storage");
+            server_core::sign::create_memory_nonce_store_factory()
+        };
+
+    server_core::sign::init_validators_with_nonce_store(None, nonce_store_factory.clone()).await;
 
     let simple_validation = {
         let validator = server_core::sign::get_simple_validator().await;
