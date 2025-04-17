@@ -1,71 +1,81 @@
-# syntax=docker/dockerfile:1
-
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
-
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
-
 ARG RUST_VERSION=1.86.0
-ARG APP_NAME=
+ARG APP_NAME=server
+ARG ALPINE_VERSION=3.21
+ARG APP_PORT=10001
+ARG APP_USER=appuser
+ARG APP_UID=10001
+ARG TZ=Asia/Shanghai
 
-################################################################################
-# Create a stage for building the application.
-
+#################################################
+# 构建阶段 - 编译Rust项目
+#################################################
 FROM rust:${RUST_VERSION}-alpine AS build
 ARG APP_NAME
 WORKDIR /app
 
-# Install host build dependencies.
-RUN apk add --no-cache clang lld musl-dev git
+# 安装必要的构建工具和依赖
+# clang/lld: 用于更快的链接
+# musl-dev: 提供C标准库
+# openssl-dev/openssl-libs-static: SSL支持(同时包含动态和静态库)
+RUN apk add --no-cache \
+    clang lld musl-dev \
+    git pkgconfig \
+    openssl-dev openssl-libs-static
 
-# Build the application.
-# Leverage a cache mount to /usr/local/cargo/registry/
-# for downloaded dependencies, a cache mount to /usr/local/cargo/git/db
-# for git repository dependencies, and a cache mount to /app/target/ for
-# compiled dependencies which will speed up subsequent builds.
-# Leverage a bind mount to the src directory to avoid having to copy the
-# source code into the container. Once built, copy the executable to an
-# output directory before the cache mounted /app/target is unmounted.
-RUN --mount=type=bind,source=src,target=src \
-    --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
-    --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
-    --mount=type=cache,target=/app/target/ \
-    --mount=type=cache,target=/usr/local/cargo/git/db \
-    --mount=type=cache,target=/usr/local/cargo/registry/ \
-cargo build --locked --release && \
-cp ./target/release/$APP_NAME /bin/server
+# 复制项目文件到容器中
+COPY . .
 
-################################################################################
-# Create a new stage for running the application that contains the minimal
-# runtime dependencies for the application. This often uses a different base
-# image from the build stage where the necessary files are copied from the build
-# stage.
-#
-# The example below uses the alpine image as the foundation for running the app.
-# By specifying the "3.18" tag, it will use version 3.18 of alpine. If
-# reproducibility is important, consider using a digest
-# (e.g., alpine@sha256:664888ac9cfd28068e062c991ebcff4b4c7307dc8dd4df9e728bedde5c449d91).
-FROM alpine:3.21 AS final
+# 构建可执行文件
+# 使用Docker缓存挂载提升后续构建速度
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/app/target \
+    cargo build --release --bin ${APP_NAME} --no-default-features && \
+    cp target/release/${APP_NAME} /bin/server && \
+    strip /bin/server
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
-ARG UID=10001
-RUN adduser \
+#################################################
+# 运行阶段 - 创建精简的运行环境
+#################################################
+FROM alpine:${ALPINE_VERSION} AS final
+
+# 参数传递到运行阶段
+ARG APP_USER
+ARG APP_UID
+ARG TZ
+ARG APP_PORT
+
+# 配置容器环境
+ENV TZ=${TZ} \
+    LANG=en_US.UTF-8 \
+    RUST_ENV=production
+
+# 配置运行环境
+# - 安装运行时依赖
+# - 创建低权限用户
+# - 创建必要的目录结构
+RUN apk add --no-cache openssl ca-certificates tzdata && \
+    adduser \
     --disabled-password \
     --gecos "" \
     --home "/nonexistent" \
     --shell "/sbin/nologin" \
     --no-create-home \
-    --uid "${UID}" \
-    appuser
-USER appuser
+    --uid "${APP_UID}" \
+    ${APP_USER} && \
+    mkdir -p /app/server/resources && \
+    chown -R ${APP_USER}:${APP_USER} /app
 
-# Copy the executable from the "build" stage.
+# 从构建阶段复制应用及配置文件
 COPY --from=build /bin/server /bin/
+COPY --from=build --chown=${APP_USER}:${APP_USER} /app/server/resources/application.yaml /app/server/resources/
+COPY --from=build --chown=${APP_USER}:${APP_USER} /app/server/resources/ip2region.xdb /app/server/resources/
+COPY --from=build --chown=${APP_USER}:${APP_USER} /app/server/resources/rbac_model.conf /app/server/resources/
 
-# Expose the port that the application listens on.
-EXPOSE 9528
+# 设置工作目录和用户
+WORKDIR /app
+USER ${APP_USER}
+EXPOSE ${APP_PORT}
 
-# What the container should run when it is started.
+# 启动服务
 CMD ["/bin/server"]

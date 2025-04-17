@@ -30,3 +30,8 @@
 /target
 LICENSE
 README.md
+
+/.idea
+/.vscode
+/deploy
+**/.env.example

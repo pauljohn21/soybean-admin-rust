@@ -10,7 +10,6 @@ services:
             - "5432:5432"
         volumes:
             - soybean-admin-postgres_data:/usr/share/docker/postgresql
-            - ./deploy/postgres:/docker-entrypoint-initdb.d
         networks:
             - soybean-admin
         healthcheck:
