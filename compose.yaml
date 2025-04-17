@@ -1,0 +1,65 @@
+services:
+    postgres:
+        image: postgres:17.4
+        environment:
+            TZ: Asia/Shanghai
+            POSTGRES_PASSWORD: soybean@123.
+            POSTGRES_USER: soybean
+            POSTGRES_DB: soybean_admin_rust
+        ports:
+            - "5432:5432"
+        volumes:
+            - soybean-admin-postgres_data:/usr/share/docker/postgresql
+            - ./deploy/postgres:/docker-entrypoint-initdb.d
+        networks:
+            - soybean-admin
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U soybean -d soybean-admin-nest-backend",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    pgbouncer:
+        image: bitnami/pgbouncer:1.24.1
+        container_name: pgbouncer
+        hostname: pgbouncer
+        restart: always
+        environment:
+            - PGBOUNCER_DATABASE=*
+            - POSTGRESQL_USERNAME=soybean
+            - POSTGRESQL_PASSWORD=soybean@123.
+            - POSTGRESQL_DATABASE=soybean_admin_rust
+            - POSTGRESQL_HOST=postgres
+            - POSTGRESQL_PORT=5432
+        ports:
+            - "6432:6432"
+        networks:
+            - soybean-admin
+
+    redis:
+        image: redis/redis-stack:7.4.0-v3
+        environment:
+            TZ: Asia/Shanghai
+        command: redis-server --requirepass 123456
+        ports:
+            - "6379:6379"
+        volumes:
+            - soybean-admin-redis_data:/data
+        networks:
+            - soybean-admin
+        healthcheck:
+            test: ["CMD", "redis-cli", "-a", "123456", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+volumes:
+    soybean-admin-postgres_data:
+    soybean-admin-redis_data:
+
+networks:
+    soybean-admin:
