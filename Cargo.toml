@@ -47,7 +47,7 @@ tower = "0.5"                                                   # Tower 中间�
 tower-http = "0.6"                                              # HTTP 相关的 Tower 中间件
 tower-layer = "0.3"                                             # 用于构建 Tower 中间件层
 tower-service = "0.3"                                           # 为服务定义 tower 服务
-http = "1.2"                                                    # HTTP 库，用于请求和响应
+http = "1.3.1"                                                    # HTTP 库，用于请求和响应
 http-body = "1.0"                                               # HTTP Body 支持库
 http-body-util = "0.1"                                          # HTTP Body 工具库
 bytes = "1.10"                                                  # 字节处理库
@@ -135,16 +135,16 @@ form_urlencoded = "1.2"                                         # 表单 URL 编
 # MongoDB 相关依赖
 # =========================================
 mongodb = "3.2"                                                 # MongoDB 驱动库
-bson = "2.13"                                                   # BSON 序列化和反序列化库
+bson = "2.14"                                                   # BSON 序列化和反序列化库
 
 # =========================================
 # other
 # =========================================
 anyhow = "1.0"                                                  # 错误处理库，提供 Result 类型和错误转换
-askama = "0.12"                                                 # 类型安全的编译时模板引擎
-askama_derive = "0.12"                                          # askama 的派生宏支持
-convert_case = "0.7"                                            # 字符串命名风格转换工具
+askama = "0.13"                                                 # 类型安全的编译时模板引擎
+askama_derive = "0.13"                                          # askama 的派生宏支持
+convert_case = "0.8"                                            # 字符串命名风格转换工具
 
-aws-config = "1.5.17"
-aws-sdk-config = "1.63.0"
-aws-sdk-s3 = { version = "1.77.0", features = ["behavior-version-latest"] }
+aws-config = "1.6"
+aws-sdk-config = "1"
+aws-sdk-s3 = { version = "1", features = ["behavior-version-latest"] }
