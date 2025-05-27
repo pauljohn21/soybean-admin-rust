@@ -120,7 +120,7 @@ impl TMenuService for SysMenuService {
 
         let menus = SysMenu::find()
             .filter(SysMenuColumn::Constant.eq(false))
-            .filter(SysMenuColumn::Status.eq(Status::ENABLED))
+            .filter(SysMenuColumn::Status.eq(Status::Enabled))
             .all(db.as_ref())
             .await
             .map_err(AppError::from)?;
@@ -145,7 +145,7 @@ impl TMenuService for SysMenuService {
 
         let menus: Vec<SysMenuModel> = SysMenu::find()
             .filter(SysMenuColumn::Constant.eq(true))
-            .filter(SysMenuColumn::Status.eq(Status::ENABLED))
+            .filter(SysMenuColumn::Status.eq(Status::Enabled))
             .all(db.as_ref())
             .await
             .map_err(AppError::from)?;
@@ -297,7 +297,7 @@ impl TMenuService for SysMenuService {
             .filter(
                 Condition::all()
                     .add(SysMenuColumn::Id.is_in(menu_ids))
-                    .add(SysMenuColumn::Status.eq(Status::ENABLED))
+                    .add(SysMenuColumn::Status.eq(Status::Enabled))
                     .add(SysMenuColumn::Constant.eq(false)),
             )
             .all(db.as_ref())

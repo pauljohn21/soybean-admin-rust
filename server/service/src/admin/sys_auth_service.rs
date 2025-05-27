@@ -160,7 +160,7 @@ impl TAuthService for SysAuthService {
 
         let menus = SysMenuEntity::find()
             .filter(SysMenuColumn::Id.is_in(menu_ids))
-            .filter(SysMenuColumn::Status.eq(Status::ENABLED))
+            .filter(SysMenuColumn::Status.eq(Status::Enabled))
             .order_by_asc(SysMenuColumn::Sequence)
             .into_model::<SysMenuModel>()
             .all(db.as_ref())
@@ -237,6 +237,8 @@ impl SysAuthService {
             .await
             .map_err(AppError::from)?
             .ok_or_else(|| AppError::from(UserError::UserNotFound))?;
+
+        //TODO validate user status and domain status
 
         // 验证密码
         if !SecureUtil::verify_password(password.as_bytes(), &user.password)
