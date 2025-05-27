@@ -67,7 +67,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(
                         ColumnDef::new(SysUser::Status)
-                            .enumeration(Alias::new("\"Status\""), Status::iter())
+                            .enumeration(Alias::new("status"), Status::iter())
                             .not_null()
                             .comment("用户状态"),
                     )

@@ -15,22 +15,22 @@ impl MigrationTrait for Migration {
         match db.get_database_backend() {
             DbBackend::MySql | DbBackend::Sqlite => {},
             DbBackend::Postgres => {
-                // Create Status enum
+                // Create status enum
                 manager
                     .create_type(
                         Type::create()
-                            .as_enum(Alias::new("Status"))
-                            .values([Status::ENABLED, Status::DISABLED, Status::BANNED])
+                            .as_enum(Alias::new("status"))
+                            .values([Status::Enabled, Status::Disabled, Status::Banned])
                             .to_owned(),
                     )
                     .await?;
 
-                // Create MenuType enum
+                // Create menu_type enum
                 manager
                     .create_type(
                         Type::create()
-                            .as_enum(Alias::new("MenuType"))
-                            .values([MenuType::DIRECTORY, MenuType::MENU])
+                            .as_enum(Alias::new("menu_type"))
+                            .values([MenuType::Directory, MenuType::Menu])
                             .to_owned(),
                     )
                     .await?;
@@ -46,13 +46,13 @@ impl MigrationTrait for Migration {
         match db.get_database_backend() {
             DbBackend::MySql | DbBackend::Sqlite => {},
             DbBackend::Postgres => {
-                // Drop Status enum
+                // Drop status enum
                 manager
-                    .drop_type(Type::drop().name(Alias::new("Status")).to_owned())
+                    .drop_type(Type::drop().name(Alias::new("status")).to_owned())
                     .await?;
-                // Drop MenuType enum
+                // Drop menu_type enum
                 manager
-                    .drop_type(Type::drop().name(Alias::new("MenuType")).to_owned())
+                    .drop_type(Type::drop().name(Alias::new("menu_type")).to_owned())
                     .await?;
             },
         }
@@ -63,22 +63,22 @@ impl MigrationTrait for Migration {
 
 #[derive(DeriveIden, EnumIter)]
 pub enum Status {
-    #[sea_orm(iden = "Status")]
+    #[sea_orm(iden = "status")]
     Enum,
-    #[sea_orm(iden = "ENABLED")]
-    ENABLED,
-    #[sea_orm(iden = "DISABLED")]
-    DISABLED,
-    #[sea_orm(iden = "BANNED")]
-    BANNED,
+    #[sea_orm(iden = "enabled")]
+    Enabled,
+    #[sea_orm(iden = "disabled")]
+    Disabled,
+    #[sea_orm(iden = "banned")]
+    Banned,
 }
 
 #[derive(DeriveIden, EnumIter)]
 pub enum MenuType {
-    #[sea_orm(iden = "MenuType")]
+    #[sea_orm(iden = "menu_type")]
     Enum,
     #[sea_orm(iden = "directory")]
-    DIRECTORY,
+    Directory,
     #[sea_orm(iden = "menu")]
-    MENU,
+    Menu,
 }
