@@ -41,7 +41,7 @@ futures = "0.3"                                                 # futures 库，
 # Web框架和中间件（底层 Web 框架）
 # =========================================
 # 相关的 HTTP 库
-axum = "0.8"                                                    # Web 框架，建立在 hyper 之上
+axum = "0.8.4"                                                    # Web 框架，建立在 hyper 之上
 axum-extra = "0.10"                                             # axum 的扩展
 tower = "0.5"                                                   # Tower 中间件库，axum 和其他库使用
 tower-http = "0.6"                                              # HTTP 相关的 Tower 中间件
@@ -135,14 +135,14 @@ form_urlencoded = "1.2"                                         # 表单 URL 编
 # MongoDB 相关依赖
 # =========================================
 mongodb = "3.2"                                                 # MongoDB 驱动库
-bson = "2.14"                                                   # BSON 序列化和反序列化库
+bson = "2.15"                                                   # BSON 序列化和反序列化库
 
 # =========================================
 # other
 # =========================================
 anyhow = "1.0"                                                  # 错误处理库，提供 Result 类型和错误转换
-askama = "0.13"                                                 # 类型安全的编译时模板引擎
-askama_derive = "0.13"                                          # askama 的派生宏支持
+askama = "0.14"                                                 # 类型安全的编译时模板引擎
+askama_derive = "0.14"                                          # askama 的派生宏支持
 convert_case = "0.8"                                            # 字符串命名风格转换工具
 
 aws-config = "1.6"
