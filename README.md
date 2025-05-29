@@ -28,36 +28,31 @@ SoybeanAdmin Rust 是一个基于 Rust 语言开发的现代化后台管理系�
 >
 > 本项目仅包含后端实现。配套的前端项目位于 [soybean-admin-nestjs](https://github.com/soybeanjs/soybean-admin-nestjs) 的 `frontend` 目录。由于前端项目与 NestJS 共用，需要进行以下调整：
 >
-> #### 接口调整
->
 > - **路由接口**：`frontend/src/service/api/route.ts` 中将 `/authorization/getUserRoutes` 改为 `/auth/getUserRoutes`
 >
-> - **Casbin 规则处理**：`frontend/src/service/api/system-manage.ts` 中将
+> - **Casbin 规则**：`frontend/src/service/api/system-manage.ts` 中将 `casbinRules.map(item =>`${item.v1}:${item.v2}`)` 改为 `casbinRules.map(item =>`${item.v2}:${item.v3}`)`
+>
+> - **接口权限**：`frontend/src/views/manage/role/modules/api-endpoint-auth-modal.vue` 中将
 >
 >   ```js
->   casbinRules.map(item => `${item.v1}:${item.v2}`)
+>   const key = item.resource && item.action && item.resource.trim() && item.action.trim() ? `${item.resource}:${item.action}` : item.id;
 >   ```
 >
 >   改为
 >
 >   ```js
->   casbinRules.map(item => `${item.v2}:${item.v3}`)
+>   const key = item.path && item.method && item.path.trim() && item.method.trim() ? `${item.path}:${item.method}` : item.id;
 >   ```
 >
-> - **接口权限处理**：`frontend/src/views/manage/role/modules/api-endpoint-auth-modal.vue` 中将
+> - **枚举修改**：`frontend/src/typings/api.d.ts` 中将 `type EnableStatus = 'ENABLED' | 'DISABLED';` 改为 `type EnableStatus = 'enabled' | 'disable';`
 >
->   ```js
->   const key = item.resource && item.action && item.resource.trim() && item.action.trim()
->     ? `${item.resource}:${item.action}`
->     : item.id;
->   ```
+> - **枚举记录**：同文件中将 `ENABLED/DISABLED` 改为 `enabled/disabled`，如：
 >
->   改为
->
->   ```js
->   const key = item.path && item.method && item.path.trim() && item.method.trim()
->     ? `${item.path}:${item.method}`
->     : item.id;
+>   ```ts
+>   export const enableStatusRecord: Record<Api.Common.EnableStatus, App.I18n.I18nKey> = {
+>     enabled: 'page.manage.common.status.enable',
+>     disabled: 'page.manage.common.status.disable'
+>   };
 >   ```
 
 项目实现了基础的 RBAC 权限管理体系，包括用户管理、角色管理、菜单管理等核心功能。无论是作为学习 Rust Web 开发的示例，还是作为实际项目的起点，都是一个理想的选择。
@@ -135,38 +130,38 @@ soybean-admin-rust/
 
 1. 克隆项目
 
-```bash
-git clone https://github.com/soybeanjs/soybean-admin-rust.git
-cd soybean-admin-rust
-```
+    ```bash
+    git clone https://github.com/soybeanjs/soybean-admin-rust.git
+    cd soybean-admin-rust
+    ```
 
 2. 配置数据库
 
-```bash
-# 编辑配置 本地开发环境
-vim server/resources/application-test.yaml
-```
+    ```bash
+    # 编辑配置 本地开发环境
+    vim server/resources/application-test.yaml
+    ```
 
 3. 运行迁移
 
-```bash
-# copy .env.example 为 .env
-cp .env.example .env
-# 修改.env文件
-vim .env
-# 运行迁移
-make run-migration
-# 或
-cargo run --bin migration
-```
+    ```bash
+    # copy .env.example 为 .env
+    cp .env.example .env
+    # 修改.env文件
+    vim .env
+    # 运行迁移
+    make run-migration
+    # 或
+    cargo run --bin migration
+    ```
 
 4. 启动服务
 
-```bash
-make run-server
-# 或
-cargo run --bin server
-```
+    ```bash
+    make run-server
+    # 或
+    cargo run --bin server
+    ```
 
 服务将在 `http://localhost:9528` 启动
 
