@@ -17,5 +17,9 @@ tokio = { workspace = true, features = ["fs", "macros"] }
 tracing = { workspace = true, features = ["log"] }
 log = { workspace = true }
 
+# 环境变量处理
+config = { workspace = true }
+envy = { workspace = true }
+
 [dev-dependencies]
 simplelog = { workspace = true }

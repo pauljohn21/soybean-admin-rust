@@ -11,7 +11,10 @@ async fn main() {
     };
 
     server_initialize::initialize_log_tracing().await;
-    server_initialize::initialize_config(config_path).await;
+
+    // 使用多实例环境变量优先的配置加载方式
+    // 支持单个配置项和多实例配置的环境变量覆盖
+    server_initialize::initialize_config_with_multi_instance_env(config_path, None).await;
     let _ = server_initialize::init_xdb().await;
     server_initialize::init_primary_connection().await;
     server_initialize::init_db_pools().await;

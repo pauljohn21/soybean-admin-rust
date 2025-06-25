@@ -8,25 +8,43 @@ use super::{
 /// 应用程序配置结构
 ///
 /// 这是应用程序的主配置结构，包含了所有子系统的配置信息
-/// 配置的加载和初始化过程如下
 ///
+/// ## 配置加载优先级
+/// 1. **环境变量**（最高优先级）
+/// 2. **配置文件**（中等优先级）
+/// 3. **默认值**（最低优先级）
+///
+/// ## 环境变量命名规范
+/// - 使用 `APP_` 前缀
+/// - 嵌套配置用下划线分隔，如：`APP_DATABASE_URL`
+/// - 数组配置用索引，如：`APP_REDIS_INSTANCES_0_NAME`
+///
+/// ## 配置的加载和初始化过程
 /// 1. 首先从配置文件（如 application.yaml）中加载整体配置
-/// 2. 然后通过 `init_from_file` 函数将配置注入到全局状态中
-///    ```rust
-///    // 注入主配置
-///    global::init_config::<Config>(config.clone()).await;
+/// 2. 然后从环境变量中读取配置并覆盖文件配置
+/// 3. 最后通过 `init_from_file_with_env` 函数将配置注入到全局状态中
+///    ```rust,no_run
+///    use server_global::global;
+///    use server_config::{Config, DatabaseConfig, ServerConfig, JwtConfig, RedisConfig};
 ///
-///    // 注入数据库配置
-///    global::init_config::<DatabaseConfig>(config.database).await;
+///    async fn init_config_example(config: Config) {
+///        // 注入主配置
+///        global::init_config::<Config>(config.clone()).await;
 ///
-///    // 注入服务器配置
-///    global::init_config::<ServerConfig>(config.server).await;
+///        // 注入数据库配置
+///        global::init_config::<DatabaseConfig>(config.database).await;
 ///
-///    // 注入 JWT 配置
-///    global::init_config::<JwtConfig>(config.jwt).await;
+///        // 注入服务器配置
+///        global::init_config::<ServerConfig>(config.server).await;
 ///
-///    // 注入 Redis 配置
-///    global::init_config::<RedisConfig>(config.redis).await;
+///        // 注入 JWT 配置
+///        global::init_config::<JwtConfig>(config.jwt).await;
+///
+///        // 注入 Redis 配置（如果存在）
+///        if let Some(redis_config) = config.redis {
+///            global::init_config::<RedisConfig>(redis_config).await;
+///        }
+///    }
 ///    ```
 ///
 /// # 配置项说明

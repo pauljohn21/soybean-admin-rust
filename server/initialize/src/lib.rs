@@ -1,7 +1,10 @@
 pub use access_key_initialization::initialize_access_key;
 pub use aws_s3_initialization::{init_primary_s3, init_s3_pools};
 pub use casbin_initialization::initialize_casbin;
-pub use config_initialization::initialize_config;
+pub use config_initialization::{
+    initialize_config, initialize_config_from_env_only, initialize_config_with_env,
+    initialize_config_with_multi_instance_env,
+};
 pub use db_initialization::{init_db_pools, init_primary_connection};
 pub use event_channel_initialization::initialize_event_channel;
 pub use ip2region_initialization::init_xdb;
