@@ -321,6 +321,7 @@ impl SysAuthService {
     }
 }
 
+#[allow(dead_code)]
 #[instrument(skip(sender, auth_event))]
 async fn send_auth_event(
     sender: mpsc::UnboundedSender<Box<dyn std::any::Any + Send>>,

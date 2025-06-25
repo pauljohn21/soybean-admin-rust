@@ -67,7 +67,7 @@ casbin = { version = "2.10", default-features = false }         # 角色访问�
 # 数据库 ORM 和适配器（底层数据库操作）
 # =========================================
 sea-orm = { version = "1.1", default-features = false, features = ["runtime-tokio-native-tls", "macros"] }         # SeaORM，Rust 的 ORM 框架
-redis = "0.29"
+redis = "0.32"
 
 # =========================================
 # 测试相关依赖（用于测试）
@@ -84,7 +84,7 @@ serde_json = "1.0"                                              # JSON 序列化
 # =========================================
 # 实用工具库（辅助工具）
 # =========================================
-once_cell = "1.20"                                              # 延迟初始化工具
+once_cell = "1.21"                                              # 延迟初始化工具
 tracing = "0.1"                                                 # 分布式追踪库
 tracing-subscriber = "0.3"                                      # tracing 库的订阅者实现
 tracing-error = "0.2"                                           # 用于错误跟踪的扩展
@@ -145,6 +145,6 @@ askama = "0.14"                                                 # 类型安全�
 askama_derive = "0.14"                                          # askama 的派生宏支持
 convert_case = "0.8"                                            # 字符串命名风格转换工具
 
-aws-config = "1.6"
+aws-config = "1.8"
 aws-sdk-config = "1"
 aws-sdk-s3 = { version = "1", features = ["behavior-version-latest"] }
